@@ -32,11 +32,21 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
 
     const handleTimeUpdate = () => {
       setCurrentTime(video.currentTime);
-      setProgress((video.currentTime / video.duration) * 100);
+      if (video.duration && !isNaN(video.duration)) {
+        setProgress((video.currentTime / video.duration) * 100);
+      }
     };
 
     const handleLoadedMetadata = () => {
-      setDuration(video.duration);
+      if (video.duration && !isNaN(video.duration)) {
+        setDuration(video.duration);
+      }
+    };
+
+    const handleLoadedData = () => {
+      if (video.duration && !isNaN(video.duration)) {
+        setDuration(video.duration);
+      }
     };
 
     const handleEnded = () => {
@@ -45,11 +55,17 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
 
     video.addEventListener("timeupdate", handleTimeUpdate);
     video.addEventListener("loadedmetadata", handleLoadedMetadata);
+    video.addEventListener("loadeddata", handleLoadedData);
     video.addEventListener("ended", handleEnded);
+
+    if (video.duration && !isNaN(video.duration)) {
+      setDuration(video.duration);
+    }
 
     return () => {
       video.removeEventListener("timeupdate", handleTimeUpdate);
       video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      video.removeEventListener("loadeddata", handleLoadedData);
       video.removeEventListener("ended", handleEnded);
     };
   }, []);
@@ -59,10 +75,13 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
       setIsPlaying(false);
       setCurrentTime(0);
       setProgress(0);
+      setShowControls(true);
       if (videoRef.current) {
         videoRef.current.pause();
         videoRef.current.currentTime = 0;
       }
+    } else {
+      setShowControls(true);
     }
   }, [isOpen]);
 
@@ -134,7 +153,9 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
   };
 
   const handleMouseMove = () => {
-    setShowControls(true);
+    if (!showControls) {
+      setShowControls(true);
+    }
     if (hideControlsTimeoutRef.current) {
       clearTimeout(hideControlsTimeoutRef.current);
     }
@@ -146,8 +167,11 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
   };
 
   const handleMouseLeaveVideo = () => {
-    if (isPlaying) {
-      setShowControls(false);
+    if (isPlaying && hideControlsTimeoutRef.current) {
+      clearTimeout(hideControlsTimeoutRef.current);
+      hideControlsTimeoutRef.current = setTimeout(() => {
+        setShowControls(false);
+      }, 1000);
     }
   };
 
@@ -177,7 +201,7 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="fixed inset-4 md:inset-10 lg:inset-20 bg-slate-900 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden border border-slate-700"
+            className="fixed inset-4 md:inset-10 lg:inset-20 bg-slate-900 rounded-2xl shadow-2xl z-50 flex flex-col border border-slate-700 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between">
@@ -201,15 +225,14 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
             </div>
 
             <div
-              className="flex-1 bg-black relative flex items-center justify-center"
-              onMouseMove={handleMouseMove}
-              onMouseLeave={handleMouseLeaveVideo}
+              className="flex-1 bg-black relative flex items-center justify-center overflow-hidden"
             >
               <video
                 ref={videoRef}
                 src={videoUrl}
-                className="w-full h-full object-contain"
+                className="max-w-full max-h-full object-contain"
                 onClick={togglePlayPause}
+                preload="metadata"
               />
 
               {!isPlaying && (
@@ -223,95 +246,82 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
                   <Play className="w-10 h-10 text-white ml-1" />
                 </motion.button>
               )}
-
-              {isPlaying && showControls && (
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-              )}
             </div>
 
-            <AnimatePresence>
-              {showControls && (
-                <motion.div
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 50 }}
-                  transition={{ duration: 0.3 }}
-                  className="bg-slate-800 px-6 py-4 border-t border-slate-700"
-                  onMouseEnter={() => setShowControls(true)}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-4">
-                      <button
-                        onClick={togglePlayPause}
-                        className="w-10 h-10 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center transition-colors"
-                      >
-                        {isPlaying ? (
-                          <Pause className="w-5 h-5 text-white" />
-                        ) : (
-                          <Play className="w-5 h-5 text-white ml-0.5" />
-                        )}
-                      </button>
-                      <button
-                        onClick={toggleMute}
-                        className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-                      >
-                        {isMuted ? (
-                          <VolumeX className="w-5 h-5 text-white" />
-                        ) : (
-                          <Volume2 className="w-5 h-5 text-white" />
-                        )}
-                      </button>
-                      <span className="text-sm text-white font-medium">
-                        {formatTime(currentTime)} / {formatTime(duration)}
-                      </span>
-                    </div>
+            <div
+              className="bg-slate-800 px-6 py-4 border-t border-slate-700"
+            >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-4">
                     <button
-                      onClick={toggleFullscreen}
-                      className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-                      title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                      onClick={togglePlayPause}
+                      className="w-10 h-10 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center transition-colors"
                     >
-                      {isFullscreen ? (
-                        <Minimize className="w-5 h-5 text-white" />
+                      {isPlaying ? (
+                        <Pause className="w-5 h-5 text-white" />
                       ) : (
-                        <Maximize className="w-5 h-5 text-white" />
+                        <Play className="w-5 h-5 text-white ml-0.5" />
                       )}
                     </button>
-                  </div>
-
-                  <div className="relative">
-                    {hoverTime !== null && (
-                      <div
-                        className="absolute bottom-full mb-2 px-3 py-1.5 bg-white text-slate-900 text-sm font-medium rounded-md shadow-xl z-50"
-                        style={{
-                          left: `${hoverPosition}%`,
-                          transform: 'translateX(-50%)',
-                          pointerEvents: 'none'
-                        }}
-                      >
-                        {formatTime(hoverTime)}
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-white rotate-45" />
-                      </div>
-                    )}
-                    <div
-                      ref={progressBarRef}
-                      onClick={handleProgressClick}
-                      onMouseMove={handleProgressHover}
-                      onMouseLeave={handleProgressLeave}
-                      className="relative h-2 bg-slate-700 rounded-full cursor-pointer group py-1 -my-1"
+                    <button
+                      onClick={toggleMute}
+                      className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
                     >
-                      <div
-                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-full"
-                        style={{ width: `${progress}%` }}
-                      />
-                      <div
-                        className="absolute top-1/2 w-3 h-3 bg-white rounded-full -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
-                        style={{ left: `${progress}%`, transform: 'translate(-50%, -50%)' }}
-                      />
-                    </div>
+                      {isMuted ? (
+                        <VolumeX className="w-5 h-5 text-white" />
+                      ) : (
+                        <Volume2 className="w-5 h-5 text-white" />
+                      )}
+                    </button>
+                    <span className="text-sm text-white font-medium">
+                      {formatTime(currentTime)} / {formatTime(duration)}
+                    </span>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <button
+                    onClick={toggleFullscreen}
+                    className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                    title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                  >
+                    {isFullscreen ? (
+                      <Minimize className="w-5 h-5 text-white" />
+                    ) : (
+                      <Maximize className="w-5 h-5 text-white" />
+                    )}
+                  </button>
+                </div>
+
+                <div className="relative">
+                  {hoverTime !== null && (
+                    <div
+                      className="absolute bottom-full mb-2 px-3 py-1.5 bg-white text-slate-900 text-sm font-medium rounded-md shadow-xl z-50"
+                      style={{
+                        left: `${hoverPosition}%`,
+                        transform: 'translateX(-50%)',
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      {formatTime(hoverTime)}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-white rotate-45" />
+                    </div>
+                  )}
+                  <div
+                    ref={progressBarRef}
+                    onClick={handleProgressClick}
+                    onMouseMove={handleProgressHover}
+                    onMouseLeave={handleProgressLeave}
+                    className="relative h-2 bg-slate-700 rounded-full cursor-pointer group py-1 -my-1"
+                  >
+                    <div
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-full"
+                      style={{ width: `${progress}%` }}
+                    />
+                    <div
+                      className="absolute top-1/2 w-3 h-3 bg-white rounded-full -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
+                      style={{ left: `${progress}%`, transform: 'translate(-50%, -50%)' }}
+                    />
+                  </div>
+                </div>
+            </div>
           </motion.div>
         </>
       )}
