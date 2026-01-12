@@ -10,21 +10,21 @@ interface ZoomAnimationProps {
 
 const animationData = {
   light: {
-    vehicleImage: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1920&q=90",
+    vehicleImage: "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=1920&q=90",
     wheelImage: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=1920&q=90",
-    brakeImage: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=1920&q=90",
+    brakeImage: "https://images.unsplash.com/photo-1656232976683-7b688560e427?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     title: "Light Vehicle Braking System"
   },
   commercial: {
-    vehicleImage: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=1920&q=90",
+    vehicleImage: "https://images.unsplash.com/photo-1602721186896-1b21c7405c0b?w=1920&q=90",
     wheelImage: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=90",
-    brakeImage: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=1920&q=90",
+    brakeImage: "https://images.unsplash.com/photo-1656232976683-7b688560e427?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     title: "Commercial Vehicle Braking System"
   },
   rail: {
     vehicleImage: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=1920&q=90",
     wheelImage: "https://images.unsplash.com/photo-1513363287815-e7a0eef0287c?w=1920&q=90",
-    brakeImage: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=1920&q=90",
+    brakeImage: "https://images.unsplash.com/photo-1656232976683-7b688560e427?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     title: "Rail Braking System"
   }
 };

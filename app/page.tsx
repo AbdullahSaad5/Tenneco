@@ -19,14 +19,14 @@ export default function Home() {
       id: "light",
       title: "Light Vehicles",
       subtitle: "Passenger Cars & Light-Duty Vehicles",
-      image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80",
+      image: "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=800&q=80",
       gradient: "from-blue-600 to-cyan-500"
     },
     {
       id: "commercial",
       title: "Commercial Vehicles",
       subtitle: "Trucks & Commercial Fleets",
-      image: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=800&q=80",
+      image: "https://images.unsplash.com/photo-1602721186896-1b21c7405c0b?w=800&q=80",
       gradient: "from-orange-600 to-red-500"
     },
     {
