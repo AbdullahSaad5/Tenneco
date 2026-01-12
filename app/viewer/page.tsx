@@ -1,7 +1,8 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { Suspense, useState, useRef } from "react";
+import { Suspense, useState, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Scene from "../_components/Scene";
 import LoadingScreen from "../_components/LoadingScreen";
 import ModelSelector from "../_components/ModelSelector";
@@ -15,8 +16,16 @@ import { MousePointer2, ZoomIn } from "lucide-react";
 
 type ModelType = "lv" | "asm" | "j4444" | "pad";
 
-export default function Home() {
-  const [activeModel, setActiveModel] = useState<ModelType>("lv");
+function ViewerContent() {
+  const searchParams = useSearchParams();
+  const modelFromUrl = searchParams.get("model") as ModelType | null;
+  const [activeModel, setActiveModel] = useState<ModelType>(modelFromUrl || "lv");
+
+  useEffect(() => {
+    if (modelFromUrl && ["lv", "asm", "j4444", "pad"].includes(modelFromUrl)) {
+      setActiveModel(modelFromUrl);
+    }
+  }, [modelFromUrl]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -57,6 +66,7 @@ export default function Home() {
         isSidebarOpen={isSidebarOpen}
         onOpenHelp={() => setIsHelpOpen(true)}
         onOpenShare={() => setIsShareOpen(true)}
+        showBackButton={true}
       />
 
       {/* Model Selector Sidebar */}
@@ -128,5 +138,13 @@ export default function Home() {
         Tenneco 3D Viewer
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <ViewerContent />
+    </Suspense>
   );
 }

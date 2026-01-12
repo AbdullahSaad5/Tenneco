@@ -3,15 +3,18 @@
 import React from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 interface NavbarProps {
   onToggleSidebar: () => void;
   isSidebarOpen: boolean;
   onOpenHelp: () => void;
   onOpenShare: () => void;
+  showBackButton?: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen, onOpenHelp, onOpenShare }) => {
+const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen, onOpenHelp, onOpenShare, showBackButton = false }) => {
   return (
     <motion.nav
       initial={{ y: -100 }}
@@ -23,6 +26,21 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen, onOpenH
         <div className="flex items-center justify-between">
           {/* Left: Sidebar Toggle + Logo */}
           <div className="flex items-center gap-4">
+            {/* Back Button (if showBackButton is true) */}
+            {showBackButton && (
+              <Link href="/">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+                  title="Back to home"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  <span className="hidden sm:inline">Back</span>
+                </motion.button>
+              </Link>
+            )}
+
             {/* Sidebar Toggle Button */}
             <motion.button
               whileHover={{ scale: 1.05 }}
