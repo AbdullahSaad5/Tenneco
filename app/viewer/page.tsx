@@ -107,7 +107,7 @@ function ViewerContent() {
             dpr={[1, 2]}
             className="transition-all duration-500"
           >
-            <Scene activeModel={activeModel} ref={sceneRef} />
+            <Scene activeModel={activeModel} onModelChange={handleModelChange} ref={sceneRef} />
           </Canvas>
         </Suspense>
       </div>

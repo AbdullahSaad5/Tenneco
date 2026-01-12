@@ -12,7 +12,12 @@ import Pad from "../Models/pad";
 
 type ModelType = "lv" | "asm" | "j4444" | "pad";
 
-const Scene = forwardRef(({ activeModel }: { activeModel: ModelType }, ref) => {
+interface SceneProps {
+  activeModel: ModelType;
+  onModelChange?: (model: ModelType) => void;
+}
+
+const Scene = forwardRef(({ activeModel, onModelChange }: SceneProps, ref) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const controlsRef = useRef<any>(null);
   const groupRef = useRef<THREE.Group | null>(null);
@@ -239,10 +244,10 @@ const Scene = forwardRef(({ activeModel }: { activeModel: ModelType }, ref) => {
         floatingRange={[0, 0.2]}
       >
         <group ref={groupRef} key={activeModel}>
-          {activeModel === "lv" && <LV key="lv" />}
-          {activeModel === "asm" && <Asm key="asm" />}
-          {activeModel === "j4444" && <J4444 key="j4444" />}
-          {activeModel === "pad" && <Pad key="pad" />}
+          {activeModel === "lv" && <LV key="lv" onHotspotClick={onModelChange} />}
+          {activeModel === "asm" && <Asm key="asm" onReturnClick={onModelChange} />}
+          {activeModel === "j4444" && <J4444 key="j4444" onReturnClick={onModelChange} />}
+          {activeModel === "pad" && <Pad key="pad" onReturnClick={onModelChange} />}
         </group>
       </Float>
 
