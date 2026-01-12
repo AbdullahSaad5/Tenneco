@@ -12,6 +12,7 @@ interface VideoModalProps {
 const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
+  const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -20,6 +21,8 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [volume, setVolume] = useState(1);
   const [showControls, setShowControls] = useState(true);
+  const [hoverTime, setHoverTime] = useState<number | null>(null);
+  const [hoverPosition, setHoverPosition] = useState(0);
 
   const videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
@@ -94,6 +97,22 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
     video.currentTime = pos * video.duration;
   };
 
+  const handleProgressHover = (e: React.MouseEvent<HTMLDivElement>) => {
+    const progressBar = progressBarRef.current;
+    if (!progressBar || !duration) return;
+
+    const rect = progressBar.getBoundingClientRect();
+    const pos = (e.clientX - rect.left) / rect.width;
+    const time = pos * duration;
+
+    setHoverPosition((e.clientX - rect.left) / rect.width * 100);
+    setHoverTime(time);
+  };
+
+  const handleProgressLeave = () => {
+    setHoverTime(null);
+  };
+
   const toggleFullscreen = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -113,6 +132,33 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
+
+  const handleMouseMove = () => {
+    setShowControls(true);
+    if (hideControlsTimeoutRef.current) {
+      clearTimeout(hideControlsTimeoutRef.current);
+    }
+    if (isPlaying) {
+      hideControlsTimeoutRef.current = setTimeout(() => {
+        setShowControls(false);
+      }, 3000);
+    }
+  };
+
+  const handleMouseLeaveVideo = () => {
+    if (isPlaying) {
+      setShowControls(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isPlaying) {
+      setShowControls(true);
+      if (hideControlsTimeoutRef.current) {
+        clearTimeout(hideControlsTimeoutRef.current);
+      }
+    }
+  }, [isPlaying]);
 
   return (
     <AnimatePresence>
@@ -154,13 +200,16 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
               </button>
             </div>
 
-            <div className="flex-1 bg-black relative flex items-center justify-center">
+            <div
+              className="flex-1 bg-black relative flex items-center justify-center"
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeaveVideo}
+            >
               <video
                 ref={videoRef}
                 src={videoUrl}
                 className="w-full h-full object-contain"
                 onClick={togglePlayPause}
-                onMouseEnter={() => setShowControls(true)}
               />
 
               {!isPlaying && (
@@ -175,66 +224,94 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
                 </motion.button>
               )}
 
-              {isPlaying && (
+              {isPlaying && showControls && (
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
               )}
             </div>
 
-            <div className="bg-slate-800 px-6 py-4 border-t border-slate-700">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={togglePlayPause}
-                    className="w-10 h-10 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center transition-colors"
-                  >
-                    {isPlaying ? (
-                      <Pause className="w-5 h-5 text-white" />
-                    ) : (
-                      <Play className="w-5 h-5 text-white ml-0.5" />
-                    )}
-                  </button>
-                  <button
-                    onClick={toggleMute}
-                    className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-                  >
-                    {isMuted ? (
-                      <VolumeX className="w-5 h-5 text-white" />
-                    ) : (
-                      <Volume2 className="w-5 h-5 text-white" />
-                    )}
-                  </button>
-                  <span className="text-sm text-white font-medium">
-                    {formatTime(currentTime)} / {formatTime(duration)}
-                  </span>
-                </div>
-                <button 
-                  onClick={toggleFullscreen}
-                  className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-                  title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            <AnimatePresence>
+              {showControls && (
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 50 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-slate-800 px-6 py-4 border-t border-slate-700"
+                  onMouseEnter={() => setShowControls(true)}
                 >
-                  {isFullscreen ? (
-                    <Minimize className="w-5 h-5 text-white" />
-                  ) : (
-                    <Maximize className="w-5 h-5 text-white" />
-                  )}
-                </button>
-              </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={togglePlayPause}
+                        className="w-10 h-10 bg-blue-600 hover:bg-blue-700 rounded-full flex items-center justify-center transition-colors"
+                      >
+                        {isPlaying ? (
+                          <Pause className="w-5 h-5 text-white" />
+                        ) : (
+                          <Play className="w-5 h-5 text-white ml-0.5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={toggleMute}
+                        className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                      >
+                        {isMuted ? (
+                          <VolumeX className="w-5 h-5 text-white" />
+                        ) : (
+                          <Volume2 className="w-5 h-5 text-white" />
+                        )}
+                      </button>
+                      <span className="text-sm text-white font-medium">
+                        {formatTime(currentTime)} / {formatTime(duration)}
+                      </span>
+                    </div>
+                    <button
+                      onClick={toggleFullscreen}
+                      className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                      title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                    >
+                      {isFullscreen ? (
+                        <Minimize className="w-5 h-5 text-white" />
+                      ) : (
+                        <Maximize className="w-5 h-5 text-white" />
+                      )}
+                    </button>
+                  </div>
 
-              <div 
-                ref={progressBarRef}
-                onClick={handleProgressClick}
-                className="relative h-1.5 bg-slate-700 rounded-full overflow-hidden cursor-pointer group"
-              >
-                <div 
-                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-600 to-blue-500 transition-all"
-                  style={{ width: `${progress}%` }}
-                />
-                <div 
-                  className="absolute top-1/2 w-3 h-3 bg-white rounded-full -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                  style={{ left: `${progress}%`, transform: 'translate(-50%, -50%)' }}
-                />
-              </div>
-            </div>
+                  <div className="relative">
+                    {hoverTime !== null && (
+                      <div
+                        className="absolute bottom-full mb-2 px-3 py-1.5 bg-white text-slate-900 text-sm font-medium rounded-md shadow-xl z-50"
+                        style={{
+                          left: `${hoverPosition}%`,
+                          transform: 'translateX(-50%)',
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        {formatTime(hoverTime)}
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-2 h-2 bg-white rotate-45" />
+                      </div>
+                    )}
+                    <div
+                      ref={progressBarRef}
+                      onClick={handleProgressClick}
+                      onMouseMove={handleProgressHover}
+                      onMouseLeave={handleProgressLeave}
+                      className="relative h-2 bg-slate-700 rounded-full cursor-pointer group py-1 -my-1"
+                    >
+                      <div
+                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-full"
+                        style={{ width: `${progress}%` }}
+                      />
+                      <div
+                        className="absolute top-1/2 w-3 h-3 bg-white rounded-full -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
+                        style={{ left: `${progress}%`, transform: 'translate(-50%, -50%)' }}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </>
       )}
