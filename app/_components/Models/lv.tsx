@@ -121,7 +121,7 @@ const Hotspot = ({ position, onClick, label, color, occludeRef }: HotspotProps) 
       <Html
         center
         distanceFactor={distanceFactor}
-        zIndexRange={[100, 0]}
+        zIndexRange={[10, 0]}
         style={{ pointerEvents: "none" }}
         occlude={occludeRef ? [occludeRef] : undefined}
       >
@@ -148,7 +148,7 @@ const Hotspot = ({ position, onClick, label, color, occludeRef }: HotspotProps) 
           position={[0, 0.8, 0]}
           center
           distanceFactor={distanceFactor}
-          zIndexRange={[101, 0]}
+          zIndexRange={[11, 0]}
           style={{ pointerEvents: "none" }}
           occlude={occludeRef ? [occludeRef] : undefined}
         >
@@ -216,14 +216,14 @@ const LV = ({ onHotspotClick }: LVProps) => {
         occludeRef={modelRef}
       />
       <Hotspot
-        position={[-1, 2.75, 8.5]}
+        position={[-0.85, 2.75, 8.5]}
         onClick={() => handleHotspotClick("j4444")}
         label="J-4444 Component"
         color="#8b5cf6"
         occludeRef={modelRef}
       />
       <Hotspot
-        position={[-1, -2.75, 5.75]}
+        position={[-0.85, -2.75, 5.75]}
         onClick={() => handleHotspotClick("asm")}
         label="ASM Assembly"
         color="#ec4899"

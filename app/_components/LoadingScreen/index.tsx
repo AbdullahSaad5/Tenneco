@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 const LoadingScreen = () => {
   return (
-    <div className="h-screen w-screen bg-slate-900 flex items-center justify-center">
+    <div className="h-screen w-screen bg-slate-900 flex items-center justify-center relative z-50">
       {/* Loading Content */}
       <div className="relative z-10 flex flex-col items-center gap-8">
         {/* Logo/Icon */}
