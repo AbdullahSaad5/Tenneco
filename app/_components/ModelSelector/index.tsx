@@ -3,6 +3,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { Package, Settings, Wrench, FileText } from "lucide-react";
 
 type ModelType = "lv" | "asm" | "j4444" | "pad";
 
@@ -10,7 +11,7 @@ interface ModelInfo {
   id: ModelType;
   label: string;
   description: string;
-  icon: string;
+  icon: React.ReactNode;
 }
 
 interface ModelSelectorProps {
@@ -25,25 +26,25 @@ const models: ModelInfo[] = [
     id: "lv",
     label: "LV File",
     description: "LV component assembly",
-    icon: "📦",
+    icon: <Package className="w-8 h-8" />,
   },
   {
     id: "asm",
     label: "ASM",
     description: "Assembly module",
-    icon: "⚙️",
+    icon: <Settings className="w-8 h-8" />,
   },
   {
     id: "j4444",
     label: "J-4444",
     description: "J-4444 component",
-    icon: "🔧",
+    icon: <Wrench className="w-8 h-8" />,
   },
   {
     id: "pad",
     label: "Pad",
     description: "Pad assembly",
-    icon: "📋",
+    icon: <FileText className="w-8 h-8" />,
   },
 ];
 
@@ -75,7 +76,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
               animate={{ x: 0 }}
               exit={{ x: -320 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-[72px] h-[calc(100vh-72px)] w-80 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl z-50 flex flex-col"
+              className="fixed left-0 top-[72px] h-[calc(100vh-72px)] w-80 bg-slate-900 border-r border-slate-700 z-50 flex flex-col"
             >
               {/* Header */}
               <div className="p-6 border-b border-slate-700/50">
@@ -135,16 +136,16 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                       setActiveModel(model.id);
                       if (window.innerWidth < 1024) setIsOpen(false);
                     }}
-                    className={`w-full p-4 rounded-xl text-left transition-all duration-300 ${
+                    className={`w-full p-4 rounded-lg text-left transition-colors ${
                       activeModel === model.id
-                        ? "bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg shadow-blue-500/50 scale-[1.02]"
-                        : "bg-slate-800/50 hover:bg-slate-700/50 hover:scale-[1.01]"
+                        ? "bg-blue-600"
+                        : "bg-slate-800 hover:bg-slate-700"
                     }`}
                   >
                     <div className="flex items-start gap-4">
                       <div
-                        className={`text-4xl ${
-                          activeModel === model.id ? "animate-pulse" : ""
+                        className={`${
+                          activeModel === model.id ? "text-white" : "text-slate-400"
                         }`}
                       >
                         {model.icon}
@@ -180,7 +181,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
               </div>
 
               {/* Footer */}
-              <div className="p-4 border-t border-slate-700/50 bg-slate-900/50">
+              <div className="p-4 border-t border-slate-700">
                 <div className="text-xs text-slate-500 text-center">
                   Use mouse to rotate • Scroll to zoom
                 </div>

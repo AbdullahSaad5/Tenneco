@@ -48,7 +48,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({ onResetCamera, onZoomIn, on
       {/* Reset Camera Button */}
       <button
         onClick={onResetCamera}
-        className="group p-3 bg-white hover:bg-blue-600 rounded-xl shadow-lg transition-all duration-300 hover:scale-110"
+        className="group p-3 bg-white hover:bg-blue-600 rounded-lg border border-slate-200 transition-colors"
         title="Reset Camera"
       >
         <svg
@@ -69,7 +69,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({ onResetCamera, onZoomIn, on
       {/* Zoom In Button */}
       <button
         onClick={onZoomIn}
-        className="group p-3 bg-white hover:bg-blue-600 rounded-xl shadow-lg transition-all duration-300 hover:scale-110"
+        className="group p-3 bg-white hover:bg-blue-600 rounded-lg border border-slate-200 transition-colors"
         title="Zoom In"
       >
         <svg
@@ -90,7 +90,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({ onResetCamera, onZoomIn, on
       {/* Zoom Out Button */}
       <button
         onClick={onZoomOut}
-        className="group p-3 bg-white hover:bg-blue-600 rounded-xl shadow-lg transition-all duration-300 hover:scale-110"
+        className="group p-3 bg-white hover:bg-blue-600 rounded-lg border border-slate-200 transition-colors"
         title="Zoom Out"
       >
         <svg
@@ -111,7 +111,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({ onResetCamera, onZoomIn, on
       {/* Fullscreen Button */}
       <button
         onClick={toggleFullscreen}
-        className="group p-3 bg-white hover:bg-blue-600 rounded-xl shadow-lg transition-all duration-300 hover:scale-110"
+        className="group p-3 bg-white hover:bg-blue-600 rounded-lg border border-slate-200 transition-colors"
         title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
       >
         {isFullscreen ? (

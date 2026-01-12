@@ -70,11 +70,11 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
             className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
           >
             <div
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden pointer-events-auto"
+              className="bg-white rounded-lg border border-slate-200 w-full max-w-md overflow-hidden pointer-events-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-5 flex items-center justify-between">
+              <div className="bg-blue-600 px-6 py-5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
                     <Share2 className="w-5 h-5 text-white" />
@@ -142,9 +142,9 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: index * 0.1 }}
                         onClick={option.action}
-                        className="flex flex-col items-center gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-all hover:scale-105"
+                        className="flex flex-col items-center gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
                       >
-                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${option.color} flex items-center justify-center text-white shadow-lg`}>
+                        <div className={`w-12 h-12 rounded-lg ${option.color.includes('red') ? 'bg-red-600' : option.color.includes('green') ? 'bg-green-600' : 'bg-blue-600'} flex items-center justify-center text-white`}>
                           {option.icon}
                         </div>
                         <span className="text-sm font-medium text-slate-700">{option.name}</span>

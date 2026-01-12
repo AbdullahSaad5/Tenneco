@@ -11,6 +11,7 @@ import Navbar from "./_components/Navbar";
 import TransitionOverlay from "./_components/TransitionOverlay";
 import HelpModal from "./_components/HelpModal";
 import ShareModal from "./_components/ShareModal";
+import { MousePointer2, ZoomIn } from "lucide-react";
 
 type ModelType = "lv" | "asm" | "j4444" | "pad";
 
@@ -48,12 +49,7 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-blue-200/20 to-transparent rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-purple-200/20 to-transparent rounded-full blur-3xl animate-pulse delay-1000" />
-      </div>
+    <div className="h-screen bg-slate-50 relative overflow-hidden">
 
       {/* Navbar */}
       <Navbar
@@ -89,16 +85,22 @@ export default function Home() {
       <ShareModal isOpen={isShareOpen} onClose={() => setIsShareOpen(false)} />
 
       {/* Bottom Info Bar */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 bg-white/80 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-slate-200">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 bg-white px-6 py-3 rounded-full border border-slate-200">
         <div className="flex items-center gap-6 text-sm text-slate-600">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
             <span className="font-medium">3D Viewer Active</span>
           </div>
           <div className="h-4 w-px bg-slate-300" />
-          <span>🖱️ Drag to rotate</span>
+          <div className="flex items-center gap-1.5">
+            <MousePointer2 className="w-4 h-4" />
+            <span>Drag to rotate</span>
+          </div>
           <div className="h-4 w-px bg-slate-300" />
-          <span>🔍 Scroll to zoom</span>
+          <div className="flex items-center gap-1.5">
+            <ZoomIn className="w-4 h-4" />
+            <span>Scroll to zoom</span>
+          </div>
         </div>
       </div>
 

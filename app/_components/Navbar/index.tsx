@@ -17,7 +17,7 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen, onOpenH
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", damping: 20 }}
-      className="fixed top-0 left-0 right-0 z-30 bg-white/80 backdrop-blur-lg border-b border-slate-200 shadow-sm"
+      className="fixed top-0 left-0 right-0 z-30 bg-white border-b border-slate-200"
     >
       <div className="max-w-screen-2xl mx-auto px-6 py-3">
         <div className="flex items-center justify-between">
@@ -92,7 +92,7 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen, onOpenH
 
             <button
               onClick={onOpenShare}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all hover:scale-105"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               title="Share"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

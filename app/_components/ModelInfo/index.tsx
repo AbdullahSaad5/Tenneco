@@ -36,6 +36,14 @@ const modelDetails = {
   },
 };
 
+const getColorClass = (color: string): string => {
+  if (color.includes('blue')) return 'bg-blue-600';
+  if (color.includes('purple')) return 'bg-purple-600';
+  if (color.includes('green')) return 'bg-green-600';
+  if (color.includes('orange')) return 'bg-orange-600';
+  return 'bg-blue-600';
+};
+
 const ModelInfo: React.FC<ModelInfoProps> = ({ activeModel }) => {
   const [isOpen, setIsOpen] = useState(true);
   const details = modelDetails[activeModel];
@@ -47,8 +55,8 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ activeModel }) => {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-20 right-6 z-20 p-3 rounded-full shadow-lg transition-all duration-300 ${
-          isOpen ? "bg-white" : "bg-gradient-to-r " + details.color
+        className={`fixed bottom-20 right-6 z-20 p-3 rounded-lg border border-slate-200 transition-colors ${
+          isOpen ? "bg-white" : getColorClass(details.color)
         }`}
         title={isOpen ? "Hide Info" : "Show Info"}
       >
@@ -76,10 +84,10 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ activeModel }) => {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 100, scale: 0.9 }}
             transition={{ duration: 0.3, type: "spring" }}
-            className="fixed bottom-36 right-6 z-20 w-80 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 overflow-hidden"
+            className="fixed bottom-36 right-6 z-20 w-80 bg-white rounded-lg border border-slate-200 overflow-hidden"
           >
-            {/* Header with gradient */}
-            <div className={`bg-gradient-to-r ${details.color} p-4`}>
+            {/* Header */}
+            <div className={`${getColorClass(details.color)} p-4`}>
               <h3 className="text-white font-bold text-lg">{details.name}</h3>
             </div>
 
@@ -99,7 +107,7 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ activeModel }) => {
                     transition={{ delay: index * 0.1 }}
                     className="flex items-center gap-2 text-sm text-slate-700"
                   >
-                    <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${details.color}`} />
+                    <div className={`w-2 h-2 rounded-full ${getColorClass(details.color)}`} />
                     <span>{spec}</span>
                   </motion.div>
                 ))}

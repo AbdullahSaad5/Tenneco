@@ -65,11 +65,11 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
           >
             <div
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden pointer-events-auto"
+              className="bg-white rounded-lg border border-slate-200 w-full max-w-2xl max-h-[90vh] overflow-hidden pointer-events-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-5 flex items-center justify-between">
+              <div className="bg-blue-600 px-6 py-5 flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-white">Help & Tips</h2>
                   <p className="text-blue-100 text-sm mt-1">Learn how to use the 3D viewer</p>
@@ -91,9 +91,9 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="flex gap-4 p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors"
+                      className="flex gap-4 p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
                     >
-                      <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${tip.color} flex items-center justify-center text-white shadow-lg`}>
+                      <div className={`flex-shrink-0 w-12 h-12 rounded-lg ${tip.color.includes('blue') ? 'bg-blue-600' : tip.color.includes('purple') ? 'bg-purple-600' : tip.color.includes('green') ? 'bg-green-600' : tip.color.includes('orange') ? 'bg-orange-600' : 'bg-pink-600'} flex items-center justify-center text-white`}>
                         {tip.icon}
                       </div>
                       <div className="flex-1">
@@ -118,7 +118,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
                 <button
                   onClick={onClose}
-                  className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all hover:scale-105"
+                  className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Got it!
                 </button>
