@@ -20,25 +20,24 @@ const Hotspot = ({ position, onClick, label, color }: HotspotProps) => {
   const [hovered, setHovered] = useState(false);
   const ring1Ref = useRef<THREE.Mesh>(null);
   const ring2Ref = useRef<THREE.Mesh>(null);
-  const ring3Ref = useRef<THREE.Mesh>(null);
-  const coreRef = useRef<THREE.Mesh>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
     
     if (ring1Ref.current) {
-      ring1Ref.current.rotation.z = time * 0.5;
-      ring1Ref.current.scale.setScalar(1 + Math.sin(time * 2) * 0.1);
+      ring1Ref.current.rotation.z = time * 0.8;
+      ring1Ref.current.scale.setScalar(1 + Math.sin(time * 2) * 0.08);
     }
     if (ring2Ref.current) {
-      ring2Ref.current.rotation.z = -time * 0.7;
-      ring2Ref.current.scale.setScalar(1 + Math.sin(time * 2 + 1) * 0.1);
+      ring2Ref.current.rotation.z = -time * 1.2;
+      ring2Ref.current.scale.setScalar(1 + Math.sin(time * 2.5 + 1) * 0.06);
     }
-    if (ring3Ref.current) {
-      ring3Ref.current.rotation.z = time * 0.3;
-    }
-    if (coreRef.current) {
-      coreRef.current.scale.setScalar(1 + Math.sin(time * 4) * 0.15);
+    if (glowRef.current) {
+      const scale = 1 + Math.sin(time * 3) * 0.12;
+      glowRef.current.scale.setScalar(scale);
+      const material = glowRef.current.material as THREE.MeshBasicMaterial;
+      material.opacity = 0.15 + Math.sin(time * 3) * 0.08;
     }
   });
 
@@ -59,69 +58,110 @@ const Hotspot = ({ position, onClick, label, color }: HotspotProps) => {
           document.body.style.cursor = 'auto';
         }}
       >
-        <sphereGeometry args={[0.4, 32, 32]} />
+        <sphereGeometry args={[0.5, 32, 32]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      <mesh ref={coreRef}>
-        <sphereGeometry args={[0.12, 32, 32]} />
-        <meshStandardMaterial
+      <mesh ref={glowRef}>
+        <sphereGeometry args={[0.45, 32, 32]} />
+        <meshBasicMaterial
           color={color}
-          emissive={color}
-          emissiveIntensity={hovered ? 2 : 1.5}
-          metalness={0.8}
-          roughness={0.2}
+          transparent
+          opacity={0.15}
+          side={THREE.BackSide}
+        />
+      </mesh>
+
+      <mesh>
+        <circleGeometry args={[0.22, 32]} />
+        <meshStandardMaterial
+          color="#ffffff"
+          emissive="#ffffff"
+          emissiveIntensity={hovered ? 0.8 : 0.5}
+          metalness={0.9}
+          roughness={0.1}
         />
       </mesh>
 
       <mesh ref={ring1Ref}>
-        <torusGeometry args={[0.25, 0.02, 16, 32]} />
+        <torusGeometry args={[0.28, 0.025, 16, 32]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={hovered ? 1.2 : 0.8}
+          emissiveIntensity={hovered ? 1.8 : 1.2}
           transparent
-          opacity={hovered ? 0.9 : 0.7}
-          metalness={0.5}
-          roughness={0.3}
+          opacity={hovered ? 1 : 0.85}
+          metalness={0.7}
+          roughness={0.2}
         />
       </mesh>
 
       <mesh ref={ring2Ref}>
-        <torusGeometry args={[0.32, 0.015, 16, 32]} />
+        <torusGeometry args={[0.37, 0.018, 16, 32]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={hovered ? 1 : 0.6}
+          emissiveIntensity={hovered ? 1.4 : 0.9}
           transparent
-          opacity={hovered ? 0.8 : 0.5}
-          metalness={0.5}
-          roughness={0.3}
+          opacity={hovered ? 0.9 : 0.65}
+          metalness={0.6}
+          roughness={0.25}
         />
       </mesh>
 
-      <mesh ref={ring3Ref}>
-        <ringGeometry args={[0.35, 0.38, 32]} />
-        <meshBasicMaterial
-          color={color}
-          transparent
-          opacity={hovered ? 0.4 : 0.2}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-
-      {hovered && (
-        <Html center distanceFactor={8}>
-          <div 
-            className="bg-gradient-to-r from-slate-800 to-slate-900 text-white px-4 py-2.5 rounded-xl text-sm font-semibold shadow-2xl whitespace-nowrap border border-white/20 backdrop-blur-sm"
+      <Html center distanceFactor={8} zIndexRange={[100, 0]}>
+        <div className="flex flex-col items-center pointer-events-none">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="drop-shadow-lg"
             style={{
-              boxShadow: `0 0 20px ${color}40`
+              filter: hovered ? `drop-shadow(0 0 8px ${color})` : 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
             }}
           >
-            {label}
-          </div>
-        </Html>
-      )}
+            <circle 
+              cx="12" 
+              cy="12" 
+              r="10" 
+              fill={color}
+              opacity={hovered ? "0.9" : "0.8"}
+            />
+            <circle 
+              cx="12" 
+              cy="12" 
+              r="9" 
+              fill="white"
+            />
+            <path
+              d="M12 8v8m-4-4h8"
+              stroke={color}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+          </svg>
+          
+          {hovered && (
+            <div 
+              className="mt-3 bg-white text-gray-900 px-4 py-2.5 rounded-lg text-sm font-semibold shadow-xl whitespace-nowrap border-2 backdrop-blur-sm"
+              style={{
+                borderColor: color,
+                boxShadow: `0 4px 16px rgba(0,0,0,0.15), 0 0 24px ${color}35`
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: color }}
+                />
+                <span>{label}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </Html>
     </group>
   );
 };
