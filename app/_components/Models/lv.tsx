@@ -64,12 +64,12 @@ const Hotspot = ({ position, onClick, label, color, occludeRef }: HotspotProps) 
         onPointerOver={(e) => {
           e.stopPropagation();
           setHovered(true);
-          document.body.style.cursor = 'pointer';
+          document.body.style.cursor = "pointer";
         }}
         onPointerOut={(e) => {
           e.stopPropagation();
           setHovered(false);
-          document.body.style.cursor = 'auto';
+          document.body.style.cursor = "auto";
         }}
       >
         <sphereGeometry args={[0.5, 32, 32]} />
@@ -78,12 +78,7 @@ const Hotspot = ({ position, onClick, label, color, occludeRef }: HotspotProps) 
 
       <mesh ref={glowRef}>
         <sphereGeometry args={[0.45, 32, 32]} />
-        <meshBasicMaterial
-          color={color}
-          transparent
-          opacity={0.15}
-          side={THREE.BackSide}
-        />
+        <meshBasicMaterial color={color} transparent opacity={0.15} side={THREE.BackSide} />
       </mesh>
 
       <mesh>
@@ -127,7 +122,7 @@ const Hotspot = ({ position, onClick, label, color, occludeRef }: HotspotProps) 
         center
         distanceFactor={distanceFactor}
         zIndexRange={[100, 0]}
-        style={{ pointerEvents: 'none' }}
+        style={{ pointerEvents: "none" }}
         occlude={occludeRef ? [occludeRef] : undefined}
       >
         <svg
@@ -138,29 +133,13 @@ const Hotspot = ({ position, onClick, label, color, occludeRef }: HotspotProps) 
           xmlns="http://www.w3.org/2000/svg"
           className="drop-shadow-lg"
           style={{
-            filter: hovered ? `drop-shadow(0 0 12px ${color})` : 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
-            transition: 'filter 0.2s ease'
+            filter: hovered ? `drop-shadow(0 0 12px ${color})` : "drop-shadow(0 2px 6px rgba(0,0,0,0.3))",
+            transition: "filter 0.2s ease",
           }}
         >
-          <circle
-            cx="12"
-            cy="12"
-            r="10"
-            fill={color}
-            opacity={hovered ? "0.9" : "0.8"}
-          />
-          <circle
-            cx="12"
-            cy="12"
-            r="9"
-            fill="white"
-          />
-          <path
-            d="M12 8v8m-4-4h8"
-            stroke={color}
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
+          <circle cx="12" cy="12" r="10" fill={color} opacity={hovered ? "0.9" : "0.8"} />
+          <circle cx="12" cy="12" r="9" fill="white" />
+          <path d="M12 8v8m-4-4h8" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
         </svg>
       </Html>
 
@@ -170,21 +149,19 @@ const Hotspot = ({ position, onClick, label, color, occludeRef }: HotspotProps) 
           center
           distanceFactor={distanceFactor}
           zIndexRange={[101, 0]}
-          style={{ pointerEvents: 'none' }}
+          style={{ pointerEvents: "none" }}
           occlude={occludeRef ? [occludeRef] : undefined}
         >
           <div
-            className="bg-white text-gray-900 px-5 py-3 rounded-lg text-base font-semibold shadow-xl whitespace-nowrap border-2 backdrop-blur-sm"
+            className="bg-white text-gray-900 px-8 py-4 rounded-xl text-3xl font-bold shadow-xl whitespace-nowrap border-3 backdrop-blur-sm"
             style={{
               borderColor: color,
-              boxShadow: `0 4px 20px rgba(0,0,0,0.2), 0 0 30px ${color}40`
+              borderWidth: "3px",
+              boxShadow: `0 4px 20px rgba(0,0,0,0.2), 0 0 30px ${color}40`,
             }}
           >
-            <div className="flex items-center gap-2.5">
-              <div
-                className="w-2.5 h-2.5 rounded-full"
-                style={{ backgroundColor: color }}
-              />
+            <div className="flex items-center gap-4">
+              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: color }} />
               <span>{label}</span>
             </div>
           </div>
@@ -232,21 +209,21 @@ const LV = ({ onHotspotClick }: LVProps) => {
       </group>
 
       <Hotspot
-        position={[-2, 0.5, 1]}
+        position={[0.75, 0, 7.5]}
         onClick={() => handleHotspotClick("pad")}
         label="Brake Pad Assembly"
         color="#f59e0b"
         occludeRef={modelRef}
       />
       <Hotspot
-        position={[2, 0.8, -0.5]}
+        position={[-1, 2.75, 8.5]}
         onClick={() => handleHotspotClick("j4444")}
         label="J-4444 Component"
         color="#8b5cf6"
         occludeRef={modelRef}
       />
       <Hotspot
-        position={[0, 1.2, 2]}
+        position={[-1, -2.75, 5.75]}
         onClick={() => handleHotspotClick("asm")}
         label="ASM Assembly"
         color="#ec4899"
