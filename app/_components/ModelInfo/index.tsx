@@ -11,27 +11,51 @@ interface ModelInfoProps {
 
 const modelDetails = {
   lv: {
-    name: "LV File Component",
-    description: "High-precision LV assembly component with advanced engineering specifications.",
-    specs: ["Material: Aluminum Alloy", "Weight: 2.5kg", "Dimensions: 150x100x80mm"],
+    name: "Brake Pad System",
+    description: "The brake pad is a key component of the braking system. When the driver presses the brake pedal, the brake pad is pushed against the brake disc. This contact creates friction, which slows down and stops the vehicle.",
+    specs: [
+      "Reliable in all driving conditions",
+      "Critical for vehicle safety",
+      "Optimized braking comfort",
+      "Advanced noise control",
+      "From everyday city traffic to emergency braking"
+    ],
     color: "from-blue-500 to-blue-600",
   },
   asm: {
-    name: "ASM Assembly",
-    description: "Complete assembly module designed for industrial applications.",
-    specs: ["Material: Steel Composite", "Weight: 5.2kg", "Dimensions: 200x150x120mm"],
+    name: "Commercial Vehicle Braking",
+    description: "Heavy-duty braking systems engineered for commercial vehicles and trucks. Designed to handle extreme loads and prolonged use in demanding conditions.",
+    specs: [
+      "High-performance materials",
+      "Enhanced durability for heavy loads",
+      "Extended service life",
+      "Superior heat dissipation",
+      "Optimized for fleet operations"
+    ],
     color: "from-purple-500 to-purple-600",
   },
   j4444: {
-    name: "J-4444 Component",
-    description: "Precision-engineered J-4444 component for heavy-duty operations.",
-    specs: ["Material: Titanium Alloy", "Weight: 3.8kg", "Dimensions: 180x120x95mm"],
+    name: "J-4444 Brake Component",
+    description: "Precision-engineered brake component designed for optimal performance in commercial applications.",
+    specs: [
+      "Advanced friction materials",
+      "Consistent performance",
+      "Reduced maintenance needs",
+      "Heavy-duty construction",
+      "Weather resistant design"
+    ],
     color: "from-green-500 to-green-600",
   },
   pad: {
-    name: "Pad Assembly",
-    description: "Specialized pad assembly with enhanced durability and performance.",
-    specs: ["Material: Carbon Fiber", "Weight: 1.2kg", "Dimensions: 120x80x45mm"],
+    name: "Rail Braking System",
+    description: "Specialized braking pads designed for railway and mass transit applications. Engineered for maximum safety and reliability in high-speed rail operations.",
+    specs: [
+      "Maximum reliability standards",
+      "Safety certified for rail systems",
+      "All-weather performance",
+      "Low noise operation",
+      "Extended wear life"
+    ],
     color: "from-orange-500 to-orange-600",
   },
 };
@@ -97,7 +121,7 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ activeModel }) => {
 
               <div className="space-y-2">
                 <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Specifications
+                  Key Features
                 </h4>
                 {details.specs.map((spec, index) => (
                   <motion.div
@@ -111,6 +135,12 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ activeModel }) => {
                     <span>{spec}</span>
                   </motion.div>
                 ))}
+              </div>
+
+              <div className="pt-3 border-t border-slate-200">
+                <p className="text-xs text-slate-500 italic">
+                  Tap on parts to discover how the braking system works, from friction to comfort!
+                </p>
               </div>
             </div>
           </motion.div>

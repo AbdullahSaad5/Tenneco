@@ -2,29 +2,35 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
+import ZoomAnimation from "./_components/ZoomAnimation";
+
+type VehicleType = "light" | "commercial" | "rail";
 
 export default function Home() {
+  const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleType | null>(null);
 
   const vehicleCategories = [
     {
-      id: "lv",
+      id: "light",
       title: "Light Vehicles",
       subtitle: "Passenger Cars & Light-Duty Vehicles",
-      image: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=80",
+      image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80",
       gradient: "from-blue-600 to-cyan-500"
     },
     {
-      id: "asm",
+      id: "commercial",
       title: "Commercial Vehicles",
       subtitle: "Trucks & Commercial Fleets",
       image: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=800&q=80",
       gradient: "from-orange-600 to-red-500"
     },
     {
-      id: "pad",
+      id: "rail",
       title: "Rail",
       subtitle: "Railway & Mass Transit Systems",
       image: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=800&q=80",
@@ -32,16 +38,33 @@ export default function Home() {
     }
   ];
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute w-96 h-96 bg-blue-500/20 rounded-full blur-3xl -top-48 -left-48 animate-pulse-slow" />
-        <div className="absolute w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl top-1/2 -right-48 animate-pulse-slow" style={{ animationDelay: '1s' }} />
-        <div className="absolute w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -bottom-48 left-1/3 animate-pulse-slow" style={{ animationDelay: '2s' }} />
-      </div>
+  const handleCardClick = (vehicleType: VehicleType) => {
+    setSelectedVehicle(vehicleType);
+    setShowAnimation(true);
+  };
 
-      <div className="relative z-10">
+  const handleAnimationComplete = () => {
+    router.push("/viewer?model=lv");
+  };
+
+  return (
+    <>
+      {showAnimation && selectedVehicle && (
+        <ZoomAnimation
+          vehicleType={selectedVehicle}
+          onComplete={handleAnimationComplete}
+        />
+      )}
+
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute w-96 h-96 bg-blue-500/20 rounded-full blur-3xl -top-48 -left-48 animate-pulse-slow" />
+          <div className="absolute w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl top-1/2 -right-48 animate-pulse-slow" style={{ animationDelay: '1s' }} />
+          <div className="absolute w-96 h-96 bg-purple-500/20 rounded-full blur-3xl -bottom-48 left-1/3 animate-pulse-slow" style={{ animationDelay: '2s' }} />
+        </div>
+
+        <div className="relative z-10">
         {/* Header */}
         <header className="pt-8 pb-4 px-6">
           <div className="max-w-7xl mx-auto flex items-center justify-center">
@@ -89,23 +112,24 @@ export default function Home() {
             {/* Vehicle Category Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {vehicleCategories.map((category) => (
-                <Link
+                <button
                   key={category.id}
-                  href={`/viewer?model=${category.id}`}
-                  className="group relative overflow-hidden rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 hover:border-white/40 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/20 cursor-pointer"
+                  onClick={() => handleCardClick(category.id as VehicleType)}
+                  className="group relative overflow-hidden rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 hover:border-white/40 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/20 cursor-pointer text-left w-full"
                   onMouseEnter={() => setHoveredCard(category.id)}
                   onMouseLeave={() => setHoveredCard(null)}
                 >
                   {/* Image Container */}
                   <div className="relative h-72 overflow-hidden">
                     <div className={`absolute inset-0 bg-gradient-to-br ${category.gradient} opacity-30 group-hover:opacity-40 transition-opacity z-10`} />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={category.image}
                       alt={category.title}
                       className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-20" />
-                    
+
                     {/* Arrow Icon */}
                     <div className="absolute top-4 right-4 z-30">
                       <div className={`w-12 h-12 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-lg transform transition-all duration-300 ${hoveredCard === category.id ? 'scale-110 rotate-45' : ''}`}>
@@ -126,12 +150,13 @@ export default function Home() {
 
                   {/* Hover Effect */}
                   <div className="absolute inset-0 bg-gradient-to-t from-blue-600/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                </Link>
+                </button>
               ))}
             </div>
           </div>
         </section>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

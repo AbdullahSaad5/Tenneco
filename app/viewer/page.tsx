@@ -2,7 +2,6 @@
 
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useState, useRef, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import Scene from "../_components/Scene";
 import LoadingScreen from "../_components/LoadingScreen";
 import ModelSelector from "../_components/ModelSelector";
@@ -17,21 +16,22 @@ import { MousePointer2, ZoomIn } from "lucide-react";
 type ModelType = "lv" | "asm" | "j4444" | "pad";
 
 function ViewerContent() {
-  const searchParams = useSearchParams();
-  const modelFromUrl = searchParams.get("model") as ModelType | null;
-  const [activeModel, setActiveModel] = useState<ModelType>(modelFromUrl || "lv");
-
-  useEffect(() => {
-    if (modelFromUrl && ["lv", "asm", "j4444", "pad"].includes(modelFromUrl)) {
-      setActiveModel(modelFromUrl);
-    }
-  }, [modelFromUrl]);
+  // Always use LV model regardless of URL parameter
+  const [activeModel, setActiveModel] = useState<ModelType>("lv");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(true);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sceneRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Fade in the viewer after a brief moment
+    const timer = setTimeout(() => {
+      setIsTransitioning(false);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleResetCamera = () => {
     // This will be handled by the Scene component
