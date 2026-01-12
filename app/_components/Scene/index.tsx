@@ -245,9 +245,9 @@ const Scene = forwardRef(({ activeModel, onModelChange }: SceneProps, ref) => {
       >
         <group ref={groupRef} key={activeModel}>
           {activeModel === "lv" && <LV key="lv" onHotspotClick={onModelChange} />}
-          {activeModel === "asm" && <Asm key="asm" onReturnClick={onModelChange} />}
-          {activeModel === "j4444" && <J4444 key="j4444" onReturnClick={onModelChange} />}
-          {activeModel === "pad" && <Pad key="pad" onReturnClick={onModelChange} />}
+          {activeModel === "asm" && <Asm key="asm" />}
+          {activeModel === "j4444" && <J4444 key="j4444" />}
+          {activeModel === "pad" && <Pad key="pad" />}
         </group>
       </Float>
 

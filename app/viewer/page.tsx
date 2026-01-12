@@ -11,6 +11,7 @@ import Navbar from "../_components/Navbar";
 import TransitionOverlay from "../_components/TransitionOverlay";
 import HelpModal from "../_components/HelpModal";
 import ShareModal from "../_components/ShareModal";
+import { ArrowLeft } from "lucide-react";
 
 type ModelType = "lv" | "asm" | "j4444" | "pad";
 
@@ -92,6 +93,17 @@ function ViewerContent() {
       {/* Modals */}
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       <ShareModal isOpen={isShareOpen} onClose={() => setIsShareOpen(false)} />
+
+      {/* Back Button - shown when viewing detail models */}
+      {activeModel !== "lv" && (
+        <button
+          onClick={() => handleModelChange("lv")}
+          className="fixed top-24 left-6 z-20 bg-white hover:bg-gray-50 text-gray-900 px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-3 group border border-gray-200"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200" />
+          <span className="font-semibold">Back to Main Model</span>
+        </button>
+      )}
 
       {/* 3D Canvas - adjusted for navbar */}
       <div className="absolute inset-0 top-[72px]">
