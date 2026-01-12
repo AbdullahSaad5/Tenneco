@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Download, FileText, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, RotateCw } from "lucide-react";
+import { X, Download, FileText, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, RotateCw, Monitor, Smartphone } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
@@ -20,25 +20,33 @@ const PDFModal: React.FC<PDFModalProps> = ({ isOpen, onClose }) => {
   const [scale, setScale] = useState(1.0);
   const [rotation, setRotation] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [pdfWidth, setPdfWidth] = useState(800);
+  const [pdfWidth, setPdfWidth] = useState(1200);
+  const [orientation, setOrientation] = useState<"portrait" | "landscape">("landscape");
 
-  const pdfUrl = "https://arxiv.org/pdf/2103.15348.pdf";
+  const pdfUrl = "./assets/pdfs/Pads.pdf";
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setPdfWidth(window.innerWidth - 80);
-      } else if (window.innerWidth < 1024) {
-        setPdfWidth(600);
+      const viewportWidth = window.innerWidth;
+      
+      if (orientation === "landscape") {
+        if (viewportWidth < 768) {
+          setPdfWidth(viewportWidth - 60);
+        } else if (viewportWidth < 1024) {
+          setPdfWidth(viewportWidth - 120);
+        } else {
+          setPdfWidth(viewportWidth - 200);
+        }
       } else {
-        setPdfWidth(800);
+        const baseWidth = viewportWidth < 768 ? viewportWidth - 80 : viewportWidth < 1024 ? 600 : 800;
+        setPdfWidth(baseWidth);
       }
     };
 
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [orientation]);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -64,6 +72,10 @@ const PDFModal: React.FC<PDFModalProps> = ({ isOpen, onClose }) => {
 
   const handleRotate = () => {
     setRotation((prev) => (prev + 90) % 360);
+  };
+
+  const handleOrientationToggle = () => {
+    setOrientation((prev) => (prev === "portrait" ? "landscape" : "portrait"));
   };
 
   const handleDownload = () => {
@@ -129,8 +141,8 @@ const PDFModal: React.FC<PDFModalProps> = ({ isOpen, onClose }) => {
                 </div>
               )}
 
-              <div className="h-full overflow-auto p-6">
-                <div className="flex justify-center">
+              <div className="h-full overflow-auto p-4">
+                <div className="flex justify-center items-center min-h-full">
                   <Document
                     file={pdfUrl}
                     onLoadSuccess={onDocumentLoadSuccess}
@@ -149,7 +161,7 @@ const PDFModal: React.FC<PDFModalProps> = ({ isOpen, onClose }) => {
                       renderAnnotationLayer={true}
                       width={pdfWidth * scale}
                       rotate={rotation}
-                      className="shadow-2xl rounded-lg overflow-hidden border border-gray-200"
+                      className="shadow-2xl rounded-lg overflow-hidden border border-gray-200 max-w-full"
                     />
                   </Document>
                 </div>
@@ -185,6 +197,17 @@ const PDFModal: React.FC<PDFModalProps> = ({ isOpen, onClose }) => {
                     title="Rotate"
                   >
                     <RotateCw className="w-5 h-5 text-gray-700" />
+                  </button>
+                  <button
+                    onClick={handleOrientationToggle}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    title={orientation === "portrait" ? "Switch to Landscape" : "Switch to Portrait"}
+                  >
+                    {orientation === "portrait" ? (
+                      <Monitor className="w-5 h-5 text-gray-700" />
+                    ) : (
+                      <Smartphone className="w-5 h-5 text-gray-700" />
+                    )}
                   </button>
                 </div>
 

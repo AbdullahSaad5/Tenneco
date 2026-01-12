@@ -80,7 +80,7 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ activeModel }) => {
   return (
     <>
       {/* Action Buttons Group */}
-      <div className="fixed bottom-20 right-6 z-20 flex flex-row gap-3">
+      <div className="fixed bottom-8 right-6 z-20 flex flex-row gap-3">
         {/* Info Toggle Button */}
         <motion.button
           initial={{ scale: 0 }}
@@ -140,7 +140,7 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ activeModel }) => {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 100, scale: 0.9 }}
             transition={{ duration: 0.3, type: "spring" }}
-            className="fixed bottom-36 right-6 z-20 w-80 bg-white rounded-lg border border-slate-200 overflow-hidden"
+            className="fixed bottom-24 right-6 z-20 w-80 bg-white rounded-lg border border-slate-200 overflow-hidden"
           >
             {/* Header */}
             <div className={`${getColorClass(details.color)} p-4`}>
