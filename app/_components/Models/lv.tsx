@@ -1,6 +1,6 @@
 import { useGLTF, Html } from "@react-three/drei";
 import React, { useRef, useState } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
 const MODEL_PATH = "./models/lv_file.glb";
@@ -14,17 +14,21 @@ interface HotspotProps {
   onClick: () => void;
   label: string;
   color: string;
+  occludeRef?: React.RefObject<THREE.Group>;
 }
 
-const Hotspot = ({ position, onClick, label, color }: HotspotProps) => {
+const Hotspot = ({ position, onClick, label, color, occludeRef }: HotspotProps) => {
   const [hovered, setHovered] = useState(false);
   const ring1Ref = useRef<THREE.Mesh>(null);
   const ring2Ref = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
+  const groupRef = useRef<THREE.Group>(null);
+  const { camera } = useThree();
+  const [distanceFactor, setDistanceFactor] = useState(8);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
-    
+
     if (ring1Ref.current) {
       ring1Ref.current.rotation.z = time * 0.8;
       ring1Ref.current.scale.setScalar(1 + Math.sin(time * 2) * 0.08);
@@ -39,10 +43,19 @@ const Hotspot = ({ position, onClick, label, color }: HotspotProps) => {
       const material = glowRef.current.material as THREE.MeshBasicMaterial;
       material.opacity = 0.15 + Math.sin(time * 3) * 0.08;
     }
+
+    if (groupRef.current) {
+      const worldPosition = new THREE.Vector3();
+      groupRef.current.getWorldPosition(worldPosition);
+      const distance = camera.position.distanceTo(worldPosition);
+      const baseDistance = 20;
+      const newDistanceFactor = (distance / baseDistance) * 8;
+      setDistanceFactor(newDistanceFactor);
+    }
   });
 
   return (
-    <group position={position}>
+    <group ref={groupRef} position={position}>
       <mesh
         onClick={(e) => {
           e.stopPropagation();
@@ -53,7 +66,8 @@ const Hotspot = ({ position, onClick, label, color }: HotspotProps) => {
           setHovered(true);
           document.body.style.cursor = 'pointer';
         }}
-        onPointerOut={() => {
+        onPointerOut={(e) => {
+          e.stopPropagation();
           setHovered(false);
           document.body.style.cursor = 'auto';
         }}
@@ -109,59 +123,73 @@ const Hotspot = ({ position, onClick, label, color }: HotspotProps) => {
         />
       </mesh>
 
-      <Html center distanceFactor={8} zIndexRange={[100, 0]}>
-        <div className="flex flex-col items-center pointer-events-none">
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="drop-shadow-lg"
+      <Html
+        center
+        distanceFactor={distanceFactor}
+        zIndexRange={[100, 0]}
+        style={{ pointerEvents: 'none' }}
+        occlude={occludeRef ? [occludeRef] : undefined}
+      >
+        <svg
+          width="56"
+          height="56"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="drop-shadow-lg"
+          style={{
+            filter: hovered ? `drop-shadow(0 0 12px ${color})` : 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
+            transition: 'filter 0.2s ease'
+          }}
+        >
+          <circle
+            cx="12"
+            cy="12"
+            r="10"
+            fill={color}
+            opacity={hovered ? "0.9" : "0.8"}
+          />
+          <circle
+            cx="12"
+            cy="12"
+            r="9"
+            fill="white"
+          />
+          <path
+            d="M12 8v8m-4-4h8"
+            stroke={color}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      </Html>
+
+      {hovered && (
+        <Html
+          position={[0, 0.8, 0]}
+          center
+          distanceFactor={distanceFactor}
+          zIndexRange={[101, 0]}
+          style={{ pointerEvents: 'none' }}
+          occlude={occludeRef ? [occludeRef] : undefined}
+        >
+          <div
+            className="bg-white text-gray-900 px-5 py-3 rounded-lg text-base font-semibold shadow-xl whitespace-nowrap border-2 backdrop-blur-sm"
             style={{
-              filter: hovered ? `drop-shadow(0 0 8px ${color})` : 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+              borderColor: color,
+              boxShadow: `0 4px 20px rgba(0,0,0,0.2), 0 0 30px ${color}40`
             }}
           >
-            <circle 
-              cx="12" 
-              cy="12" 
-              r="10" 
-              fill={color}
-              opacity={hovered ? "0.9" : "0.8"}
-            />
-            <circle 
-              cx="12" 
-              cy="12" 
-              r="9" 
-              fill="white"
-            />
-            <path
-              d="M12 8v8m-4-4h8"
-              stroke={color}
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-          </svg>
-          
-          {hovered && (
-            <div 
-              className="mt-3 bg-white text-gray-900 px-4 py-2.5 rounded-lg text-sm font-semibold shadow-xl whitespace-nowrap border-2 backdrop-blur-sm"
-              style={{
-                borderColor: color,
-                boxShadow: `0 4px 16px rgba(0,0,0,0.15), 0 0 24px ${color}35`
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <div 
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: color }}
-                />
-                <span>{label}</span>
-              </div>
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-2.5 h-2.5 rounded-full"
+                style={{ backgroundColor: color }}
+              />
+              <span>{label}</span>
             </div>
-          )}
-        </div>
-      </Html>
+          </div>
+        </Html>
+      )}
     </group>
   );
 };
@@ -173,6 +201,7 @@ interface LVProps {
 const LV = ({ onHotspotClick }: LVProps) => {
   const result = useGLTF(MODEL_PATH);
   const groupRef = useRef<THREE.Group>(null);
+  const modelRef = useRef<THREE.Group>(null);
   const isPositionedRef = useRef(false);
 
   useFrame(() => {
@@ -198,25 +227,30 @@ const LV = ({ onHotspotClick }: LVProps) => {
 
   return (
     <group ref={groupRef}>
-      <primitive object={result.scene} scale={0.05} />
-      
+      <group ref={modelRef}>
+        <primitive object={result.scene} scale={0.05} />
+      </group>
+
       <Hotspot
         position={[-2, 0.5, 1]}
         onClick={() => handleHotspotClick("pad")}
         label="Brake Pad Assembly"
         color="#f59e0b"
+        occludeRef={modelRef}
       />
       <Hotspot
         position={[2, 0.8, -0.5]}
         onClick={() => handleHotspotClick("j4444")}
         label="J-4444 Component"
         color="#8b5cf6"
+        occludeRef={modelRef}
       />
       <Hotspot
         position={[0, 1.2, 2]}
         onClick={() => handleHotspotClick("asm")}
         label="ASM Assembly"
         color="#ec4899"
+        occludeRef={modelRef}
       />
     </group>
   );

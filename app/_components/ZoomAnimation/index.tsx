@@ -54,7 +54,7 @@ const ZoomAnimation: React.FC<ZoomAnimationProps> = ({ vehicleType, onComplete }
     <div className="fixed inset-0 z-50 bg-black overflow-hidden">
       {/* Vignette Overlay */}
       <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black/80 z-10 pointer-events-none" />
-      
+
       {/* Animated Scan Lines */}
       <motion.div
         className="absolute inset-0 z-20 pointer-events-none"
@@ -78,13 +78,13 @@ const ZoomAnimation: React.FC<ZoomAnimationProps> = ({ vehicleType, onComplete }
             key="vehicle"
             initial={{ scale: 1.2, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ 
-              scale: 4, 
+            exit={{
+              scale: 4,
               opacity: 0,
               filter: "blur(20px)"
             }}
-            transition={{ 
-              duration: 2, 
+            transition={{
+              duration: 2,
               ease: [0.43, 0.13, 0.23, 0.96]
             }}
             className="absolute inset-0"
@@ -95,7 +95,7 @@ const ZoomAnimation: React.FC<ZoomAnimationProps> = ({ vehicleType, onComplete }
               alt="Vehicle"
               className="w-full h-full object-cover"
             />
-            
+
             {/* Circular Focus Ring */}
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
@@ -149,22 +149,22 @@ const ZoomAnimation: React.FC<ZoomAnimationProps> = ({ vehicleType, onComplete }
         {stage === "wheel" && (
           <motion.div
             key="wheel"
-            initial={{ 
-              scale: 4, 
+            initial={{
+              scale: 4,
               opacity: 0,
               filter: "blur(20px)"
             }}
-            animate={{ 
-              scale: 1, 
+            animate={{
+              scale: 1,
               opacity: 1,
               filter: "blur(0px)"
             }}
-            exit={{ 
-              scale: 5, 
+            exit={{
+              scale: 5,
               opacity: 0,
               filter: "blur(30px)"
             }}
-            transition={{ 
+            transition={{
               duration: 2,
               ease: [0.43, 0.13, 0.23, 0.96]
             }}
@@ -176,7 +176,7 @@ const ZoomAnimation: React.FC<ZoomAnimationProps> = ({ vehicleType, onComplete }
               alt="Wheel"
               className="w-full h-full object-cover"
             />
-            
+
             {/* Targeting Reticle */}
             <motion.div
               initial={{ scale: 2, opacity: 0 }}
@@ -220,23 +220,23 @@ const ZoomAnimation: React.FC<ZoomAnimationProps> = ({ vehicleType, onComplete }
         {stage === "brake" && (
           <motion.div
             key="brake"
-            initial={{ 
-              scale: 5, 
+            initial={{
+              scale: 5,
               opacity: 0,
               filter: "blur(30px)"
             }}
-            animate={{ 
-              scale: 1, 
+            animate={{
+              scale: 1,
               opacity: 1,
               filter: "blur(0px)"
             }}
-            exit={{ 
-              scale: 8, 
+            exit={{
+              scale: 8,
               opacity: 0,
               filter: "blur(40px)",
               rotate: 10
             }}
-            transition={{ 
+            transition={{
               duration: 2,
               ease: [0.43, 0.13, 0.23, 0.96]
             }}
@@ -254,7 +254,7 @@ const ZoomAnimation: React.FC<ZoomAnimationProps> = ({ vehicleType, onComplete }
               className="absolute inset-0 flex items-center justify-center"
             >
               <motion.div
-                animate={{ 
+                animate={{
                   scale: [1, 1.5, 1],
                   opacity: [0.5, 0, 0.5]
                 }}
@@ -288,24 +288,24 @@ const ZoomAnimation: React.FC<ZoomAnimationProps> = ({ vehicleType, onComplete }
         {stage === "mechanism" && (
           <motion.div
             key="mechanism"
-            initial={{ 
-              scale: 8, 
+            initial={{
+              scale: 8,
               opacity: 0,
               filter: "blur(40px)",
               rotate: 10
             }}
-            animate={{ 
-              scale: 1, 
+            animate={{
+              scale: 1,
               opacity: 1,
               filter: "blur(0px)",
               rotate: 0
             }}
-            exit={{ 
+            exit={{
               scale: 0,
               opacity: 0,
               filter: "blur(50px)"
             }}
-            transition={{ 
+            transition={{
               duration: 2,
               ease: [0.43, 0.13, 0.23, 0.96]
             }}
@@ -337,7 +337,7 @@ const ZoomAnimation: React.FC<ZoomAnimationProps> = ({ vehicleType, onComplete }
             >
               <div className="text-center">
                 <motion.div
-                  animate={{ 
+                  animate={{
                     boxShadow: [
                       "0 0 20px rgba(59, 130, 246, 0.5)",
                       "0 0 60px rgba(59, 130, 246, 0.8)",
@@ -364,11 +364,11 @@ const ZoomAnimation: React.FC<ZoomAnimationProps> = ({ vehicleType, onComplete }
       {/* Light Rays Effect */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-30">
         <motion.div
-          animate={{ 
+          animate={{
             rotate: 360,
             opacity: [0.1, 0.3, 0.1]
           }}
-          transition={{ 
+          transition={{
             rotate: { duration: 20, repeat: Infinity, ease: "linear" },
             opacity: { duration: 3, repeat: Infinity, ease: "easeInOut" }
           }}
