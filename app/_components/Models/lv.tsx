@@ -216,7 +216,7 @@ const LV = ({ onHotspotClick }: LVProps) => {
         occludeRef={modelRef}
       />
       <Hotspot
-        position={[-0.85, 2.75, 8.5]}
+        position={[-0.85, 2.65, 8.5]}
         onClick={() => handleHotspotClick("j4444")}
         label="J-4444 Component"
         color="#8b5cf6"

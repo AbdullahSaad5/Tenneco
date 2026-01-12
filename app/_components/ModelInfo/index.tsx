@@ -2,6 +2,9 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { FileText, Video } from "lucide-react";
+import PDFModal from "../PDFModal";
+import VideoModal from "../VideoModal";
 
 type ModelType = "lv" | "asm" | "j4444" | "pad";
 
@@ -70,34 +73,63 @@ const getColorClass = (color: string): string => {
 
 const ModelInfo: React.FC<ModelInfoProps> = ({ activeModel }) => {
   const [isOpen, setIsOpen] = useState(true);
+  const [isPDFOpen, setIsPDFOpen] = useState(false);
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
   const details = modelDetails[activeModel];
 
   return (
     <>
-      {/* Toggle Button */}
-      <motion.button
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-20 right-6 z-20 p-3 rounded-lg border border-slate-200 transition-colors ${
-          isOpen ? "bg-white" : getColorClass(details.color)
-        }`}
-        title={isOpen ? "Hide Info" : "Show Info"}
-      >
-        <svg
-          className={`w-6 h-6 transition-colors ${isOpen ? "text-slate-700" : "text-white"}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      {/* Action Buttons Group */}
+      <div className="fixed bottom-20 right-6 z-20 flex flex-row gap-3">
+        {/* Info Toggle Button */}
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          onClick={() => setIsOpen(!isOpen)}
+          className={`p-3 rounded-lg border border-slate-200 transition-colors shadow-lg ${
+            isOpen ? "bg-white" : getColorClass(details.color)
+          }`}
+          title={isOpen ? "Hide Info" : "Show Info"}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      </motion.button>
+          <svg
+            className={`w-6 h-6 transition-colors ${isOpen ? "text-slate-700" : "text-white"}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </motion.button>
+
+        {/* PDF Button */}
+        <motion.button
+          initial={{ scale: 0, y: 20 }}
+          animate={{ scale: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          onClick={() => setIsPDFOpen(true)}
+          className="p-3 rounded-lg bg-red-600 hover:bg-red-700 transition-colors shadow-lg group"
+          title="View Documentation"
+        >
+          <FileText className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+        </motion.button>
+
+        {/* Video Button */}
+        <motion.button
+          initial={{ scale: 0, y: 20 }}
+          animate={{ scale: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          onClick={() => setIsVideoOpen(true)}
+          className="p-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors shadow-lg group"
+          title="Watch Video"
+        >
+          <Video className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+        </motion.button>
+      </div>
 
       {/* Info Panel */}
       <AnimatePresence mode="wait">
@@ -146,6 +178,10 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ activeModel }) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Modals */}
+      <PDFModal isOpen={isPDFOpen} onClose={() => setIsPDFOpen(false)} />
+      <VideoModal isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} />
     </>
   );
 };
