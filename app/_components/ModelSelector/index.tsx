@@ -136,7 +136,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                       transition={{ delay: index * 0.1 }}
                       onClick={() => {
                         setActiveModel(model.id);
-                        if (window.innerWidth < 1024) setIsOpen(false);
+                        setIsOpen(false);
                       }}
                       className={`w-full p-4 rounded-lg text-left transition-colors ${
                         activeModel === model.id

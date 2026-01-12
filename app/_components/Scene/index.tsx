@@ -25,7 +25,7 @@ const Scene = forwardRef(({ activeModel }: { activeModel: ModelType }, ref) => {
     position: new THREE.Vector3(5, 3, 20),
     target: new THREE.Vector3(0, 0, 0),
     zoomFactor: 1,
-    maxDistance: 500,
+    maxDistance: 30,
     minDistance: 0.1,
   }), []);
 
@@ -228,8 +228,8 @@ const Scene = forwardRef(({ activeModel }: { activeModel: ModelType }, ref) => {
       {/* Background */}
       <color attach="background" args={["#f8fafc"]} />
 
-      {/* Fog for depth */}
-      <fog attach="fog" args={["#f8fafc", 30, 100]} />
+      {/* Fog for depth - helps with infinite ground effect */}
+      <fog attach="fog" args={["#f8fafc", 50, 200]} />
 
       {/* 3D Models with Float animation */}
       <Float
@@ -250,13 +250,13 @@ const Scene = forwardRef(({ activeModel }: { activeModel: ModelType }, ref) => {
       <ContactShadows
         position={[0, -2, 0]}
         opacity={0.4}
-        scale={50}
+        scale={500}
         blur={2}
-        far={10}
+        far={100}
       />
 
-      {/* Grid Helper (optional, subtle) */}
-      <gridHelper args={[100, 50, "#e2e8f0", "#f1f5f9"]} position={[0, -2, 0]} />
+      {/* Infinite Ground Grid */}
+      <gridHelper args={[1000, 200, "#e2e8f0", "#f1f5f9"]} position={[0, -2, 0]} />
 
       {/* Camera Controls */}
       <OrbitControls

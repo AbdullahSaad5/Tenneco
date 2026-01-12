@@ -17,16 +17,16 @@ const Pad = () => {
       // Calculate bounding box after model is rendered
       const box = new THREE.Box3();
       box.setFromObject(groupRef.current);
-      
+
       // Check if bounding box is valid
       if (box.isEmpty()) return;
-      
+
       // Get the minimum Y (bottom of the model)
       const minY = box.min.y;
-      
+
       // Calculate offset to place bottom above ground with some space
       const offsetY = GROUND_Y - minY + GROUND_OFFSET;
-      
+
       // Apply offset to position
       groupRef.current.position.y = offsetY;
       isPositionedRef.current = true;
