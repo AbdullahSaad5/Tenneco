@@ -28,7 +28,7 @@ const PDFModal: React.FC<PDFModalProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     const handleResize = () => {
       const viewportWidth = window.innerWidth;
-      
+
       if (orientation === "landscape") {
         if (viewportWidth < 768) {
           setPdfWidth(viewportWidth - 60);
