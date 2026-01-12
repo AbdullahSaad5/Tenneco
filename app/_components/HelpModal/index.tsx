@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, MousePointer2, MousePointerSquare, Move, ZoomIn, Maximize2 } from "lucide-react";
+import { X, MousePointer2, Move, ZoomIn, Maximize2, Search } from "lucide-react";
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -12,34 +12,34 @@ interface HelpModalProps {
 const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
   const tips = [
     {
-      icon: <MousePointer2 className="w-6 h-6" />,
+      Icon: MousePointer2,
       title: "Rotate Model",
       description: "Click and drag on the model to rotate the camera view around it.",
-      color: "from-blue-500 to-blue-600",
+      bgColor: "bg-blue-600",
     },
     {
-      icon: <MousePointerSquare className="w-6 h-6" />,
+      Icon: Search,
       title: "Zoom",
       description: "Use your mouse scroll wheel or pinch gesture to zoom in and out of the model.",
-      color: "from-purple-500 to-purple-600",
+      bgColor: "bg-purple-600",
     },
     {
-      icon: <Move className="w-6 h-6" />,
+      Icon: Move,
       title: "Pan View",
       description: "Right-click and drag (or two-finger drag on trackpad) to pan the camera.",
-      color: "from-green-500 to-green-600",
+      bgColor: "bg-green-600",
     },
     {
-      icon: <ZoomIn className="w-6 h-6" />,
+      Icon: ZoomIn,
       title: "Zoom Controls",
       description: "Use the zoom in/out buttons on the right side for precise zoom control.",
-      color: "from-orange-500 to-orange-600",
+      bgColor: "bg-orange-600",
     },
     {
-      icon: <Maximize2 className="w-6 h-6" />,
+      Icon: Maximize2,
       title: "Fullscreen Mode",
       description: "Click the fullscreen button for an immersive viewing experience.",
-      color: "from-pink-500 to-pink-600",
+      bgColor: "bg-pink-600",
     },
   ];
 
@@ -85,27 +85,30 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               {/* Content */}
               <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
                 <div className="space-y-4">
-                  {tips.map((tip, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex gap-4 p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
-                    >
-                      <div className={`flex-shrink-0 w-12 h-12 rounded-lg ${tip.color.includes('blue') ? 'bg-blue-600' : tip.color.includes('purple') ? 'bg-purple-600' : tip.color.includes('green') ? 'bg-green-600' : tip.color.includes('orange') ? 'bg-orange-600' : 'bg-pink-600'} flex items-center justify-center text-white`}>
-                        {tip.icon}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-slate-900 mb-1">{tip.title}</h3>
-                        <p className="text-sm text-slate-600">{tip.description}</p>
-                      </div>
-                    </motion.div>
-                  ))}
+                  {tips.map((tip, index) => {
+                    const IconComponent = tip.Icon;
+                    return (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="flex gap-4 p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                      >
+                        <div className={`flex-shrink-0 w-12 h-12 rounded-lg ${tip.bgColor} flex items-center justify-center text-white`}>
+                          <IconComponent className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-slate-900 mb-1">{tip.title}</h3>
+                          <p className="text-sm text-slate-600">{tip.description}</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
 
                 {/* Additional Info */}
-                <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-lg">
                   <h4 className="font-semibold text-blue-900 mb-2">Need More Help?</h4>
                   <p className="text-sm text-blue-700">
                     If you encounter any issues or have questions, please contact our support team.

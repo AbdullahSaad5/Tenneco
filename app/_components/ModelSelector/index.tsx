@@ -11,7 +11,7 @@ interface ModelInfo {
   id: ModelType;
   label: string;
   description: string;
-  icon: React.ReactNode;
+  Icon: React.ComponentType<{ className?: string }>;
 }
 
 interface ModelSelectorProps {
@@ -26,25 +26,25 @@ const models: ModelInfo[] = [
     id: "lv",
     label: "LV File",
     description: "LV component assembly",
-    icon: <Package className="w-8 h-8" />,
+    Icon: Package,
   },
   {
     id: "asm",
     label: "ASM",
     description: "Assembly module",
-    icon: <Settings className="w-8 h-8" />,
+    Icon: Settings,
   },
   {
     id: "j4444",
     label: "J-4444",
     description: "J-4444 component",
-    icon: <Wrench className="w-8 h-8" />,
+    Icon: Wrench,
   },
   {
     id: "pad",
     label: "Pad",
     description: "Pad assembly",
-    icon: <FileText className="w-8 h-8" />,
+    Icon: FileText,
   },
 ];
 
@@ -126,58 +126,61 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
 
               {/* Model Cards */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {models.map((model, index) => (
-                  <motion.button
-                    key={model.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    onClick={() => {
-                      setActiveModel(model.id);
-                      if (window.innerWidth < 1024) setIsOpen(false);
-                    }}
-                    className={`w-full p-4 rounded-lg text-left transition-colors ${
-                      activeModel === model.id
-                        ? "bg-blue-600"
-                        : "bg-slate-800 hover:bg-slate-700"
-                    }`}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div
-                        className={`${
-                          activeModel === model.id ? "text-white" : "text-slate-400"
-                        }`}
-                      >
-                        {model.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3
-                          className={`font-semibold text-lg mb-1 ${
-                            activeModel === model.id ? "text-white" : "text-slate-200"
+                {models.map((model, index) => {
+                  const IconComponent = model.Icon;
+                  return (
+                    <motion.button
+                      key={model.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      onClick={() => {
+                        setActiveModel(model.id);
+                        if (window.innerWidth < 1024) setIsOpen(false);
+                      }}
+                      className={`w-full p-4 rounded-lg text-left transition-colors ${
+                        activeModel === model.id
+                          ? "bg-blue-600"
+                          : "bg-slate-800 hover:bg-slate-700"
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={`${
+                            activeModel === model.id ? "text-white" : "text-slate-400"
                           }`}
                         >
-                          {model.label}
-                        </h3>
-                        <p
-                          className={`text-sm ${
-                            activeModel === model.id
-                              ? "text-blue-100"
-                              : "text-slate-400"
-                          }`}
-                        >
-                          {model.description}
-                        </p>
+                          <IconComponent className="w-8 h-8" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3
+                            className={`font-semibold text-lg mb-1 ${
+                              activeModel === model.id ? "text-white" : "text-slate-200"
+                            }`}
+                          >
+                            {model.label}
+                          </h3>
+                          <p
+                            className={`text-sm ${
+                              activeModel === model.id
+                                ? "text-blue-100"
+                                : "text-slate-400"
+                            }`}
+                          >
+                            {model.description}
+                          </p>
+                        </div>
+                        {activeModel === model.id && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="w-3 h-3 bg-white rounded-full mt-2"
+                          />
+                        )}
                       </div>
-                      {activeModel === model.id && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="w-3 h-3 bg-white rounded-full mt-2"
-                        />
-                      )}
-                    </div>
-                  </motion.button>
-                ))}
+                    </motion.button>
+                  );
+                })}
               </div>
 
               {/* Footer */}

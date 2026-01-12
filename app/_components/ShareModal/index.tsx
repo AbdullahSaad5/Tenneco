@@ -26,24 +26,24 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
   const shareOptions = [
     {
       name: "Email",
-      icon: <Mail className="w-5 h-5" />,
-      color: "from-red-500 to-red-600",
+      Icon: Mail,
+      bgColor: "bg-red-600",
       action: () => {
         window.location.href = `mailto:?subject=Check out this 3D model&body=View this 3D model: ${currentUrl}`;
       },
     },
     {
       name: "WhatsApp",
-      icon: <MessageCircle className="w-5 h-5" />,
-      color: "from-green-500 to-green-600",
+      Icon: MessageCircle,
+      bgColor: "bg-green-600",
       action: () => {
         window.open(`https://wa.me/?text=${encodeURIComponent(currentUrl)}`, "_blank");
       },
     },
     {
       name: "Copy Link",
-      icon: copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />,
-      color: copied ? "from-green-500 to-green-600" : "from-blue-500 to-blue-600",
+      Icon: copied ? Check : Copy,
+      bgColor: copied ? "bg-green-600" : "bg-blue-600",
       action: handleCopy,
     },
   ];
@@ -108,7 +108,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
                     />
                     <button
                       onClick={handleCopy}
-                      className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                      className={`px-4 py-3 rounded-lg font-medium transition-colors ${
                         copied
                           ? "bg-green-500 text-white"
                           : "bg-blue-600 text-white hover:bg-blue-700"
@@ -135,21 +135,24 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
                     Share via
                   </label>
                   <div className="grid grid-cols-3 gap-3">
-                    {shareOptions.map((option, index) => (
-                      <motion.button
-                        key={option.name}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: index * 0.1 }}
-                        onClick={option.action}
-                        className="flex flex-col items-center gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
-                      >
-                        <div className={`w-12 h-12 rounded-lg ${option.color.includes('red') ? 'bg-red-600' : option.color.includes('green') ? 'bg-green-600' : 'bg-blue-600'} flex items-center justify-center text-white`}>
-                          {option.icon}
-                        </div>
-                        <span className="text-sm font-medium text-slate-700">{option.name}</span>
-                      </motion.button>
-                    ))}
+                    {shareOptions.map((option, index) => {
+                      const IconComponent = option.Icon;
+                      return (
+                        <motion.button
+                          key={option.name}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: index * 0.1 }}
+                          onClick={option.action}
+                          className="flex flex-col items-center gap-2 p-4 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors"
+                        >
+                          <div className={`w-12 h-12 rounded-lg ${option.bgColor} flex items-center justify-center text-white`}>
+                            <IconComponent className="w-5 h-5" />
+                          </div>
+                          <span className="text-sm font-medium text-slate-700">{option.name}</span>
+                        </motion.button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -158,7 +161,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
               <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end">
                 <button
                   onClick={onClose}
-                  className="px-6 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg transition-all"
+                  className="px-6 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg transition-colors"
                 >
                   Close
                 </button>
