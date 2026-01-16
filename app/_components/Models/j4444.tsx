@@ -11,7 +11,7 @@ interface J4444Props {
   onReturnClick?: () => void;
 }
 
-const J4444 = ({ onReturnClick }: J4444Props) => {
+const J4444 = ({  }: J4444Props) => {
   const result = useGLTF(MODEL_PATH);
   const groupRef = useRef<THREE.Group>(null);
   const isPositionedRef = useRef(false);

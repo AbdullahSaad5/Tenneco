@@ -11,7 +11,7 @@ interface PadProps {
   onReturnClick?: () => void;
 }
 
-const Pad = ({ onReturnClick }: PadProps) => {
+const Pad = ({  }: PadProps) => {
   const result = useGLTF(MODEL_PATH);
   const groupRef = useRef<THREE.Group>(null);
   const isPositionedRef = useRef(false);

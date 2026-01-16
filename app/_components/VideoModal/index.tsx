@@ -19,8 +19,8 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [volume, setVolume] = useState(1);
-  const [showControls, setShowControls] = useState(true);
+  // const [volume, setVolume] = useState(1);
+  // const [showControls, setShowControls] = useState(true);
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [hoverPosition, setHoverPosition] = useState(0);
 
@@ -75,13 +75,13 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
       setIsPlaying(false);
       setCurrentTime(0);
       setProgress(0);
-      setShowControls(true);
+      // setShowControls(true);
       if (videoRef.current) {
         videoRef.current.pause();
         videoRef.current.currentTime = 0;
       }
     } else {
-      setShowControls(true);
+      // setShowControls(true);
     }
   }, [isOpen]);
 
@@ -152,32 +152,32 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
-  const handleMouseMove = () => {
-    if (!showControls) {
-      setShowControls(true);
-    }
-    if (hideControlsTimeoutRef.current) {
-      clearTimeout(hideControlsTimeoutRef.current);
-    }
-    if (isPlaying) {
-      hideControlsTimeoutRef.current = setTimeout(() => {
-        setShowControls(false);
-      }, 3000);
-    }
-  };
+  // const handleMouseMove = () => {
+  //   if (!showControls) {
+  //     setShowControls(true);
+  //   }
+  //   if (hideControlsTimeoutRef.current) {
+  //     clearTimeout(hideControlsTimeoutRef.current);
+  //   }
+  //   if (isPlaying) {
+  //     hideControlsTimeoutRef.current = setTimeout(() => {
+  //       setShowControls(false);
+  //     }, 3000);
+  //   }
+  // };
 
-  const handleMouseLeaveVideo = () => {
-    if (isPlaying && hideControlsTimeoutRef.current) {
-      clearTimeout(hideControlsTimeoutRef.current);
-      hideControlsTimeoutRef.current = setTimeout(() => {
-        setShowControls(false);
-      }, 1000);
-    }
-  };
+  // const handleMouseLeaveVideo = () => {
+  //   if (isPlaying && hideControlsTimeoutRef.current) {
+  //     clearTimeout(hideControlsTimeoutRef.current);
+  //     hideControlsTimeoutRef.current = setTimeout(() => {
+  //       setShowControls(false);
+  //     }, 1000);
+  //   }
+  // };
 
   useEffect(() => {
     if (!isPlaying) {
-      setShowControls(true);
+      // setShowControls(true);
       if (hideControlsTimeoutRef.current) {
         clearTimeout(hideControlsTimeoutRef.current);
       }

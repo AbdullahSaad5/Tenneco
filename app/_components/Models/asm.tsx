@@ -11,7 +11,7 @@ interface AsmProps {
   onReturnClick?: () => void;
 }
 
-const Asm = ({ onReturnClick }: AsmProps) => {
+const Asm = ({ }: AsmProps) => {
   const result = useGLTF(MODEL_PATH);
   const groupRef = useRef<THREE.Group>(null);
   const isPositionedRef = useRef(false);
