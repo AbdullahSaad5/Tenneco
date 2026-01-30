@@ -45,7 +45,7 @@ const VehicleModel = ({ vehicleType, opacity }: VehicleModelProps) => {
     return { clonedScene: cloned, centerOffset: offset };
   }, [scene, modelScale]);
 
-  // Update opacity
+  // Update opacity and material properties
   useEffect(() => {
     clonedScene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
@@ -54,6 +54,19 @@ const VehicleModel = ({ vehicleType, opacity }: VehicleModelProps) => {
           const material = mesh.material as THREE.Material;
           material.transparent = true;
           material.opacity = opacity;
+
+          // Adjust material properties to prevent overexposure
+          if ((material as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+            const stdMat = material as THREE.MeshStandardMaterial;
+            // Reduce metalness to decrease reflectivity
+            stdMat.metalness = Math.min(stdMat.metalness, 0.3);
+            // Increase roughness to make surface less shiny
+            stdMat.roughness = Math.max(stdMat.roughness, 0.7);
+            // Reduce or disable emissive properties
+            stdMat.emissiveIntensity = 0;
+            stdMat.emissive.set(0x000000);
+          }
+
           material.needsUpdate = true;
         }
       }
@@ -284,25 +297,25 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
         fov={viewer.camera.fov}
       />
 
-      {/* Lighting - Same as viewer */}
-      <ambientLight intensity={lighting.ambient.intensity} />
+      {/* Lighting - Reduced intensity to prevent overexposure */}
+      <ambientLight intensity={lighting.ambient.intensity * 0.6} />
       <directionalLight
         position={[lighting.directional1.position.x, lighting.directional1.position.y, lighting.directional1.position.z]}
-        intensity={lighting.directional1.intensity}
+        intensity={lighting.directional1.intensity * 0.5}
         castShadow
       />
       <directionalLight
         position={[lighting.directional2.position.x, lighting.directional2.position.y, lighting.directional2.position.z]}
-        intensity={lighting.directional2.intensity}
+        intensity={lighting.directional2.intensity * 0.5}
       />
       <spotLight
         position={[lighting.spot.position.x, lighting.spot.position.y, lighting.spot.position.z]}
-        intensity={lighting.spot.intensity}
+        intensity={lighting.spot.intensity * 0.4}
         angle={lighting.spot.angle}
         penumbra={1}
         castShadow
       />
-      <hemisphereLight groundColor={lighting.hemisphere.groundColor} intensity={lighting.hemisphere.intensity} />
+      <hemisphereLight groundColor={lighting.hemisphere.groundColor} intensity={lighting.hemisphere.intensity * 0.6} />
 
       {/* Background - Same as viewer */}
       <color attach="background" args={[sceneConfig.backgroundColor]} />
@@ -338,12 +351,12 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
         position={[0, -2, 0]}
       />
 
-      {/* Post Processing Effects - Same as viewer */}
+      {/* Post Processing Effects - Reduced bloom to prevent overexposure */}
       <EffectComposer>
         <Bloom
-          luminanceThreshold={viewer.postProcessing.bloom.luminanceThreshold}
-          luminanceSmoothing={viewer.postProcessing.bloom.luminanceSmoothing}
-          intensity={viewer.postProcessing.bloom.intensity}
+          luminanceThreshold={0.95}
+          luminanceSmoothing={0.9}
+          intensity={0.15}
         />
         <Vignette offset={viewer.postProcessing.vignette.offset} darkness={viewer.postProcessing.vignette.darkness} eskil={false} />
       </EffectComposer>
@@ -374,6 +387,8 @@ const VehicleZoomTransition: React.FC<VehicleZoomTransitionProps> = ({
             antialias: true,
             powerPreference: "high-performance",
             alpha: true,
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 0.8,
           }}
           dpr={[1, 2]}
         >
