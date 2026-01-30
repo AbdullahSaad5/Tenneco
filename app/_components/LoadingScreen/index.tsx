@@ -2,8 +2,16 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { useContent } from "../../providers/ContentProvider";
+import Image from "next/image";
 
 const LoadingScreen = () => {
+  const { loadingScreen } = useContent();
+
+  const primaryColor = loadingScreen?.animation.colors.primary || "#2563eb";
+  const secondaryColor = loadingScreen?.animation.colors.secondary || "#0ea5e9";
+  const duration = (loadingScreen?.animation.duration || 2000) / 1000;
+
   return (
     <div className="h-screen w-screen bg-slate-900 flex items-center justify-center relative z-50">
       {/* Loading Content */}
@@ -15,22 +23,35 @@ const LoadingScreen = () => {
           animate={{ scale: 1 }}
           transition={{ duration: 0.5, type: "spring" }}
         >
-          <div className="w-24 h-24 bg-blue-600 rounded-lg flex items-center justify-center">
-            <motion.svg
-              className="w-12 h-12 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z"
+          <div
+            className="w-24 h-24 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: primaryColor }}
+          >
+            {loadingScreen?.logoType === "image" && loadingScreen.logoMediaId ? (
+              <Image
+                src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}/media/${loadingScreen.logoMediaId}`}
+                alt="Logo"
+                width={48}
+                height={48}
+                className="w-12 h-12"
               />
-            </motion.svg>
+            ) : (
+              <motion.svg
+                className="w-12 h-12 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                animate={{ rotate: 360 }}
+                transition={{ duration: duration, repeat: Infinity, ease: "linear" }}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d={loadingScreen?.svgPath || "M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z"}
+                />
+              </motion.svg>
+            )}
           </div>
         </motion.div>
 
@@ -41,18 +62,23 @@ const LoadingScreen = () => {
           transition={{ delay: 0.3 }}
           className="text-center"
         >
-          <h2 className="text-3xl font-bold text-white mb-2">Tenneco 3D Viewer</h2>
-          <p className="text-slate-400 text-lg">Loading 3D models...</p>
+          <h2 className="text-3xl font-bold text-white mb-2">
+            {loadingScreen?.title || "Tenneco 3D Viewer"}
+          </h2>
+          <p className="text-slate-400 text-lg">
+            {loadingScreen?.subtitle || "Loading 3D models..."}
+          </p>
         </motion.div>
 
         {/* Loading Bar */}
         <div className="w-64 h-2 bg-slate-800 rounded overflow-hidden">
           <motion.div
-            className="h-full bg-blue-600 rounded"
+            className="h-full rounded"
+            style={{ backgroundColor: primaryColor }}
             initial={{ width: "0%" }}
             animate={{ width: "100%" }}
             transition={{
-              duration: 2,
+              duration: duration,
               repeat: Infinity,
               ease: "easeInOut",
             }}
@@ -64,7 +90,8 @@ const LoadingScreen = () => {
           {[0, 1, 2].map((i) => (
             <motion.div
               key={i}
-              className="w-3 h-3 bg-blue-600 rounded-full"
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: i === 1 ? secondaryColor : primaryColor }}
               animate={{
                 scale: [1, 1.5, 1],
                 opacity: [0.5, 1, 0.5],

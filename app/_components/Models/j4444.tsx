@@ -2,17 +2,16 @@ import { useGLTF } from "@react-three/drei";
 import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-
-const MODEL_PATH = "./models/J-4444.glb";
-const GROUND_Y = -2;
-const GROUND_OFFSET = 0.15;
+import { ModelConfiguration } from "../../_types/content";
 
 interface J4444Props {
+  config: ModelConfiguration;
   onReturnClick?: () => void;
 }
 
-const J4444 = ({  }: J4444Props) => {
-  const result = useGLTF(MODEL_PATH);
+const J4444 = ({ config }: J4444Props) => {
+  const modelPath = config.modelFile.fallbackPath || "./models/J-4444.glb";
+  const result = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
   const isPositionedRef = useRef(false);
 
@@ -24,7 +23,7 @@ const J4444 = ({  }: J4444Props) => {
       if (box.isEmpty()) return;
 
       const minY = box.min.y;
-      const offsetY = GROUND_Y - minY + GROUND_OFFSET;
+      const offsetY = config.transform.groundY - minY + config.transform.groundOffset;
 
       groupRef.current.position.y = offsetY;
       isPositionedRef.current = true;
@@ -33,7 +32,15 @@ const J4444 = ({  }: J4444Props) => {
 
   return (
     <group ref={groupRef}>
-      <primitive object={result.scene} scale={0.025} />
+      <primitive
+        object={result.scene}
+        scale={config.transform.scale}
+        rotation={[
+          config.transform.rotation.x,
+          config.transform.rotation.y,
+          config.transform.rotation.z
+        ]}
+      />
     </group>
   );
 };

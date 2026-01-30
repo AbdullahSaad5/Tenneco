@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed": "tsx scripts/seedCmsData.ts",
+    "seed:languages": "tsx scripts/seedLanguages.ts"
   },
   "dependencies": {
     "@react-three/drei": "^9.121.4",

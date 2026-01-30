@@ -1,54 +1,74 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useContent } from "../../providers/ContentProvider";
+import { FALLBACK_ZOOM_ANIMATION_IMAGES } from "../../config/fallbacks";
 
 interface ZoomAnimationProps {
   vehicleType: "light" | "commercial" | "rail";
   onComplete: () => void;
 }
 
-const animationData = {
-  light: {
-    vehicleImage: "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=1920&q=90",
-    wheelImage: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=1920&q=90",
-    brakeImage: "https://images.unsplash.com/photo-1656232976683-7b688560e427?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    title: "Light Vehicle Braking System"
-  },
-  commercial: {
-    vehicleImage: "https://images.unsplash.com/photo-1602721186896-1b21c7405c0b?w=1920&q=90",
-    wheelImage: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=90",
-    brakeImage: "https://images.unsplash.com/photo-1656232976683-7b688560e427?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    title: "Commercial Vehicle Braking System"
-  },
-  rail: {
-    vehicleImage: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=1920&q=90",
-    wheelImage: "https://images.unsplash.com/photo-1513363287815-e7a0eef0287c?w=1920&q=90",
-    brakeImage: "https://images.unsplash.com/photo-1656232976683-7b688560e427?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    title: "Rail Braking System"
-  }
-};
-
 const ZoomAnimation: React.FC<ZoomAnimationProps> = ({ vehicleType, onComplete }) => {
-  const [stage, setStage] = useState<"vehicle" | "wheel" | "brake" | "mechanism" | "complete">("vehicle");
-  const images = animationData[vehicleType];
+  const [currentStageIndex, setCurrentStageIndex] = useState(0);
+  const { zoomAnimations } = useContent();
+
+  // Get animation config for this vehicle type
+  const animationConfig = useMemo(() => {
+    return zoomAnimations?.[vehicleType];
+  }, [zoomAnimations, vehicleType]);
+
+  // Get sorted stages
+  const stages = useMemo(() => {
+    if (!animationConfig?.stages) return [];
+    return [...animationConfig.stages].sort((a, b) => a.order - b.order);
+  }, [animationConfig]);
+
+  const currentStage = stages[currentStageIndex];
+
+  // Get image URL with fallback
+  const getImageUrl = (stageIndex: number): string => {
+    const stage = stages[stageIndex];
+    if (!stage) return "";
+
+    if (stage.imageMediaId) {
+      return `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}/media/${stage.imageMediaId}`;
+    }
+
+    // Fallback to Unsplash images
+    const fallbackImages = FALLBACK_ZOOM_ANIMATION_IMAGES[vehicleType];
+    const stageName = stage.name as keyof typeof fallbackImages;
+    return fallbackImages[stageName] || "";
+  };
 
   useEffect(() => {
-    const timer1 = setTimeout(() => setStage("wheel"), 2000);
-    const timer2 = setTimeout(() => setStage("brake"), 4000);
-    const timer3 = setTimeout(() => setStage("mechanism"), 6000);
-    const timer4 = setTimeout(() => {
-      setStage("complete");
-      onComplete();
-    }, 8000);
+    if (!stages.length) return;
+
+    // Calculate cumulative duration for this stage
+    let cumulativeDuration = 0;
+    for (let i = 0; i <= currentStageIndex; i++) {
+      cumulativeDuration += stages[i]?.duration || 2000;
+    }
+
+    const timer = setTimeout(() => {
+      if (currentStageIndex < stages.length - 1) {
+        setCurrentStageIndex(currentStageIndex + 1);
+      } else {
+        onComplete();
+      }
+    }, currentStage?.duration || 2000);
 
     return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
-      clearTimeout(timer4);
+      clearTimeout(timer);
     };
-  }, [onComplete]);
+  }, [currentStageIndex, stages, currentStage, onComplete]);
+
+  if (!currentStage || !stages.length) {
+    return null;
+  }
+
+  const imageUrl = getImageUrl(currentStageIndex);
 
   return (
     <div className="fixed inset-0 z-50 bg-black overflow-hidden">
@@ -72,57 +92,76 @@ const ZoomAnimation: React.FC<ZoomAnimationProps> = ({ vehicleType, onComplete }
       />
 
       <AnimatePresence mode="wait">
-        {/* Stage 1: Full Vehicle */}
-        {stage === "vehicle" && (
+        {/* Dynamic Stage Rendering */}
+        {currentStage && (
           <motion.div
-            key="vehicle"
-            initial={{ scale: 1.2, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{
-              scale: 4,
-              opacity: 0,
-              filter: "blur(20px)"
-            }}
-            transition={{
-              duration: 2,
-              ease: [0.43, 0.13, 0.23, 0.96]
-            }}
+            key={currentStage.name}
             className="absolute inset-0"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={images.vehicleImage}
-              alt="Vehicle"
-              className="w-full h-full object-cover"
-            />
+            {/* Background Image with Blur Effect */}
+            <motion.div
+              initial={{
+                scale: currentStage.effects.scale.from,
+                opacity: 0,
+                filter: `blur(${currentStage.effects.blur.from}px)`
+              }}
+              animate={{
+                scale: currentStage.effects.scale.to,
+                opacity: 1,
+                filter: `blur(${currentStage.effects.blur.to}px)`
+              }}
+              exit={{
+                scale: currentStageIndex < stages.length - 1 ? stages[currentStageIndex + 1].effects.scale.from : 8,
+                opacity: 0,
+                filter: `blur(${currentStageIndex < stages.length - 1 ? stages[currentStageIndex + 1].effects.blur.from : 50}px)`,
+                rotate: currentStage.effects.rotation?.to || 0
+              }}
+              transition={{
+                duration: (currentStage.duration / 1000) || 2,
+                ease: [0.43, 0.13, 0.23, 0.96]
+              }}
+              className="absolute inset-0"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageUrl}
+                alt={currentStage.title}
+                className="w-full h-full object-cover"
+              />
+            </motion.div>
 
-            {/* Circular Focus Ring */}
+
+            {/* Visual Effect Ring - Sharp (not blurred) */}
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.5, opacity: 0 }}
               transition={{ delay: 0.5, duration: 1 }}
-              className="absolute inset-0 flex items-center justify-center"
+              className="absolute inset-0 flex items-center justify-center z-10"
             >
               <div className="relative w-96 h-96">
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 rounded-full border-2 border-blue-500/50"
+                  className="absolute inset-0 rounded-full border-2"
                   style={{
-                    boxShadow: "0 0 30px rgba(59, 130, 246, 0.5), inset 0 0 30px rgba(59, 130, 246, 0.3)"
+                    borderColor: `${currentStage.label?.color.primary}80`,
+                    boxShadow: `0 0 30px ${currentStage.label?.color.primary}80, inset 0 0 30px ${currentStage.label?.color.primary}50`
                   }}
                 />
                 <motion.div
                   animate={{ rotate: -360 }}
                   transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-4 rounded-full border border-cyan-500/30"
+                  className="absolute inset-4 rounded-full border"
+                  style={{
+                    borderColor: `${currentStage.label?.color.secondary}50`
+                  }}
                 />
               </div>
             </motion.div>
 
-            {/* Title */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            {/* Label - Sharp (not blurred) */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -130,233 +169,31 @@ const ZoomAnimation: React.FC<ZoomAnimationProps> = ({ vehicleType, onComplete }
                 transition={{ delay: 0.5, duration: 0.8 }}
                 className="text-center"
               >
-                <h2 className="text-5xl font-bold text-white mb-4 tracking-wider"
-                    style={{ textShadow: "0 0 20px rgba(0,0,0,0.8)" }}>
-                  {images.title}
-                </h2>
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: "100%" }}
-                  transition={{ delay: 1, duration: 1 }}
-                  className="h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent"
-                />
+                {currentStageIndex === 0 && (
+                  <h2 className="text-5xl font-bold text-white mb-4 tracking-wider"
+                      style={{ textShadow: "0 0 20px rgba(0,0,0,0.8)" }}>
+                    {currentStage.title}
+                  </h2>
+                )}
+                <div
+                  className="bg-gradient-to-r backdrop-blur-md px-8 py-4 rounded-full border-2"
+                  style={{
+                    background: `linear-gradient(to right, ${currentStage.label?.color.primary}e6, ${currentStage.label?.color.secondary}e6)`,
+                    borderColor: currentStage.label?.color.primary,
+                    boxShadow: `0 0 40px ${currentStage.label?.color.primary}99`
+                  }}
+                >
+                  <p className="text-white font-bold text-3xl tracking-wide text-center">
+                    {currentStage.label?.text}
+                  </p>
+                  {currentStage.label?.subtext && (
+                    <p className="text-white/90 text-sm text-center mt-1">
+                      {currentStage.label.subtext}
+                    </p>
+                  )}
+                </div>
               </motion.div>
             </div>
-          </motion.div>
-        )}
-
-        {/* Stage 2: Zoom to Wheel */}
-        {stage === "wheel" && (
-          <motion.div
-            key="wheel"
-            initial={{
-              scale: 4,
-              opacity: 0,
-              filter: "blur(20px)"
-            }}
-            animate={{
-              scale: 1,
-              opacity: 1,
-              filter: "blur(0px)"
-            }}
-            exit={{
-              scale: 5,
-              opacity: 0,
-              filter: "blur(30px)"
-            }}
-            transition={{
-              duration: 2,
-              ease: [0.43, 0.13, 0.23, 0.96]
-            }}
-            className="absolute inset-0"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={images.wheelImage}
-              alt="Wheel"
-              className="w-full h-full object-cover"
-            />
-
-            {/* Targeting Reticle */}
-            <motion.div
-              initial={{ scale: 2, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <div className="relative w-80 h-80">
-                {/* Corner Brackets */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: [0, 1, 1, 0] }}
-                  transition={{ duration: 2, times: [0, 0.2, 0.8, 1] }}
-                  className="absolute inset-0"
-                >
-                  <div className="absolute top-0 left-0 w-16 h-16 border-t-4 border-l-4 border-cyan-500" />
-                  <div className="absolute top-0 right-0 w-16 h-16 border-t-4 border-r-4 border-cyan-500" />
-                  <div className="absolute bottom-0 left-0 w-16 h-16 border-b-4 border-l-4 border-cyan-500" />
-                  <div className="absolute bottom-0 right-0 w-16 h-16 border-b-4 border-r-4 border-cyan-500" />
-                </motion.div>
-              </div>
-            </motion.div>
-
-            {/* Label */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 50 }}
-              transition={{ delay: 0.5 }}
-              className="absolute top-1/2 left-20 -translate-y-1/2"
-            >
-              <div className="bg-gradient-to-r from-blue-600/90 to-cyan-600/90 backdrop-blur-md px-6 py-3 rounded-r-full border-l-4 border-cyan-400"
-                   style={{ boxShadow: "0 0 30px rgba(6, 182, 212, 0.5)" }}>
-                <p className="text-white font-bold text-2xl tracking-wide">WHEEL SYSTEM</p>
-                <p className="text-cyan-200 text-sm">Analyzing braking components...</p>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* Stage 3: Zoom to Brake */}
-        {stage === "brake" && (
-          <motion.div
-            key="brake"
-            initial={{
-              scale: 5,
-              opacity: 0,
-              filter: "blur(30px)"
-            }}
-            animate={{
-              scale: 1,
-              opacity: 1,
-              filter: "blur(0px)"
-            }}
-            exit={{
-              scale: 8,
-              opacity: 0,
-              filter: "blur(40px)",
-              rotate: 10
-            }}
-            transition={{
-              duration: 2,
-              ease: [0.43, 0.13, 0.23, 0.96]
-            }}
-            className="absolute inset-0"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={images.brakeImage}
-              alt="Brake"
-              className="w-full h-full object-cover"
-            />
-
-            {/* Pulsing Circle */}
-            <motion.div
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <motion.div
-                animate={{
-                  scale: [1, 1.5, 1],
-                  opacity: [0.5, 0, 0.5]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="absolute w-96 h-96 rounded-full border-4 border-orange-500"
-              />
-            </motion.div>
-
-            {/* Label */}
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 2 }}
-              transition={{ delay: 0.5 }}
-              className="absolute bottom-32 left-1/2 -translate-x-1/2"
-            >
-              <div className="bg-gradient-to-r from-orange-600/90 to-red-600/90 backdrop-blur-md px-8 py-4 rounded-full border-2 border-orange-400"
-                   style={{ boxShadow: "0 0 40px rgba(249, 115, 22, 0.6)" }}>
-                <p className="text-white font-bold text-3xl tracking-wide text-center">BRAKE DISC</p>
-                <p className="text-orange-200 text-sm text-center mt-1">Friction surface analysis</p>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* Stage 4: Deep Zoom to Mechanism */}
-        {stage === "mechanism" && (
-          <motion.div
-            key="mechanism"
-            initial={{
-              scale: 8,
-              opacity: 0,
-              filter: "blur(40px)",
-              rotate: 10
-            }}
-            animate={{
-              scale: 1,
-              opacity: 1,
-              filter: "blur(0px)",
-              rotate: 0
-            }}
-            exit={{
-              scale: 0,
-              opacity: 0,
-              filter: "blur(50px)"
-            }}
-            transition={{
-              duration: 2,
-              ease: [0.43, 0.13, 0.23, 0.96]
-            }}
-            className="absolute inset-0"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={images.brakeImage}
-              alt="Mechanism"
-              className="w-full h-full object-cover scale-150"
-            />
-
-            {/* Grid Overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.3 }}
-              className="absolute inset-0"
-              style={{
-                backgroundImage: "linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px)",
-                backgroundSize: "50px 50px"
-              }}
-            />
-
-            {/* Central Label */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <div className="text-center">
-                <motion.div
-                  animate={{
-                    boxShadow: [
-                      "0 0 20px rgba(59, 130, 246, 0.5)",
-                      "0 0 60px rgba(59, 130, 246, 0.8)",
-                      "0 0 20px rgba(59, 130, 246, 0.5)"
-                    ]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="bg-gradient-to-br from-blue-600/90 via-purple-600/90 to-pink-600/90 backdrop-blur-xl px-12 py-8 rounded-2xl border-2 border-white/30"
-                >
-                  <p className="text-white font-bold text-4xl tracking-wider mb-2">BRAKE PAD</p>
-                  <p className="text-white/90 text-lg">Entering 3D Analysis Mode</p>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    className="mt-4 mx-auto w-8 h-8 border-4 border-white/30 border-t-white rounded-full"
-                  />
-                </motion.div>
-              </div>
-            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

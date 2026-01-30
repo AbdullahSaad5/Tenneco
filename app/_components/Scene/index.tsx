@@ -9,6 +9,7 @@ import LV from "../Models/lv";
 import Asm from "../Models/asm";
 import J4444 from "../Models/j4444";
 import Pad from "../Models/pad";
+import { useContent } from "../../providers/ContentProvider";
 
 type ModelType = "lv" | "asm" | "j4444" | "pad";
 
@@ -24,6 +25,9 @@ const Scene = forwardRef(({ activeModel, onModelChange }: SceneProps, ref) => {
   const { camera } = useThree();
   const [isInitialized, setIsInitialized] = useState(false);
   const [modelOpacity, setModelOpacity] = useState(1);
+
+  // Get model configurations
+  const { modelConfigs } = useContent();
 
   // Static camera view configuration
   const cameraView = useMemo(() => ({
@@ -244,10 +248,18 @@ const Scene = forwardRef(({ activeModel, onModelChange }: SceneProps, ref) => {
         floatingRange={[0, 0.2]}
       >
         <group ref={groupRef} key={activeModel}>
-          {activeModel === "lv" && <LV key="lv" onHotspotClick={onModelChange} />}
-          {activeModel === "asm" && <Asm key="asm" />}
-          {activeModel === "j4444" && <J4444 key="j4444" />}
-          {activeModel === "pad" && <Pad key="pad" />}
+          {activeModel === "lv" && modelConfigs.lv && (
+            <LV key="lv" config={modelConfigs.lv} onHotspotClick={onModelChange} />
+          )}
+          {activeModel === "asm" && modelConfigs.asm && (
+            <Asm key="asm" config={modelConfigs.asm} />
+          )}
+          {activeModel === "j4444" && modelConfigs.j4444 && (
+            <J4444 key="j4444" config={modelConfigs.j4444} />
+          )}
+          {activeModel === "pad" && modelConfigs.pad && (
+            <Pad key="pad" config={modelConfigs.pad} />
+          )}
         </group>
       </Float>
 
@@ -277,8 +289,8 @@ const Scene = forwardRef(({ activeModel, onModelChange }: SceneProps, ref) => {
         makeDefault
       />
 
-      {/* Environment Lighting */}
-      <Environment preset="city" />
+      {/* Environment Lighting - Using studio preset for better compatibility */}
+      <Environment preset="city" background={false} />
 
       {/* Post Processing Effects */}
       <EffectComposer>

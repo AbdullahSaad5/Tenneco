@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><title>Language Check</title></head>
+<body>
+<h1>Checking Languages...</h1>
+<pre id="result">Loading...</pre>
+<script>
+fetch('https://tenneco-admin.vercel.app/api/languages')
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+  })
+  .catch(err => {
+    document.getElementById('result').textContent = 'Error: ' + err.message;
+  });
+</script>
+</body>
+</html>

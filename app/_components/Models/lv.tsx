@@ -2,10 +2,7 @@ import { useGLTF, Html } from "@react-three/drei";
 import React, { useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-
-const MODEL_PATH = "./models/lv_file.glb";
-const GROUND_Y = -2;
-const GROUND_OFFSET = 0.15;
+import { ModelConfiguration } from "../../_types/content";
 
 type ModelType = "lv" | "asm" | "j4444" | "pad";
 
@@ -172,11 +169,13 @@ const Hotspot = ({ position, onClick, label, color, occludeRef }: HotspotProps) 
 };
 
 interface LVProps {
+  config: ModelConfiguration;
   onHotspotClick?: (model: ModelType) => void;
 }
 
-const LV = ({ onHotspotClick }: LVProps) => {
-  const result = useGLTF(MODEL_PATH);
+const LV = ({ config, onHotspotClick }: LVProps) => {
+  const modelPath = config.modelFile.fallbackPath || "./models/lv_file.glb";
+  const result = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
   const modelRef = useRef<THREE.Group>(null);
   const isPositionedRef = useRef(false);
@@ -189,7 +188,7 @@ const LV = ({ onHotspotClick }: LVProps) => {
       if (box.isEmpty()) return;
 
       const minY = box.min.y;
-      const offsetY = GROUND_Y - minY + GROUND_OFFSET;
+      const offsetY = config.transform.groundY - minY + config.transform.groundOffset;
 
       groupRef.current.position.y = offsetY;
       isPositionedRef.current = true;
@@ -202,33 +201,36 @@ const LV = ({ onHotspotClick }: LVProps) => {
     }
   };
 
+  // Filter and sort enabled hotspots
+  const activeHotspots = config.hotspots
+    .filter(hs => hs.isEnabled)
+    .sort((a, b) => a.order - b.order);
+
   return (
     <group ref={groupRef}>
       <group ref={modelRef}>
-        <primitive object={result.scene} scale={0.05} />
+        <primitive
+          object={result.scene}
+          scale={config.transform.scale}
+          rotation={[
+            config.transform.rotation.x,
+            config.transform.rotation.y,
+            config.transform.rotation.z
+          ]}
+        />
       </group>
 
-      <Hotspot
-        position={[0.75, 0, 7.5]}
-        onClick={() => handleHotspotClick("pad")}
-        label="Brake Pad Assembly"
-        color="#f59e0b"
-        occludeRef={modelRef}
-      />
-      <Hotspot
-        position={[-0.85, 2.65, 8.5]}
-        onClick={() => handleHotspotClick("j4444")}
-        label="J-4444 Component"
-        color="#8b5cf6"
-        occludeRef={modelRef}
-      />
-      <Hotspot
-        position={[-0.85, -2.75, 5.75]}
-        onClick={() => handleHotspotClick("asm")}
-        label="ASM Assembly"
-        color="#ec4899"
-        occludeRef={modelRef}
-      />
+      {/* Dynamic Hotspots */}
+      {activeHotspots.map((hotspot) => (
+        <Hotspot
+          key={hotspot.id}
+          position={[hotspot.position.x, hotspot.position.y, hotspot.position.z]}
+          onClick={() => hotspot.targetModel && handleHotspotClick(hotspot.targetModel as ModelType)}
+          label={hotspot.label}
+          color={hotspot.color}
+          occludeRef={modelRef}
+        />
+      ))}
     </group>
   );
 };

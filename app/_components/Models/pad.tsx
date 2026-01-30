@@ -2,17 +2,16 @@ import { useGLTF } from "@react-three/drei";
 import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-
-const MODEL_PATH = "./models/pad.glb";
-const GROUND_Y = -2;
-const GROUND_OFFSET = 0.15;
+import { ModelConfiguration } from "../../_types/content";
 
 interface PadProps {
+  config: ModelConfiguration;
   onReturnClick?: () => void;
 }
 
-const Pad = ({  }: PadProps) => {
-  const result = useGLTF(MODEL_PATH);
+const Pad = ({ config }: PadProps) => {
+  const modelPath = config.modelFile.fallbackPath || "./models/pad.glb";
+  const result = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
   const isPositionedRef = useRef(false);
 
@@ -24,7 +23,7 @@ const Pad = ({  }: PadProps) => {
       if (box.isEmpty()) return;
 
       const minY = box.min.y;
-      const offsetY = GROUND_Y - minY + GROUND_OFFSET;
+      const offsetY = config.transform.groundY - minY + config.transform.groundOffset;
 
       groupRef.current.position.y = offsetY;
       isPositionedRef.current = true;
@@ -33,7 +32,15 @@ const Pad = ({  }: PadProps) => {
 
   return (
     <group ref={groupRef}>
-      <primitive object={result.scene} scale={0.05} />
+      <primitive
+        object={result.scene}
+        scale={config.transform.scale}
+        rotation={[
+          config.transform.rotation.x,
+          config.transform.rotation.y,
+          config.transform.rotation.z
+        ]}
+      />
     </group>
   );
 };
