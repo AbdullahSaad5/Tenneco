@@ -3,6 +3,8 @@ import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { brakes, hotspots, VehicleType, HotspotConfig } from "../../config";
+import { AnimationMixer, AnimationAction } from "three";
+import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 
 interface HotspotProps {
   config: HotspotConfig;
@@ -176,15 +178,34 @@ const BrakeModel = ({ vehicleType }: BrakeModelProps) => {
   const config = brakes[vehicleType];
   const vehicleHotspots = hotspots[vehicleType];
 
-  const { scene } = useGLTF(config.modelPath);
+  const { scene, animations } = useGLTF(config.modelPath);
   const groupRef = useRef<THREE.Group>(null);
   const modelRef = useRef<THREE.Group>(null);
+  const mixerRef = useRef<AnimationMixer | null>(null);
+  const actionRef = useRef<AnimationAction | null>(null);
+
+  // Animation state
+  const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
+  const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+  // Show hotspots immediately if no animations, otherwise wait for animation to complete
+  const [showHotspots, setShowHotspots] = useState(false);
+
+  // Use viewerScale from scaleConfig
+  const brakeScale = config.scaleConfig.viewerScale * config.scale;
 
   // Clone and calculate offset synchronously
   const { clonedScene, centerOffset } = useMemo(() => {
-    const cloned = scene.clone();
+    // Use SkeletonUtils.clone for proper animation support
+    const cloned = clone(scene) as THREE.Group;
 
-    // Calculate center immediately when cloning
+    // Apply scale to EVERY object in the hierarchy
+    cloned.traverse((child) => {
+      if (child instanceof THREE.Object3D) {
+        child.scale.set(brakeScale, brakeScale, brakeScale);
+      }
+    });
+
+    // Calculate center immediately when cloning (after scaling)
     const box = new THREE.Box3().setFromObject(cloned);
     const center = new THREE.Vector3();
     box.getCenter(center);
@@ -197,23 +218,135 @@ const BrakeModel = ({ vehicleType }: BrakeModelProps) => {
     offset.y = -minY - 2;
 
     return { clonedScene: cloned, centerOffset: offset };
-  }, [scene]);
+  }, [scene, brakeScale]);
 
   // Filter enabled hotspots
   const activeHotspots = vehicleHotspots.filter(hs => hs.isEnabled);
 
+  // Show hotspots immediately if no animations
+  useEffect(() => {
+    if (!animations || animations.length === 0) {
+      setShowHotspots(true);
+    }
+  }, [animations]);
+
+  // Initialize AnimationMixer and setup animation
+  useEffect(() => {
+    console.log('[BrakeModel] Checking animations:', {
+      hasAnimations: !!animations,
+      animationCount: animations?.length || 0,
+      hasClonedScene: !!clonedScene,
+      allAnimations: animations?.map(a => ({ name: a.name, duration: a.duration }))
+    });
+
+    if (animations && animations.length > 0 && clonedScene) {
+      const mixer = new AnimationMixer(clonedScene);
+      mixerRef.current = mixer;
+
+      // Get the first animation (assuming explosion animation is the first one)
+      const clip = animations[0];
+      const action = mixer.clipAction(clip);
+
+      // Configure animation to stop at the last frame
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true; // Preserve the last frame
+
+      actionRef.current = action;
+
+      console.log('[BrakeModel] Animation loaded:', {
+        name: clip.name,
+        duration: clip.duration,
+        tracksCount: clip.tracks.length,
+        tracks: clip.tracks.map(t => ({ name: t.name, type: t.constructor.name }))
+      });
+
+      // Listen for animation completion
+      const onFinished = (e: any) => {
+        if (e.action === action) {
+          console.log('[BrakeModel] Animation completed');
+          setIsAnimationPlaying(false);
+          setIsAnimationComplete(true);
+          setShowHotspots(true);
+        }
+      };
+
+      mixer.addEventListener('finished', onFinished);
+
+      return () => {
+        mixer.removeEventListener('finished', onFinished);
+        mixer.stopAllAction();
+      };
+    }
+  }, [animations, clonedScene]);
+
+  // Listen for playExplosion event
+  useEffect(() => {
+    const handlePlayExplosion = () => {
+      console.log('[BrakeModel] playExplosion event received', {
+        hasAction: !!actionRef.current,
+        isPlaying: isAnimationPlaying,
+        hasMixer: !!mixerRef.current
+      });
+
+      if (actionRef.current && !isAnimationPlaying) {
+        console.log('[BrakeModel] Starting explosion animation');
+        setIsAnimationPlaying(true);
+        setShowHotspots(false);
+        actionRef.current.reset();
+        actionRef.current.play();
+        console.log('[BrakeModel] Animation play() called, time:', actionRef.current.time);
+      } else if (!actionRef.current) {
+        console.warn('[BrakeModel] No animation action available - model may not have animations');
+      } else if (isAnimationPlaying) {
+        console.warn('[BrakeModel] Animation already playing');
+      }
+    };
+
+    window.addEventListener('playExplosion', handlePlayExplosion);
+    return () => window.removeEventListener('playExplosion', handlePlayExplosion);
+  }, [isAnimationPlaying]);
+
+  // Update animation mixer
+  const frameCountRef = useRef(0);
+  useFrame((state, delta) => {
+    if (mixerRef.current && isAnimationPlaying) {
+      mixerRef.current.update(delta);
+
+      // Log every 30 frames (roughly once per second at 60fps)
+      frameCountRef.current++;
+      if (frameCountRef.current % 30 === 0 && actionRef.current) {
+        console.log('[BrakeModel] Animation playing:', {
+          time: actionRef.current.time.toFixed(2),
+          duration: actionRef.current.getClip().duration.toFixed(2),
+          isRunning: actionRef.current.isRunning()
+        });
+      }
+    }
+  });
+
+  // Debug logging
+  console.log('[BrakeModel Viewer]', {
+    vehicleType,
+    viewerScale: config.scaleConfig.viewerScale,
+    baseScale: config.scale,
+    finalScale: brakeScale,
+    hasAnimations: animations && animations.length > 0
+  });
+
   return (
     <group ref={groupRef}>
-      <group ref={modelRef} position={[centerOffset.x, centerOffset.y, centerOffset.z]}>
+      <group
+        ref={modelRef}
+        position={[centerOffset.x, centerOffset.y, centerOffset.z]}
+      >
         <primitive
           object={clonedScene}
-          scale={config.scale}
           rotation={[config.rotation.x, config.rotation.y, config.rotation.z]}
         />
       </group>
 
-      {/* Dynamic Hotspots from config */}
-      {activeHotspots.map((hotspotConfig) => (
+      {/* Dynamic Hotspots from config - only show after animation completes */}
+      {showHotspots && activeHotspots.map((hotspotConfig) => (
         <Hotspot
           key={hotspotConfig.id}
           config={hotspotConfig}

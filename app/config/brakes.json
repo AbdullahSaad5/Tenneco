@@ -5,7 +5,11 @@
     "scale": 1,
     "rotation": { "x": 0, "y": 0, "z": 0 },
     "position": { "x": 0, "y": 0, "z": 0 },
-    "centerModel": true
+    "centerModel": true,
+    "scaleConfig": {
+      "transitionScale": 0.6,
+      "viewerScale": 0.9
+    }
   },
   "commercial": {
     "name": "Commercial Vehicle Brake",
@@ -13,7 +17,11 @@
     "scale": 1,
     "rotation": { "x": 0, "y": 0, "z": 0 },
     "position": { "x": 0, "y": 0, "z": 0 },
-    "centerModel": true
+    "centerModel": true,
+    "scaleConfig": {
+      "transitionScale": 1.0,
+      "viewerScale": 0.01
+    }
   },
   "rail": {
     "name": "Rail Brake",
@@ -21,6 +29,10 @@
     "scale": 1,
     "rotation": { "x": 0, "y": 0, "z": 0 },
     "position": { "x": 0, "y": 0, "z": 0 },
-    "centerModel": true
+    "centerModel": true,
+    "scaleConfig": {
+      "transitionScale": 1.0,
+      "viewerScale": 1.0
+    }
   }
 }

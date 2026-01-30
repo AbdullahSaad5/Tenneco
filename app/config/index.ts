@@ -15,6 +15,13 @@ export interface Vector3Config {
   z: number;
 }
 
+export interface ZoomConfig {
+  initialScale: number;
+  initialLookAtTarget: Vector3Config;
+  zoomLookAtTarget: Vector3Config;
+  zoomIntensity: number;
+}
+
 export interface VehicleConfig {
   name: string;
   modelPath: string;
@@ -24,6 +31,12 @@ export interface VehicleConfig {
   tirePosition: Vector3Config;
   cameraStart: Vector3Config;
   cameraZoomTarget: Vector3Config;
+  zoomConfig: ZoomConfig;
+}
+
+export interface BrakeScaleConfig {
+  transitionScale: number;
+  viewerScale: number;
 }
 
 export interface BrakeConfig {
@@ -33,6 +46,7 @@ export interface BrakeConfig {
   rotation: Vector3Config;
   position: Vector3Config;
   centerModel: boolean;
+  scaleConfig: BrakeScaleConfig;
 }
 
 export interface HotspotConfig {

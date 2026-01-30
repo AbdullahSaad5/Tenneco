@@ -34,6 +34,10 @@ function ViewerContent() {
     window.dispatchEvent(new CustomEvent("zoomOut"));
   };
 
+  const handlePlayExplosion = () => {
+    window.dispatchEvent(new CustomEvent("playExplosion"));
+  };
+
   return (
     <div className="h-screen bg-slate-50 relative overflow-hidden">
       {/* Navbar */}
@@ -44,6 +48,8 @@ function ViewerContent() {
         onResetCamera={handleResetCamera}
         onZoomIn={handleZoomIn}
         onZoomOut={handleZoomOut}
+        onPlayExplosion={handlePlayExplosion}
+        showExplosionButton={true}
       />
 
       {/* 3D Canvas */}

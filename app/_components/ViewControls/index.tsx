@@ -7,9 +7,17 @@ interface ViewControlsProps {
   onResetCamera: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
+  onPlayExplosion?: () => void;
+  showExplosionButton?: boolean;
 }
 
-const ViewControls: React.FC<ViewControlsProps> = ({ onResetCamera, onZoomIn, onZoomOut }) => {
+const ViewControls: React.FC<ViewControlsProps> = ({
+  onResetCamera,
+  onZoomIn,
+  onZoomOut,
+  onPlayExplosion,
+  showExplosionButton = false
+}) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const toggleFullscreen = () => {
@@ -65,6 +73,29 @@ const ViewControls: React.FC<ViewControlsProps> = ({ onResetCamera, onZoomIn, on
           />
         </svg>
       </button>
+
+      {/* Play Explosion Button - only show if available */}
+      {showExplosionButton && onPlayExplosion && (
+        <button
+          onClick={onPlayExplosion}
+          className="group p-3 bg-white hover:bg-orange-600 rounded-lg border border-slate-200 transition-colors"
+          title="Play Explosion Animation"
+        >
+          <svg
+            className="w-6 h-6 text-slate-700 group-hover:text-white transition-colors"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            />
+          </svg>
+        </button>
+      )}
 
       {/* Zoom In Button */}
       <button

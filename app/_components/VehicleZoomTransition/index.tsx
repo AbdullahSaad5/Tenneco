@@ -6,6 +6,7 @@ import { Suspense, useRef, useState, useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
 import { vehicles, brakes, transition, VehicleType } from "../../config";
+import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 
 interface VehicleZoomTransitionProps {
   vehicleType: VehicleType;
@@ -22,11 +23,22 @@ const VehicleModel = ({ vehicleType, opacity }: VehicleModelProps) => {
   const { scene } = useGLTF(config.modelPath);
   const groupRef = useRef<THREE.Group>(null);
 
+  // Use initialScale from zoomConfig
+  const modelScale = config.zoomConfig.initialScale * config.scale;
+
   // Clone and calculate offset synchronously
   const { clonedScene, centerOffset } = useMemo(() => {
-    const cloned = scene.clone();
+    // Use SkeletonUtils.clone for proper animation and hierarchy support
+    const cloned = clone(scene) as THREE.Group;
 
-    // Calculate center immediately when cloning
+    // Apply scale to EVERY object in the hierarchy
+    cloned.traverse((child) => {
+      if (child instanceof THREE.Object3D) {
+        child.scale.set(modelScale, modelScale, modelScale);
+      }
+    });
+
+    // Calculate center immediately when cloning (after scaling)
     const box = new THREE.Box3().setFromObject(cloned);
     const center = new THREE.Vector3();
     box.getCenter(center);
@@ -36,7 +48,7 @@ const VehicleModel = ({ vehicleType, opacity }: VehicleModelProps) => {
     offset.y = -minY - 0.5; // Position on ground
 
     return { clonedScene: cloned, centerOffset: offset };
-  }, [scene]);
+  }, [scene, modelScale]);
 
   // Update opacity
   useEffect(() => {
@@ -54,10 +66,12 @@ const VehicleModel = ({ vehicleType, opacity }: VehicleModelProps) => {
   }, [clonedScene, opacity]);
 
   return (
-    <group ref={groupRef} position={[centerOffset.x, centerOffset.y, centerOffset.z]}>
+    <group
+      ref={groupRef}
+      position={[centerOffset.x, centerOffset.y, centerOffset.z]}
+    >
       <primitive
         object={clonedScene}
-        scale={config.scale}
         rotation={[config.rotation.x, config.rotation.y, config.rotation.z]}
       />
     </group>
@@ -71,14 +85,31 @@ interface BrakeModelProps {
 
 const BrakeTransitionModel = ({ vehicleType, opacity }: BrakeModelProps) => {
   const config = brakes[vehicleType];
+
+  // Debug: Log entire config on mount
+  useEffect(() => {
+    console.log('[BrakeTransitionModel] Full config:', config);
+  }, [config]);
+
   const { scene } = useGLTF(config.modelPath);
   const groupRef = useRef<THREE.Group>(null);
 
+  // Use transitionScale from scaleConfig
+  const brakeScale = config.scaleConfig.transitionScale * config.scale;
+
   // Clone and calculate offset synchronously
   const { clonedScene, centerOffset } = useMemo(() => {
-    const cloned = scene.clone();
+    // Use SkeletonUtils.clone for proper animation and hierarchy support
+    const cloned = clone(scene) as THREE.Group;
 
-    // Calculate center immediately when cloning
+    // Apply scale to EVERY object in the hierarchy
+    cloned.traverse((child) => {
+      if (child instanceof THREE.Object3D) {
+        child.scale.set(brakeScale, brakeScale, brakeScale);
+      }
+    });
+
+    // Calculate center immediately when cloning (after scaling)
     const box = new THREE.Box3().setFromObject(cloned);
     const center = new THREE.Vector3();
     box.getCenter(center);
@@ -88,7 +119,7 @@ const BrakeTransitionModel = ({ vehicleType, opacity }: BrakeModelProps) => {
     offset.y = -minY - 0.5;
 
     return { clonedScene: cloned, centerOffset: offset };
-  }, [scene]);
+  }, [scene, brakeScale]);
 
   // Update opacity
   useEffect(() => {
@@ -105,11 +136,21 @@ const BrakeTransitionModel = ({ vehicleType, opacity }: BrakeModelProps) => {
     });
   }, [clonedScene, opacity]);
 
+  // Debug logging
+  console.log('[BrakeTransitionModel]', {
+    vehicleType,
+    transitionScale: config.scaleConfig.transitionScale,
+    baseScale: config.scale,
+    finalScale: brakeScale
+  });
+
   return (
-    <group ref={groupRef} position={[centerOffset.x, centerOffset.y, centerOffset.z]}>
+    <group
+      ref={groupRef}
+      position={[centerOffset.x, centerOffset.y, centerOffset.z]}
+    >
       <primitive
         object={clonedScene}
-        scale={config.scale}
         rotation={[config.rotation.x, config.rotation.y, config.rotation.z]}
       />
     </group>
@@ -130,11 +171,7 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
 
   const startTime = useRef(Date.now());
   const vehicleConfig = vehicles[vehicleType];
-  const tirePosition = new THREE.Vector3(
-    vehicleConfig.tirePosition.x,
-    vehicleConfig.tirePosition.y,
-    vehicleConfig.tirePosition.z
-  );
+  const zoomConfig = vehicleConfig.zoomConfig;
 
   // Timing from config
   const { fadeInDuration, showVehicleDuration, zoomDuration, transitionDuration, showBrakeDuration } = transition.timing;
@@ -146,9 +183,28 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
     vehicleConfig.cameraStart.z
   ));
   const zoomTargetPosition = useRef(new THREE.Vector3(
-    vehicleConfig.cameraZoomTarget.x,
-    vehicleConfig.cameraZoomTarget.y,
-    vehicleConfig.cameraZoomTarget.z
+    vehicleConfig.cameraZoomTarget.x * zoomConfig.zoomIntensity,
+    vehicleConfig.cameraZoomTarget.y * zoomConfig.zoomIntensity,
+    vehicleConfig.cameraZoomTarget.z * zoomConfig.zoomIntensity
+  ));
+
+  // LookAt targets from config
+  const initialLookAt = useRef(new THREE.Vector3(
+    zoomConfig.initialLookAtTarget.x,
+    zoomConfig.initialLookAtTarget.y,
+    zoomConfig.initialLookAtTarget.z
+  ));
+  const zoomLookAt = useRef(new THREE.Vector3(
+    zoomConfig.zoomLookAtTarget.x,
+    zoomConfig.zoomLookAtTarget.y,
+    zoomConfig.zoomLookAtTarget.z
+  ));
+
+  // For smooth lookAt interpolation
+  const currentLookAt = useRef(new THREE.Vector3(
+    zoomConfig.initialLookAtTarget.x,
+    zoomConfig.initialLookAtTarget.y,
+    zoomConfig.initialLookAtTarget.z
   ));
 
   useFrame(() => {
@@ -156,8 +212,8 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
 
     // Phase 1: Fade in vehicle
     if (phase === "showing") {
-      // Make camera look at center where model is positioned
-      camera.lookAt(0, 0, 0);
+      // Keep camera looking at initial lookAt target
+      camera.lookAt(initialLookAt.current);
 
       if (elapsed < fadeInDuration) {
         const progress = elapsed / fadeInDuration;
@@ -170,14 +226,18 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
       }
     }
 
-    // Phase 2: Zoom into tire
+    // Phase 2: Zoom into tire - smoothly interpolate BOTH position and lookAt
     if (phase === "zooming") {
       const zoomElapsed = Date.now() - startTime.current;
       const progress = Math.min(zoomElapsed / zoomDuration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
 
+      // Smoothly move camera position
       camera.position.lerpVectors(initialPosition.current, zoomTargetPosition.current, eased);
-      camera.lookAt(tirePosition);
+
+      // Smoothly interpolate lookAt target to avoid sudden shifts
+      currentLookAt.current.lerpVectors(initialLookAt.current, zoomLookAt.current, eased);
+      camera.lookAt(currentLookAt.current);
 
       if (progress >= 1) {
         setPhase("transitioning");
