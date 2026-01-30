@@ -3,57 +3,57 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { Package, Settings, Wrench, FileText } from "lucide-react";
+import { Car, Truck, Train } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { VehicleType } from "../../config";
 
-type ModelType = "lv" | "asm" | "j4444" | "pad";
-
-interface ModelInfo {
-  id: ModelType;
+interface VehicleInfo {
+  id: VehicleType;
   label: string;
   description: string;
   Icon: React.ComponentType<{ className?: string }>;
 }
 
 interface ModelSelectorProps {
-  activeModel: ModelType;
-  setActiveModel: (model: ModelType) => void;
+  activeVehicle: VehicleType;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
 }
 
-const models: ModelInfo[] = [
+const vehicles: VehicleInfo[] = [
   {
-    id: "lv",
-    label: "LV File",
-    description: "LV component assembly",
-    Icon: Package,
+    id: "light",
+    label: "Light Vehicles",
+    description: "Passenger car brake systems",
+    Icon: Car,
   },
   {
-    id: "asm",
-    label: "ASM",
-    description: "Assembly module",
-    Icon: Settings,
+    id: "commercial",
+    label: "Commercial Vehicles",
+    description: "Heavy-duty truck brake systems",
+    Icon: Truck,
   },
   {
-    id: "j4444",
-    label: "J-4444",
-    description: "J-4444 component",
-    Icon: Wrench,
-  },
-  {
-    id: "pad",
-    label: "Pad",
-    description: "Pad assembly",
-    Icon: FileText,
+    id: "rail",
+    label: "Rail Vehicles",
+    description: "Railway brake systems",
+    Icon: Train,
   },
 ];
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({
-  activeModel,
-  setActiveModel,
+  activeVehicle,
   isOpen,
   setIsOpen,
 }) => {
+  const router = useRouter();
+
+  const handleVehicleSelect = (vehicleType: VehicleType) => {
+    setIsOpen(false);
+    // Navigate to viewer with selected vehicle and animation
+    router.push(`/viewer?vehicle=${vehicleType}&animate=true`);
+  };
+
   return (
     <>
       {/* Sidebar */}
@@ -66,7 +66,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
               onClick={() => setIsOpen(false)}
             />
 
@@ -76,10 +76,10 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
               animate={{ x: 0 }}
               exit={{ x: -320 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-[72px] h-[calc(100vh-72px)] w-80 bg-slate-900 border-r border-slate-700 z-50 flex flex-col"
+              className="fixed left-0 top-[72px] h-[calc(100vh-72px)] w-80 bg-gradient-to-br from-slate-900 to-slate-800 backdrop-blur-xl border-r border-white/10 z-50 flex flex-col shadow-2xl"
             >
               {/* Header */}
-              <div className="p-6 border-b border-slate-700/50">
+              <div className="p-6 border-b border-white/10">
                 {/* Logo and Close Button */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -95,7 +95,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                   </div>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors group"
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
                     title="Close sidebar"
                   >
                     <svg
@@ -113,41 +113,35 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                     </svg>
                   </button>
                 </div>
-                {/* Subtitle */}
-                <div className="mb-4">
-                  <p className="text-slate-400 text-sm">3D Model Viewer</p>
-                </div>
                 {/* Section Title */}
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-1">Models</h2>
-                  <p className="text-slate-400 text-sm">Select a 3D model to view</p>
+                  <h2 className="text-xl font-bold text-white mb-1">Vehicle Types</h2>
+                  <p className="text-slate-400 text-sm">Select a brake system to explore</p>
                 </div>
               </div>
 
-              {/* Model Cards */}
+              {/* Vehicle Cards */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {models.map((model, index) => {
-                  const IconComponent = model.Icon;
+                {vehicles.map((vehicle, index) => {
+                  const IconComponent = vehicle.Icon;
+                  const isActive = activeVehicle === vehicle.id;
                   return (
                     <motion.button
-                      key={model.id}
+                      key={vehicle.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      onClick={() => {
-                        setActiveModel(model.id);
-                        setIsOpen(false);
-                      }}
-                      className={`w-full p-4 rounded-lg text-left transition-colors ${
-                        activeModel === model.id
-                          ? "bg-blue-600"
-                          : "bg-slate-800 hover:bg-slate-700"
+                      onClick={() => handleVehicleSelect(vehicle.id)}
+                      className={`w-full p-4 rounded-xl text-left transition-all ${
+                        isActive
+                          ? "bg-gradient-to-r from-blue-600 to-cyan-600 shadow-lg shadow-blue-500/30"
+                          : "bg-white/5 hover:bg-white/10 border border-white/10"
                       }`}
                     >
                       <div className="flex items-start gap-4">
                         <div
                           className={`${
-                            activeModel === model.id ? "text-white" : "text-slate-400"
+                            isActive ? "text-white" : "text-slate-400"
                           }`}
                         >
                           <IconComponent className="w-8 h-8" />
@@ -155,26 +149,26 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                         <div className="flex-1 min-w-0">
                           <h3
                             className={`font-semibold text-lg mb-1 ${
-                              activeModel === model.id ? "text-white" : "text-slate-200"
+                              isActive ? "text-white" : "text-slate-200"
                             }`}
                           >
-                            {model.label}
+                            {vehicle.label}
                           </h3>
                           <p
                             className={`text-sm ${
-                              activeModel === model.id
+                              isActive
                                 ? "text-blue-100"
                                 : "text-slate-400"
                             }`}
                           >
-                            {model.description}
+                            {vehicle.description}
                           </p>
                         </div>
-                        {activeModel === model.id && (
+                        {isActive && (
                           <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            className="w-3 h-3 bg-white rounded-full mt-2"
+                            className="w-3 h-3 bg-white rounded-full mt-2 shadow-lg"
                           />
                         )}
                       </div>
@@ -184,7 +178,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
               </div>
 
               {/* Footer */}
-              <div className="p-4 border-t border-slate-700">
+              <div className="p-4 border-t border-white/10">
                 <div className="text-xs text-slate-500 text-center">
                   Use mouse to rotate • Scroll to zoom
                 </div>

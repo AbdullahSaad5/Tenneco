@@ -9,6 +9,7 @@ import ViewControls from "../_components/ViewControls";
 import Navbar from "../_components/Navbar";
 import VehicleZoomTransition from "../_components/VehicleZoomTransition";
 import ModelInfo from "../_components/ModelInfo";
+import ModelSelector from "../_components/ModelSelector";
 import { VehicleType, HotspotConfig } from "../config";
 
 function ViewerContent() {
@@ -23,9 +24,16 @@ function ViewerContent() {
   const [showAnimation, setShowAnimation] = useState(shouldAnimate);
   const [animationComplete, setAnimationComplete] = useState(!shouldAnimate);
   const [selectedHotspot, setSelectedHotspot] = useState<HotspotConfig | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Reset states when vehicle type or animation param changes
   useEffect(() => {
-    if (!shouldAnimate) {
+    const shouldAnim = searchParams.get("animate") === "true";
+    setShowAnimation(shouldAnim);
+    setAnimationComplete(!shouldAnim);
+    setSelectedHotspot(null);
+
+    if (!shouldAnim) {
       // Small delay to ensure smooth loading when no animation
       const timer = setTimeout(() => setIsReady(true), 100);
       return () => clearTimeout(timer);
@@ -33,7 +41,7 @@ function ViewerContent() {
       // Ready immediately for animation
       setIsReady(false);
     }
-  }, [shouldAnimate]);
+  }, [vehicleType, searchParams]);
 
   const handleAnimationComplete = () => {
     setShowAnimation(false);
@@ -77,7 +85,20 @@ function ViewerContent() {
       )}
 
       {/* Navbar - only show after animation complete */}
-      {animationComplete && <Navbar showBackButton={true} />}
+      {animationComplete && (
+        <Navbar
+          showBackButton={true}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          isSidebarOpen={isSidebarOpen}
+        />
+      )}
+
+      {/* Model Selector Sidebar */}
+      <ModelSelector
+        activeVehicle={vehicleType}
+        isOpen={isSidebarOpen}
+        setIsOpen={setIsSidebarOpen}
+      />
 
       {/* View Controls - only show after animation complete */}
       {animationComplete && (
