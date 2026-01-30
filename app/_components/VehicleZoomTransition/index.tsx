@@ -17,10 +17,10 @@ interface VehicleZoomTransitionProps {
 interface VehicleModelProps {
   vehicleType: VehicleType;
   opacity: number;
-  isBlueVariant?: boolean;
+  blueTransitionProgress?: number; // 0 = normal, 1 = fully blue
 }
 
-const VehicleModel = ({ vehicleType, opacity, isBlueVariant = false }: VehicleModelProps) => {
+const VehicleModel = ({ vehicleType, opacity, blueTransitionProgress = 0 }: VehicleModelProps) => {
   const config = vehicles[vehicleType];
   const { scene } = useGLTF(config.modelPath);
   const groupRef = useRef<THREE.Group>(null);
@@ -107,8 +107,12 @@ const VehicleModel = ({ vehicleType, opacity, isBlueVariant = false }: VehicleMo
     });
   }, [clonedScene]);
 
-  // Update opacity and material properties
+  // Update opacity and material properties with smooth transitions
   useEffect(() => {
+    const blueColor = new THREE.Color(0x5BA3F5);
+    const blueEmissive = new THREE.Color(0x3A80D5);
+    const blackEmissive = new THREE.Color(0x000000);
+
     clonedScene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
@@ -117,27 +121,26 @@ const VehicleModel = ({ vehicleType, opacity, isBlueVariant = false }: VehicleMo
           material.transparent = true;
           material.opacity = opacity;
 
-          // Adjust material properties based on variant
+          // Smoothly interpolate material properties based on transition progress
           if ((material as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
             const stdMat = material as THREE.MeshStandardMaterial;
+            const original = originalMaterials.current.get(stdMat);
 
-            if (isBlueVariant) {
-              // Blue semi-transparent variant
-              stdMat.color.set(0x5BA3F5); // Bright blue color
-              stdMat.metalness = 0.3;
-              stdMat.roughness = 0.5;
-              stdMat.emissive.set(0x3A80D5);
-              stdMat.emissiveIntensity = 0.4;
-            } else {
-              // Restore original appearance or apply default adjustments
-              const original = originalMaterials.current.get(stdMat);
-              if (original) {
-                stdMat.color.copy(original.color);
-                stdMat.metalness = Math.min(original.metalness, 0.3);
-                stdMat.roughness = Math.max(original.roughness, 0.7);
-                stdMat.emissiveIntensity = 0;
-                stdMat.emissive.set(0x000000);
-              }
+            if (original) {
+              // Interpolate color from original to blue
+              stdMat.color.lerpColors(original.color, blueColor, blueTransitionProgress);
+
+              // Interpolate metalness
+              const targetMetalness = blueTransitionProgress > 0 ? 0.3 : Math.min(original.metalness, 0.3);
+              stdMat.metalness = THREE.MathUtils.lerp(Math.min(original.metalness, 0.3), targetMetalness, blueTransitionProgress);
+
+              // Interpolate roughness
+              const targetRoughness = blueTransitionProgress > 0 ? 0.5 : Math.max(original.roughness, 0.7);
+              stdMat.roughness = THREE.MathUtils.lerp(Math.max(original.roughness, 0.7), targetRoughness, blueTransitionProgress);
+
+              // Interpolate emissive
+              stdMat.emissive.lerpColors(blackEmissive, blueEmissive, blueTransitionProgress);
+              stdMat.emissiveIntensity = THREE.MathUtils.lerp(0, 0.4, blueTransitionProgress);
             }
           }
 
@@ -145,7 +148,7 @@ const VehicleModel = ({ vehicleType, opacity, isBlueVariant = false }: VehicleMo
         }
       }
     });
-  }, [clonedScene, opacity, isBlueVariant]);
+  }, [clonedScene, opacity, blueTransitionProgress]);
 
   return (
     <group
@@ -243,7 +246,7 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
   const { camera } = useThree();
   const [phase, setPhase] = useState<"showing" | "blueTransition" | "zooming" | "transitioning" | "brake">("showing");
   const [vehicleOpacity, setVehicleOpacity] = useState(1); // Start at full opacity
-  const [isBlueVariant, setIsBlueVariant] = useState(false);
+  const [blueTransitionProgress, setBlueTransitionProgress] = useState(0); // 0 = normal, 1 = fully blue
   const [brakeOpacity, setBrakeOpacity] = useState(0);
   const completedRef = useRef(false);
 
@@ -309,10 +312,8 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
       const blueElapsed = Date.now() - startTime.current;
       const progress = Math.min(blueElapsed / blueTransitionDuration, 1);
 
-      // Switch to blue variant at the very beginning of this phase
-      if (!isBlueVariant) {
-        setIsBlueVariant(true);
-      }
+      // Smoothly transition blue progress from 0 to 1
+      setBlueTransitionProgress(progress);
 
       // Transition to 70% opacity
       setVehicleOpacity(1 - progress * 0.3); // Goes from 1.0 to 0.7
@@ -329,8 +330,9 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
       const progress = Math.min(zoomElapsed / zoomDuration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
 
-      // Keep vehicle at 70% opacity and blue
+      // Keep vehicle at 70% opacity and fully blue
       setVehicleOpacity(0.7);
+      setBlueTransitionProgress(1); // Maintain fully blue during zoom
 
       // Smoothly move camera position
       camera.position.lerpVectors(initialPosition.current, zoomTargetPosition.current, eased);
@@ -425,7 +427,7 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
 
       {/* Vehicle Model */}
       {vehicleOpacity > 0 && (
-        <VehicleModel vehicleType={vehicleType} opacity={vehicleOpacity} isBlueVariant={isBlueVariant} />
+        <VehicleModel vehicleType={vehicleType} opacity={vehicleOpacity} blueTransitionProgress={blueTransitionProgress} />
       )}
 
       {/* Brake Model */}
