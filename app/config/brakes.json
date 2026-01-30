@@ -1,0 +1,26 @@
+{
+  "light": {
+    "name": "Light Vehicle Brake",
+    "modelPath": "./models/brakes/Light vehicles - Brake.glb",
+    "scale": 1,
+    "rotation": { "x": 0, "y": 0, "z": 0 },
+    "position": { "x": 0, "y": 0, "z": 0 },
+    "centerModel": true
+  },
+  "commercial": {
+    "name": "Commercial Vehicle Brake",
+    "modelPath": "./models/brakes/Commercial vehicles - Brake.glb",
+    "scale": 1,
+    "rotation": { "x": 0, "y": 0, "z": 0 },
+    "position": { "x": 0, "y": 0, "z": 0 },
+    "centerModel": true
+  },
+  "rail": {
+    "name": "Rail Brake",
+    "modelPath": "./models/brakes/Rails - Brake.glb",
+    "scale": 1,
+    "rotation": { "x": 0, "y": 0, "z": 0 },
+    "position": { "x": 0, "y": 0, "z": 0 },
+    "centerModel": true
+  }
+}

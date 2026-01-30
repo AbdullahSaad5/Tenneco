@@ -1,40 +1,28 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { Suspense, useState, useRef, useEffect } from "react";
+import { Suspense, useRef, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Scene from "../_components/Scene";
 import LoadingScreen from "../_components/LoadingScreen";
-import ModelSelector from "../_components/ModelSelector";
 import ViewControls from "../_components/ViewControls";
-import ModelInfo from "../_components/ModelInfo";
 import Navbar from "../_components/Navbar";
-import TransitionOverlay from "../_components/TransitionOverlay";
-import HelpModal from "../_components/HelpModal";
-import ShareModal from "../_components/ShareModal";
-import { ArrowLeft } from "lucide-react";
-
-type ModelType = "lv" | "asm" | "j4444" | "pad";
+import { VehicleType } from "../config";
 
 function ViewerContent() {
-  // Always use LV model regardless of URL parameter
-  const [activeModel, setActiveModel] = useState<ModelType>("lv");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(true);
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [isShareOpen, setIsShareOpen] = useState(false);
+  const searchParams = useSearchParams();
+  const vehicleType = (searchParams.get("vehicle") as VehicleType) || "light";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sceneRef = useRef<any>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Fade in the viewer after a brief moment
-    const timer = setTimeout(() => {
-      setIsTransitioning(false);
-    }, 800);
+    // Small delay to ensure smooth transition from the zoom animation
+    const timer = setTimeout(() => setIsReady(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
   const handleResetCamera = () => {
-    // This will be handled by the Scene component
     window.dispatchEvent(new CustomEvent("resetCamera"));
   };
 
@@ -46,39 +34,10 @@ function ViewerContent() {
     window.dispatchEvent(new CustomEvent("zoomOut"));
   };
 
-  // Track model changes for transition overlay
-  const handleModelChange = (model: ModelType) => {
-    setIsTransitioning(true);
-    setActiveModel(model);
-
-    // Hide transition overlay after animation completes
-    setTimeout(() => {
-      setIsTransitioning(false);
-    }, 600);
-  };
-
   return (
     <div className="h-screen bg-slate-50 relative overflow-hidden">
-
       {/* Navbar */}
-      <Navbar
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        isSidebarOpen={isSidebarOpen}
-        onOpenHelp={() => setIsHelpOpen(true)}
-        onOpenShare={() => setIsShareOpen(true)}
-        showBackButton={true}
-      />
-
-      {/* Model Selector Sidebar */}
-      <ModelSelector
-        activeModel={activeModel}
-        setActiveModel={handleModelChange}
-        isOpen={isSidebarOpen}
-        setIsOpen={setIsSidebarOpen}
-      />
-
-      {/* Transition Overlay */}
-      <TransitionOverlay isTransitioning={isTransitioning} />
+      <Navbar showBackButton={true} />
 
       {/* View Controls */}
       <ViewControls
@@ -87,27 +46,9 @@ function ViewerContent() {
         onZoomOut={handleZoomOut}
       />
 
-      {/* Model Info Panel */}
-      <ModelInfo activeModel={activeModel} />
-
-      {/* Modals */}
-      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-      <ShareModal isOpen={isShareOpen} onClose={() => setIsShareOpen(false)} />
-
-      {/* Back Button - shown when viewing detail models */}
-      {activeModel !== "lv" && (
-        <button
-          onClick={() => handleModelChange("lv")}
-          className="fixed top-24 left-6 z-20 bg-white hover:bg-gray-50 text-gray-900 px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-3 group border border-gray-200"
-        >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200" />
-          <span className="font-semibold">Back to Main Model</span>
-        </button>
-      )}
-
-      {/* 3D Canvas - adjusted for navbar */}
+      {/* 3D Canvas */}
       <div className="absolute inset-0 top-[72px]">
-        <Suspense fallback={<LoadingScreen />} unstable_expectedLoadTime={3000}>
+        {isReady && (
           <Canvas
             shadows
             gl={{
@@ -117,11 +58,12 @@ function ViewerContent() {
               preserveDrawingBuffer: true,
             }}
             dpr={[1, 2]}
-            className="transition-all duration-500"
           >
-            <Scene activeModel={activeModel} onModelChange={handleModelChange} ref={sceneRef} />
+            <Suspense fallback={null}>
+              <Scene vehicleType={vehicleType} ref={sceneRef} />
+            </Suspense>
           </Canvas>
-        </Suspense>
+        )}
       </div>
 
       {/* Watermark */}
@@ -132,7 +74,7 @@ function ViewerContent() {
   );
 }
 
-export default function Home() {
+export default function ViewerPage() {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <ViewerContent />

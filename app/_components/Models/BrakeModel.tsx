@@ -1,20 +1,16 @@
 import { useGLTF, Html } from "@react-three/drei";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { ModelConfiguration } from "../../_types/content";
-
-type ModelType = "lv" | "asm" | "j4444" | "pad";
+import { brakes, hotspots, VehicleType, HotspotConfig } from "../../config";
 
 interface HotspotProps {
-  position: [number, number, number];
-  onClick: () => void;
-  label: string;
-  color: string;
+  config: HotspotConfig;
+  onClick?: () => void;
   occludeRef?: React.RefObject<THREE.Group>;
 }
 
-const Hotspot = ({ position, onClick, label, color, occludeRef }: HotspotProps) => {
+const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
   const [hovered, setHovered] = useState(false);
   const ring1Ref = useRef<THREE.Mesh>(null);
   const ring2Ref = useRef<THREE.Mesh>(null);
@@ -22,6 +18,10 @@ const Hotspot = ({ position, onClick, label, color, occludeRef }: HotspotProps) 
   const groupRef = useRef<THREE.Group>(null);
   const { camera } = useThree();
   const [distanceFactor, setDistanceFactor] = useState(8);
+
+  const position: [number, number, number] = [config.position.x, config.position.y, config.position.z];
+  const color = config.color;
+  const label = config.label;
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
@@ -56,7 +56,7 @@ const Hotspot = ({ position, onClick, label, color, occludeRef }: HotspotProps) 
       <mesh
         onClick={(e) => {
           e.stopPropagation();
-          onClick();
+          if (onClick) onClick();
         }}
         onPointerOver={(e) => {
           e.stopPropagation();
@@ -168,66 +168,55 @@ const Hotspot = ({ position, onClick, label, color, occludeRef }: HotspotProps) 
   );
 };
 
-interface LVProps {
-  config: ModelConfiguration;
-  onHotspotClick?: (model: ModelType) => void;
+interface BrakeModelProps {
+  vehicleType: VehicleType;
 }
 
-const LV = ({ config, onHotspotClick }: LVProps) => {
-  const modelPath = config.modelFile.fallbackPath || "./models/lv_file.glb";
-  const result = useGLTF(modelPath);
+const BrakeModel = ({ vehicleType }: BrakeModelProps) => {
+  const config = brakes[vehicleType];
+  const vehicleHotspots = hotspots[vehicleType];
+
+  const { scene } = useGLTF(config.modelPath);
   const groupRef = useRef<THREE.Group>(null);
   const modelRef = useRef<THREE.Group>(null);
-  const isPositionedRef = useRef(false);
 
-  useFrame(() => {
-    if (groupRef.current && !isPositionedRef.current) {
-      const box = new THREE.Box3();
-      box.setFromObject(groupRef.current);
+  // Clone and calculate offset synchronously
+  const { clonedScene, centerOffset } = useMemo(() => {
+    const cloned = scene.clone();
 
-      if (box.isEmpty()) return;
+    // Calculate center immediately when cloning
+    const box = new THREE.Box3().setFromObject(cloned);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
 
-      const minY = box.min.y;
-      const offsetY = config.transform.groundY - minY + config.transform.groundOffset;
+    // Calculate offset to center the model at origin
+    const offset = center.clone().negate();
 
-      groupRef.current.position.y = offsetY;
-      isPositionedRef.current = true;
-    }
-  });
+    // Also adjust Y so model sits on ground (y = -2)
+    const minY = box.min.y;
+    offset.y = -minY - 2;
 
-  const handleHotspotClick = (model: ModelType) => {
-    if (onHotspotClick) {
-      onHotspotClick(model);
-    }
-  };
+    return { clonedScene: cloned, centerOffset: offset };
+  }, [scene]);
 
-  // Filter and sort enabled hotspots
-  const activeHotspots = config.hotspots
-    .filter(hs => hs.isEnabled)
-    .sort((a, b) => a.order - b.order);
+  // Filter enabled hotspots
+  const activeHotspots = vehicleHotspots.filter(hs => hs.isEnabled);
 
   return (
     <group ref={groupRef}>
-      <group ref={modelRef}>
+      <group ref={modelRef} position={[centerOffset.x, centerOffset.y, centerOffset.z]}>
         <primitive
-          object={result.scene}
-          scale={config.transform.scale}
-          rotation={[
-            config.transform.rotation.x,
-            config.transform.rotation.y,
-            config.transform.rotation.z
-          ]}
+          object={clonedScene}
+          scale={config.scale}
+          rotation={[config.rotation.x, config.rotation.y, config.rotation.z]}
         />
       </group>
 
-      {/* Dynamic Hotspots */}
-      {activeHotspots.map((hotspot) => (
+      {/* Dynamic Hotspots from config */}
+      {activeHotspots.map((hotspotConfig) => (
         <Hotspot
-          key={hotspot.id}
-          position={[hotspot.position.x, hotspot.position.y, hotspot.position.z]}
-          onClick={() => hotspot.targetModel && handleHotspotClick(hotspot.targetModel as ModelType)}
-          label={hotspot.label}
-          color={hotspot.color}
+          key={hotspotConfig.id}
+          config={hotspotConfig}
           occludeRef={modelRef}
         />
       ))}
@@ -235,4 +224,4 @@ const LV = ({ config, onHotspotClick }: LVProps) => {
   );
 };
 
-export default LV;
+export default BrakeModel;

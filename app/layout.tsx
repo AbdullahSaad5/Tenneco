@@ -4,9 +4,7 @@ import "globalthis/auto";
 import { Urbanist } from "next/font/google";
 import "./globals.css";
 import "./polyfills";
-import ActiveComponentProvider from "./providers/ActiveComponentProvider";
-import { ContentProvider } from "./providers/ContentProvider";
-import { LanguageProvider } from "./providers/LanguageProvider";
+import { ModelPreloaderProvider, PreloadingScreen, usePreload } from "./_components/ModelPreloader";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -14,10 +12,15 @@ const urbanist = Urbanist({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-// export const metadata: Metadata = {
-//   title: "Tenneco 3D Model Viewer",
-//   description: "Tenneco 3D Model Viewer - Interactive 3D visualization platform",
-// };
+function AppContent({ children }: { children: React.ReactNode }) {
+  const { isPreloaded } = usePreload();
+
+  if (!isPreloaded) {
+    return <PreloadingScreen />;
+  }
+
+  return <>{children}</>;
+}
 
 export default function RootLayout({
   children,
@@ -43,13 +46,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Tenneco 3D Viewer" />
       </head>
       <body className={`${urbanist.className} antialiased min-h-screen h-full w-full bg-red-50`}>
-        <LanguageProvider defaultLanguage="en">
-          <ContentProvider>
-            <ActiveComponentProvider>
-              {children}
-            </ActiveComponentProvider>
-          </ContentProvider>
-        </LanguageProvider>
+        <ModelPreloaderProvider>
+          <AppContent>{children}</AppContent>
+        </ModelPreloaderProvider>
       </body>
     </html>
   );

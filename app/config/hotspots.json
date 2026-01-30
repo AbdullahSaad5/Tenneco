@@ -1,0 +1,80 @@
+{
+  "light": [
+    {
+      "id": "hotspot-1",
+      "label": "Brake Assembly",
+      "position": { "x": 2, "y": 1, "z": 0 },
+      "color": "#3b82f6",
+      "targetModel": "asm",
+      "isEnabled": true
+    },
+    {
+      "id": "hotspot-2",
+      "label": "J-4444 Component",
+      "position": { "x": -1, "y": 2, "z": 1 },
+      "color": "#10b981",
+      "targetModel": "j4444",
+      "isEnabled": true
+    },
+    {
+      "id": "hotspot-3",
+      "label": "Brake Pad",
+      "position": { "x": 0, "y": 0.5, "z": 2 },
+      "color": "#f59e0b",
+      "targetModel": "pad",
+      "isEnabled": true
+    }
+  ],
+  "commercial": [
+    {
+      "id": "hotspot-1",
+      "label": "Brake Assembly",
+      "position": { "x": 2, "y": 1, "z": 0 },
+      "color": "#3b82f6",
+      "targetModel": "asm",
+      "isEnabled": true
+    },
+    {
+      "id": "hotspot-2",
+      "label": "J-4444 Component",
+      "position": { "x": -1, "y": 2, "z": 1 },
+      "color": "#10b981",
+      "targetModel": "j4444",
+      "isEnabled": true
+    },
+    {
+      "id": "hotspot-3",
+      "label": "Brake Pad",
+      "position": { "x": 0, "y": 0.5, "z": 2 },
+      "color": "#f59e0b",
+      "targetModel": "pad",
+      "isEnabled": true
+    }
+  ],
+  "rail": [
+    {
+      "id": "hotspot-1",
+      "label": "Brake Assembly",
+      "position": { "x": 2, "y": 1, "z": 0 },
+      "color": "#3b82f6",
+      "targetModel": "asm",
+      "isEnabled": true
+    },
+    {
+      "id": "hotspot-2",
+      "label": "J-4444 Component",
+      "position": { "x": -1, "y": 2, "z": 1 },
+      "color": "#10b981",
+      "targetModel": "j4444",
+      "isEnabled": true
+    },
+    {
+      "id": "hotspot-3",
+      "label": "Brake Pad",
+      "position": { "x": 0, "y": 0.5, "z": 2 },
+      "color": "#f59e0b",
+      "targetModel": "pad",
+      "isEnabled": true
+    }
+  ]
+}

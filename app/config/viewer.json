@@ -1,0 +1,45 @@
+{
+  "scene": {
+    "backgroundColor": "#f8fafc",
+    "fogColor": "#f8fafc",
+    "fogNear": 50,
+    "fogFar": 200,
+    "gridSize": 1000,
+    "gridDivisions": 200,
+    "gridColor1": "#e2e8f0",
+    "gridColor2": "#f1f5f9"
+  },
+  "camera": {
+    "fov": 50,
+    "position": { "x": 5, "y": 3, "z": 20 },
+    "target": { "x": 0, "y": 0, "z": 0 },
+    "zoomFactor": 1,
+    "maxDistance": 30,
+    "minDistance": 0.1
+  },
+  "lighting": {
+    "ambient": { "intensity": 0.8 },
+    "directional1": { "position": { "x": 10, "y": 10, "z": 5 }, "intensity": 1.5 },
+    "directional2": { "position": { "x": -10, "y": -10, "z": -5 }, "intensity": 0.6 },
+    "spot": { "position": { "x": 0, "y": 15, "z": 0 }, "intensity": 1.0, "angle": 0.3 },
+    "hemisphere": { "groundColor": "#666666", "intensity": 0.7 }
+  },
+  "float": {
+    "speed": 1.5,
+    "rotationIntensity": 0.2,
+    "floatIntensity": 0.5,
+    "floatingRange": [0, 0.2]
+  },
+  "postProcessing": {
+    "bloom": { "luminanceThreshold": 0.9, "luminanceSmoothing": 0.9, "intensity": 0.5 },
+    "vignette": { "offset": 0.5, "darkness": 0.2 }
+  },
+  "controls": {
+    "enableDamping": true,
+    "dampingFactor": 0.05,
+    "rotateSpeed": 0.5,
+    "zoomSpeed": 0.8,
+    "minPolarAngle": 0,
+    "maxPolarAngle": 1.745
+  }
+}
