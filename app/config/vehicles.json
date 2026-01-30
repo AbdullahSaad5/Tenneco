@@ -27,7 +27,7 @@
     "zoomConfig": {
       "initialScale": 1.0,
       "initialLookAtTarget": { "x": 0, "y": 0, "z": 0 },
-      "zoomLookAtTarget": { "x": -2, "y": 0.6, "z": 2 },
+      "zoomLookAtTarget": { "x": 0, "y": 0, "z": 0 },
       "zoomIntensity": 1.0
     }
   },
@@ -43,7 +43,7 @@
     "zoomConfig": {
       "initialScale": 1.0,
       "initialLookAtTarget": { "x": 0, "y": 0, "z": 0 },
-      "zoomLookAtTarget": { "x": -1.5, "y": 0.5, "z": 1.5 },
+      "zoomLookAtTarget": { "x": 0, "y": -6, "z": 1},
       "zoomIntensity": 1.0
     }
   }

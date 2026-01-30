@@ -12,6 +12,199 @@ interface HotspotProps {
   occludeRef?: React.RefObject<THREE.Group>;
 }
 
+interface ExplosionHotspotProps {
+  position: Vector3Config;
+  color: string;
+  label: string;
+  onClick?: () => void;
+  occludeRef?: React.RefObject<THREE.Group>;
+}
+
+const ExplosionHotspot = ({ position, color, label, onClick, occludeRef }: ExplosionHotspotProps) => {
+  const [hovered, setHovered] = useState(false);
+  const ring1Ref = useRef<THREE.Mesh>(null);
+  const ring2Ref = useRef<THREE.Mesh>(null);
+  const ring3Ref = useRef<THREE.Mesh>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
+  const groupRef = useRef<THREE.Group>(null);
+  const { camera } = useThree();
+  const [distanceFactor, setDistanceFactor] = useState(8);
+
+  const pos: [number, number, number] = [position.x, position.y, position.z];
+
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+
+    // More dynamic animations for explosion hotspot
+    if (ring1Ref.current) {
+      ring1Ref.current.rotation.z = time * 1.5;
+      ring1Ref.current.scale.setScalar(1 + Math.sin(time * 3) * 0.15);
+    }
+    if (ring2Ref.current) {
+      ring2Ref.current.rotation.z = -time * 2;
+      ring2Ref.current.scale.setScalar(1 + Math.sin(time * 3.5 + 1) * 0.12);
+    }
+    if (ring3Ref.current) {
+      ring3Ref.current.rotation.z = time * 1.2;
+      ring3Ref.current.scale.setScalar(1 + Math.sin(time * 4 + 2) * 0.1);
+    }
+    if (glowRef.current) {
+      const scale = 1 + Math.sin(time * 4) * 0.2;
+      glowRef.current.scale.setScalar(scale);
+      const material = glowRef.current.material as THREE.MeshBasicMaterial;
+      material.opacity = 0.2 + Math.sin(time * 4) * 0.12;
+    }
+
+    if (groupRef.current) {
+      const worldPosition = new THREE.Vector3();
+      groupRef.current.getWorldPosition(worldPosition);
+      const distance = camera.position.distanceTo(worldPosition);
+      const baseDistance = 20;
+      const newDistanceFactor = (distance / baseDistance) * 8;
+      setDistanceFactor(newDistanceFactor);
+    }
+  });
+
+  return (
+    <group ref={groupRef} position={pos}>
+      <mesh
+        onClick={(e) => {
+          e.stopPropagation();
+          if (onClick) onClick();
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+          document.body.style.cursor = "pointer";
+        }}
+        onPointerOut={(e) => {
+          e.stopPropagation();
+          setHovered(false);
+          document.body.style.cursor = "auto";
+        }}
+      >
+        <sphereGeometry args={[0.1, 32, 32]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+
+      {/* <mesh ref={glowRef}>
+        <sphereGeometry args={[0.5, 32, 32]} />
+        <meshBasicMaterial color={color} transparent opacity={0.2} side={THREE.BackSide} />
+      </mesh> */}
+
+      {/* Center star/explosion shape */}
+      {/* <mesh>
+        <circleGeometry args={[0.28, 32]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={hovered ? 1.2 : 0.8}
+          metalness={0.9}
+          roughness={0.1}
+        />
+      </mesh> */}
+
+      {/* Three animated rings */}
+      {/* <mesh ref={ring1Ref}>
+        <torusGeometry args={[0.35, 0.03, 16, 32]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={hovered ? 2.0 : 1.5}
+          transparent
+          opacity={hovered ? 1 : 0.9}
+          metalness={0.8}
+          roughness={0.1}
+        />
+      </mesh>
+
+      <mesh ref={ring2Ref}>
+        <torusGeometry args={[0.45, 0.025, 16, 32]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={hovered ? 1.6 : 1.2}
+          transparent
+          opacity={hovered ? 0.95 : 0.75}
+          metalness={0.7}
+          roughness={0.15}
+        />
+      </mesh>
+
+      <mesh ref={ring3Ref}>
+        <torusGeometry args={[0.55, 0.02, 16, 32]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={hovered ? 1.3 : 0.9}
+          transparent
+          opacity={hovered ? 0.85 : 0.6}
+          metalness={0.6}
+          roughness={0.2}
+        />
+      </mesh> */}
+
+      {/* Lightning/Explosion icon */}
+      <Html
+        center
+        distanceFactor={distanceFactor}
+        zIndexRange={[10, 0]}
+        style={{ pointerEvents: "none" }}
+        occlude={occludeRef ? [occludeRef] : undefined}
+      >
+        <svg
+          width="64"
+          height="64"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="drop-shadow-lg"
+          style={{
+            filter: hovered ? `drop-shadow(0 0 20px ${color})` : `drop-shadow(0 4px 10px ${color}80)`,
+            transition: "filter 0.3s ease",
+          }}
+        >
+          <circle cx="12" cy="12" r="11" fill={color} opacity={hovered ? "1" : "0.95"} />
+          <circle cx="12" cy="12" r="10" fill="white" />
+          {/* Lightning bolt icon */}
+          <path
+            d="M13 3L4 14h7v7l9-11h-7V3z"
+            fill={color}
+            opacity={hovered ? "1" : "0.9"}
+          />
+        </svg>
+      </Html>
+
+      {hovered && (
+        <Html
+          position={[0, 0.9, 0]}
+          center
+          distanceFactor={distanceFactor}
+          zIndexRange={[11, 0]}
+          style={{ pointerEvents: "none" }}
+          occlude={occludeRef ? [occludeRef] : undefined}
+        >
+          <div
+            className="bg-white text-gray-900 px-8 py-4 rounded-xl text-3xl font-bold shadow-xl whitespace-nowrap border-3 backdrop-blur-sm"
+            style={{
+              borderColor: color,
+              borderWidth: "3px",
+              boxShadow: `0 4px 20px rgba(0,0,0,0.2), 0 0 30px ${color}40`,
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M13 3L4 14h7v7l9-11h-7V3z" fill={color} />
+              </svg>
+              <span>{label}</span>
+            </div>
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+};
+
 const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
   const [hovered, setHovered] = useState(false);
   const ring1Ref = useRef<THREE.Mesh>(null);
@@ -71,16 +264,16 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
           document.body.style.cursor = "auto";
         }}
       >
-        <sphereGeometry args={[0.5, 32, 32]} />
+        <sphereGeometry args={[0.1, 32, 32]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      <mesh ref={glowRef}>
+      {/* <mesh ref={glowRef}>
         <sphereGeometry args={[0.45, 32, 32]} />
         <meshBasicMaterial color={color} transparent opacity={0.15} side={THREE.BackSide} />
-      </mesh>
+      </mesh> */}
 
-      <mesh>
+      {/* <mesh>
         <circleGeometry args={[0.22, 32]} />
         <meshStandardMaterial
           color="#ffffff"
@@ -89,9 +282,9 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
           metalness={0.9}
           roughness={0.1}
         />
-      </mesh>
+      </mesh> */}
 
-      <mesh ref={ring1Ref}>
+      {/* <mesh ref={ring1Ref}>
         <torusGeometry args={[0.28, 0.025, 16, 32]} />
         <meshStandardMaterial
           color={color}
@@ -115,7 +308,7 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
           metalness={0.6}
           roughness={0.25}
         />
-      </mesh>
+      </mesh> */}
 
       <Html
         center
@@ -190,6 +383,8 @@ const BrakeModel = ({ vehicleType, onHotspotClick }: BrakeModelProps) => {
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
   // Show hotspots immediately if no animations, otherwise wait for animation to complete
   const [showHotspots, setShowHotspots] = useState(false);
+  // Show explosion hotspot initially, hide after clicking
+  const [showExplosionHotspot, setShowExplosionHotspot] = useState(true);
 
   // Use viewerScale from scaleConfig
   const brakeScale = config.scaleConfig.viewerScale * config.scale;
@@ -213,6 +408,18 @@ const BrakeModel = ({ vehicleType, onHotspotClick }: BrakeModelProps) => {
 
   // Filter enabled hotspots
   const activeHotspots = vehicleHotspots.filter(hs => hs.isEnabled);
+
+  // Handle explosion hotspot click
+  const handleExplosionHotspotClick = () => {
+    if (actionRef.current && !isAnimationPlaying) {
+      console.log('[BrakeModel] Explosion hotspot clicked, starting animation');
+      setIsAnimationPlaying(true);
+      setShowHotspots(false);
+      setShowExplosionHotspot(false); // Hide explosion hotspot
+      actionRef.current.reset();
+      actionRef.current.play();
+    }
+  };
 
   // Show hotspots immediately if no animations
   useEffect(() => {
@@ -283,6 +490,7 @@ const BrakeModel = ({ vehicleType, onHotspotClick }: BrakeModelProps) => {
         console.log('[BrakeModel] Starting explosion animation');
         setIsAnimationPlaying(true);
         setShowHotspots(false);
+        setShowExplosionHotspot(false); // Hide explosion hotspot
         actionRef.current.reset();
         actionRef.current.play();
         console.log('[BrakeModel] Animation play() called, time:', actionRef.current.time);
@@ -336,6 +544,17 @@ const BrakeModel = ({ vehicleType, onHotspotClick }: BrakeModelProps) => {
           rotation={[config.rotation.x, config.rotation.y, config.rotation.z]}
         />
       </group>
+
+      {/* Explosion Hotspot - only show before animation is played */}
+      {showExplosionHotspot && config.explosionHotspot && animations && animations.length > 0 && (
+        <ExplosionHotspot
+          position={config.explosionHotspot.position}
+          color={config.explosionHotspot.color}
+          label={config.explosionHotspot.label}
+          occludeRef={modelRef}
+          onClick={handleExplosionHotspotClick}
+        />
+      )}
 
       {/* Dynamic Hotspots from config - only show after animation completes */}
       {showHotspots && activeHotspots.map((hotspotConfig) => (

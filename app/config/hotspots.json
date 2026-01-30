@@ -7,7 +7,7 @@
     {
       "id": "hotspot-1",
       "label": "Brake Caliper Assembly",
-      "position": { "x": 2, "y": 1, "z": 0 },
+      "position": { "x": 1, "y": 1.1, "z": 0 },
       "color": "#3b82f6",
       "targetModel": "asm",
       "isEnabled": true,
@@ -21,7 +21,7 @@
     {
       "id": "hotspot-2",
       "label": "Brake Rotor Disc",
-      "position": { "x": -1, "y": 2, "z": 1 },
+      "position": { "x": -1, "y": 3, "z": 1 },
       "color": "#10b981",
       "targetModel": "j4444",
       "isEnabled": true,
@@ -49,7 +49,7 @@
     {
       "id": "hotspot-4",
       "label": "Master Cylinder",
-      "position": { "x": -2, "y": 1.5, "z": -1 },
+      "position": { "x": -1, "y": 2, "z": -1 },
       "color": "#8b5cf6",
       "targetModel": "asm",
       "isEnabled": true,
@@ -63,7 +63,7 @@
     {
       "id": "hotspot-5",
       "label": "Brake Lines",
-      "position": { "x": 1.5, "y": -0.5, "z": 1.5 },
+      "position": { "x": 1.2, "y": -1.70, "z": 1.5 },
       "color": "#ec4899",
       "targetModel": "j4444",
       "isEnabled": true,
@@ -91,7 +91,7 @@
     {
       "id": "hotspot-7",
       "label": "Parking Brake",
-      "position": { "x": -1.5, "y": 0, "z": 2 },
+      "position": { "x": -1.5, "y": -0.1, "z": 2 },
       "color": "#f43f5e",
       "targetModel": "asm",
       "isEnabled": true,

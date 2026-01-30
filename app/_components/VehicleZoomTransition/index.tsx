@@ -347,13 +347,23 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
       }
     }
 
-    // Phase 3: Transition - fade out vehicle, fade in brake
+    // Phase 4: Transition - fade out vehicle first, then fade in brake
     if (phase === "transitioning") {
       const transitionElapsed = Date.now() - startTime.current;
       const progress = Math.min(transitionElapsed / transitionDuration, 1);
 
-      setVehicleOpacity(1 - progress);
-      setBrakeOpacity(progress);
+      // Split transition into two halves
+      if (progress < 0.5) {
+        // First half: fade out vehicle only
+        const fadeOutProgress = progress * 2; // 0 to 1 in first half
+        setVehicleOpacity(0.7 * (1 - fadeOutProgress)); // From 0.7 to 0
+        setBrakeOpacity(0); // Brake stays hidden
+      } else {
+        // Second half: fade in brake only
+        const fadeInProgress = (progress - 0.5) * 2; // 0 to 1 in second half
+        setVehicleOpacity(0); // Vehicle stays hidden
+        setBrakeOpacity(fadeInProgress); // From 0 to 1
+      }
 
       if (progress >= 1) {
         setPhase("brake");
@@ -477,7 +487,7 @@ const VehicleZoomTransition: React.FC<VehicleZoomTransitionProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0a0a0f] overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-white overflow-hidden">
       {/* 3D Canvas - No fade effects for seamless transition */}
       <div className="absolute inset-0">
         <Canvas

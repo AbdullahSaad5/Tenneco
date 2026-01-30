@@ -39,6 +39,12 @@ export interface BrakeScaleConfig {
   viewerScale: number;
 }
 
+export interface ExplosionHotspotConfig {
+  position: Vector3Config;
+  color: string;
+  label: string;
+}
+
 export interface BrakeConfig {
   name: string;
   modelPath: string;
@@ -47,6 +53,7 @@ export interface BrakeConfig {
   position: Vector3Config;
   centerModel: boolean;
   scaleConfig: BrakeScaleConfig;
+  explosionHotspot?: ExplosionHotspotConfig;
 }
 
 export interface HotspotInfo {

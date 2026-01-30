@@ -75,7 +75,7 @@ function ViewerContent() {
   };
 
   return (
-    <div className="h-screen bg-[#0a0a0f] relative overflow-hidden">
+    <div className="h-screen bg-white relative overflow-hidden">
       {/* Show animation if needed */}
       {showAnimation && (
         <VehicleZoomTransition
@@ -107,7 +107,7 @@ function ViewerContent() {
           onZoomIn={handleZoomIn}
           onZoomOut={handleZoomOut}
           onPlayExplosion={handlePlayExplosion}
-          showExplosionButton={true}
+          showExplosionButton={false}
         />
       )}
 
