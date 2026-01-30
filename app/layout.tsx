@@ -45,7 +45,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Tenneco 3D Viewer" />
       </head>
-      <body className={`${urbanist.className} antialiased min-h-screen h-full w-full bg-red-50`}>
+      <body className={`${urbanist.className} antialiased min-h-screen h-full w-full bg-[#0a0a0f]`}>
         <ModelPreloaderProvider>
           <AppContent>{children}</AppContent>
         </ModelPreloaderProvider>

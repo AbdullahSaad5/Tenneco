@@ -12,9 +12,10 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/l
 interface PDFModalProps {
   isOpen: boolean;
   onClose: () => void;
+  pdfUrl?: string;
 }
 
-const PDFModal: React.FC<PDFModalProps> = ({ isOpen, onClose }) => {
+const PDFModal: React.FC<PDFModalProps> = ({ isOpen, onClose, pdfUrl = "./assets/pdfs/Pads.pdf" }) => {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.0);
@@ -22,8 +23,6 @@ const PDFModal: React.FC<PDFModalProps> = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [pdfWidth, setPdfWidth] = useState(1200);
   const [orientation, setOrientation] = useState<"portrait" | "landscape">("landscape");
-
-  const pdfUrl = "./assets/pdfs/Pads.pdf";
 
   useEffect(() => {
     const handleResize = () => {

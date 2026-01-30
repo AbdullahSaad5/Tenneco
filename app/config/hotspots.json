@@ -1,80 +1,208 @@
 {
+  "defaults": {
+    "pdf": "./documents/default-brake-info.pdf",
+    "video": "./videos/default-brake-overview.mp4"
+  },
   "light": [
     {
       "id": "hotspot-1",
-      "label": "Brake Assembly",
+      "label": "Brake Caliper Assembly",
       "position": { "x": 2, "y": 1, "z": 0 },
       "color": "#3b82f6",
       "targetModel": "asm",
-      "isEnabled": true
+      "isEnabled": true,
+      "info": {
+        "title": "Hydraulic Brake Caliper Assembly",
+        "description": "The brake caliper houses the brake pads and pistons. When hydraulic pressure is applied, the caliper squeezes the brake pads against the rotor disc, creating the friction needed to slow your vehicle. This precision-engineered component features corrosion-resistant coating and optimized heat dissipation for consistent performance in everyday driving conditions, from city traffic to highway speeds.",
+        "pdf": "./documents/light-caliper-specs.pdf",
+        "video": null
+      }
     },
     {
       "id": "hotspot-2",
-      "label": "J-4444 Component",
+      "label": "Brake Rotor Disc",
       "position": { "x": -1, "y": 2, "z": 1 },
       "color": "#10b981",
       "targetModel": "j4444",
-      "isEnabled": true
+      "isEnabled": true,
+      "info": {
+        "title": "Ventilated Brake Rotor Disc",
+        "description": "The brake rotor is a metal disc that rotates with the wheel. When the brake pads clamp down on it, friction converts kinetic energy into heat, slowing the vehicle. This ventilated design features internal cooling vanes that improve heat dissipation during repeated braking, preventing brake fade and maintaining optimal stopping power. Surface treated for enhanced durability and reduced noise.",
+        "pdf": null,
+        "video": "./videos/rotor-technology.mp4"
+      }
     },
     {
       "id": "hotspot-3",
-      "label": "Brake Pad",
+      "label": "Ceramic Brake Pad",
       "position": { "x": 0, "y": 0.5, "z": 2 },
       "color": "#f59e0b",
       "targetModel": "pad",
-      "isEnabled": true
+      "isEnabled": true,
+      "info": {
+        "title": "Low-Dust Ceramic Brake Pad",
+        "description": "Advanced ceramic friction material engineered for passenger vehicles. These pads offer superior stopping power while generating minimal dust and noise. The ceramic compound remains stable across a wide temperature range, providing consistent braking feel in all weather conditions. Extended pad life reduces maintenance frequency, and the low-metallic formula helps preserve rotor life while keeping wheels cleaner.",
+        "pdf": null,
+        "video": null
+      }
+    },
+    {
+      "id": "hotspot-4",
+      "label": "Master Cylinder",
+      "position": { "x": -2, "y": 1.5, "z": -1 },
+      "color": "#8b5cf6",
+      "targetModel": "asm",
+      "isEnabled": true,
+      "info": {
+        "title": "Brake Master Cylinder",
+        "description": "The master cylinder is the heart of your hydraulic brake system. When you press the brake pedal, it converts mechanical force into hydraulic pressure, pushing brake fluid through the lines to each wheel. This dual-circuit design ensures that even if one circuit fails, the other remains operational for safety. Equipped with a fluid reservoir and pressure sensors for modern vehicle integration.",
+        "pdf": "./documents/master-cylinder-maintenance.pdf",
+        "video": null
+      }
+    },
+    {
+      "id": "hotspot-5",
+      "label": "Brake Lines",
+      "position": { "x": 1.5, "y": -0.5, "z": 1.5 },
+      "color": "#ec4899",
+      "targetModel": "j4444",
+      "isEnabled": true,
+      "info": {
+        "title": "High-Pressure Brake Lines",
+        "description": "Brake lines transport hydraulic fluid from the master cylinder to each brake caliper. These reinforced steel and rubber hoses are engineered to withstand extreme pressure fluctuations while maintaining flexibility for suspension movement. Protected against corrosion and abrasion, they feature multiple layers including an inner tube, braided reinforcement, and protective outer coating to ensure leak-free operation throughout the vehicle's lifetime.",
+        "pdf": null,
+        "video": null
+      }
+    },
+    {
+      "id": "hotspot-6",
+      "label": "ABS Sensor",
+      "position": { "x": 0.5, "y": -1, "z": -1.5 },
+      "color": "#06b6d4",
+      "targetModel": "pad",
+      "isEnabled": true,
+      "info": {
+        "title": "Anti-Lock Brake System Sensor",
+        "description": "The ABS wheel speed sensor continuously monitors wheel rotation speed, detecting when a wheel is about to lock up during hard braking. This data is sent to the ABS control module which modulates brake pressure up to 15 times per second, preventing wheel lockup and maintaining steering control. Essential for modern vehicle safety, working seamlessly with stability control and traction systems.",
+        "pdf": null,
+        "video": "./videos/abs-technology-explained.mp4"
+      }
+    },
+    {
+      "id": "hotspot-7",
+      "label": "Parking Brake",
+      "position": { "x": -1.5, "y": 0, "z": 2 },
+      "color": "#f43f5e",
+      "targetModel": "asm",
+      "isEnabled": true,
+      "info": {
+        "title": "Electronic Parking Brake System",
+        "description": "The electronic parking brake replaces traditional handbrake cables with an electric motor-driven system. Activated by a simple button press, it automatically applies optimal clamping force to the rear brake calipers, holding your vehicle securely on slopes. Features automatic release when you accelerate, hill-hold assist integration, and emergency braking capability if pulled while driving at low speeds.",
+        "pdf": "./documents/parking-brake-guide.pdf",
+        "video": null
+      }
     }
   ],
   "commercial": [
     {
       "id": "hotspot-1",
-      "label": "Brake Assembly",
+      "label": "Heavy-Duty Caliper",
       "position": { "x": 2, "y": 1, "z": 0 },
       "color": "#3b82f6",
       "targetModel": "asm",
-      "isEnabled": true
+      "isEnabled": true,
+      "info": {
+        "title": "Commercial Grade Brake Caliper",
+        "description": "Engineered for trucks and commercial vehicles carrying heavy loads. This reinforced caliper assembly features larger pistons and robust construction to handle the extreme forces generated during commercial vehicle braking. Built with high-temperature seals and premium corrosion protection, it delivers reliable performance even under continuous use in demanding fleet operations, construction sites, and long-haul transportation.",
+        "pdf": "./documents/commercial-caliper-maintenance.pdf",
+        "video": "./videos/heavy-duty-braking.mp4"
+      }
     },
     {
       "id": "hotspot-2",
-      "label": "J-4444 Component",
+      "label": "Heavy-Duty Rotor",
       "position": { "x": -1, "y": 2, "z": 1 },
       "color": "#10b981",
       "targetModel": "j4444",
-      "isEnabled": true
+      "isEnabled": true,
+      "info": {
+        "title": "Reinforced Commercial Brake Rotor",
+        "description": "Designed to withstand the intense thermal and mechanical stresses of commercial vehicle operation. This heavy-duty rotor features enhanced metallurgy and increased mass to absorb and dissipate heat more effectively during repeated heavy braking cycles. The optimized cooling vane design ensures stable performance even when hauling maximum loads on steep grades or during emergency stops.",
+        "pdf": null,
+        "video": null
+      }
     },
     {
       "id": "hotspot-3",
-      "label": "Brake Pad",
+      "label": "Semi-Metallic Pad",
       "position": { "x": 0, "y": 0.5, "z": 2 },
       "color": "#f59e0b",
       "targetModel": "pad",
-      "isEnabled": true
+      "isEnabled": true,
+      "info": {
+        "title": "Commercial Semi-Metallic Brake Pad",
+        "description": "High-performance friction material specifically formulated for commercial vehicle applications. These semi-metallic pads combine superior heat resistance with exceptional fade-free braking, essential for vehicles carrying heavy loads or operating in mountainous terrain. The advanced compound provides consistent coefficient of friction across a broad temperature range while resisting wear to minimize downtime and maximize operational efficiency.",
+        "pdf": "./documents/commercial-pad-specs.pdf",
+        "video": null
+      }
+    },
+    {
+      "id": "hotspot-4",
+      "label": "Air Brake Chamber",
+      "position": { "x": -1.5, "y": -0.5, "z": -1 },
+      "color": "#8b5cf6",
+      "targetModel": "asm",
+      "isEnabled": true,
+      "info": {
+        "title": "Pneumatic Air Brake Chamber",
+        "description": "Commercial trucks use air brake systems for superior stopping power with heavy loads. The brake chamber converts compressed air pressure into mechanical force that actuates the brake shoes or pads. This spring brake chamber includes both service and parking brake functions - the powerful spring provides fail-safe parking brake operation if air pressure is lost. Designed for millions of cycles in harsh commercial operating environments with minimal maintenance requirements.",
+        "pdf": null,
+        "video": "./videos/air-brake-system.mp4"
+      }
     }
   ],
   "rail": [
     {
       "id": "hotspot-1",
-      "label": "Brake Assembly",
+      "label": "Pneumatic Brake Unit",
       "position": { "x": 2, "y": 1, "z": 0 },
       "color": "#3b82f6",
       "targetModel": "asm",
-      "isEnabled": true
+      "isEnabled": true,
+      "info": {
+        "title": "Railway Pneumatic Brake Assembly",
+        "description": "The pneumatic brake system is critical for railway safety, using compressed air to apply braking force across multiple rail cars simultaneously. This assembly features fail-safe design principles where air pressure releases the brakes and air loss applies them automatically. Built to exacting railway standards with redundant safety systems, ensuring reliable stopping power for passenger and freight operations in all weather conditions.",
+        "pdf": null,
+        "video": "./videos/railway-braking-system.mp4"
+      }
     },
     {
       "id": "hotspot-2",
-      "label": "J-4444 Component",
+      "label": "Brake Disc & Clamp",
       "position": { "x": -1, "y": 2, "z": 1 },
       "color": "#10b981",
       "targetModel": "j4444",
-      "isEnabled": true
+      "isEnabled": true,
+      "info": {
+        "title": "Rail Brake Disc Assembly",
+        "description": "Railway brake discs operate under extreme conditions, dissipating massive amounts of energy when bringing multi-ton trains to a stop from high speeds. This disc features specialized heat-resistant steel alloy construction with enhanced thermal capacity and dimensional stability. The precision-balanced design minimizes vibration while the mounting system accommodates thermal expansion during intensive braking sequences without compromising safety or performance.",
+        "pdf": "./documents/rail-disc-specifications.pdf",
+        "video": null
+      }
     },
     {
       "id": "hotspot-3",
-      "label": "Brake Pad",
+      "label": "Composite Brake Block",
       "position": { "x": 0, "y": 0.5, "z": 2 },
       "color": "#f59e0b",
       "targetModel": "pad",
-      "isEnabled": true
+      "isEnabled": true,
+      "info": {
+        "title": "Railway Composite Brake Block",
+        "description": "Engineered specifically for rail applications, these composite brake blocks provide consistent friction characteristics essential for safe railway operations. The advanced polymer-based compound delivers predictable braking across extreme temperature variations while resisting wear from prolonged high-speed operation. Low noise emission and minimal wheel damage characteristics make them ideal for modern passenger rail systems, meeting stringent international railway safety certifications.",
+        "pdf": null,
+        "video": null
+      }
     }
   ]
 }

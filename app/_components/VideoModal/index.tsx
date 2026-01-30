@@ -7,9 +7,10 @@ import { X, Play, Pause, Volume2, VolumeX, Maximize, Video, Minimize } from "luc
 interface VideoModalProps {
   isOpen: boolean;
   onClose: () => void;
+  videoUrl?: string;
 }
 
-const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
+const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose, videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -23,8 +24,6 @@ const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
   // const [showControls, setShowControls] = useState(true);
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [hoverPosition, setHoverPosition] = useState(0);
-
-  const videoUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
   useEffect(() => {
     const video = videoRef.current;

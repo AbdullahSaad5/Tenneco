@@ -172,9 +172,10 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
 
 interface BrakeModelProps {
   vehicleType: VehicleType;
+  onHotspotClick?: (hotspot: HotspotConfig) => void;
 }
 
-const BrakeModel = ({ vehicleType }: BrakeModelProps) => {
+const BrakeModel = ({ vehicleType, onHotspotClick }: BrakeModelProps) => {
   const config = brakes[vehicleType];
   const vehicleHotspots = hotspots[vehicleType];
 
@@ -342,6 +343,7 @@ const BrakeModel = ({ vehicleType }: BrakeModelProps) => {
           key={hotspotConfig.id}
           config={hotspotConfig}
           occludeRef={modelRef}
+          onClick={() => onHotspotClick?.(hotspotConfig)}
         />
       ))}
     </group>

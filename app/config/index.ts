@@ -49,12 +49,30 @@ export interface BrakeConfig {
   scaleConfig: BrakeScaleConfig;
 }
 
+export interface HotspotInfo {
+  title: string;
+  description: string;
+  pdf: string | null;
+  video: string | null;
+}
+
 export interface HotspotConfig {
   id: string;
   label: string;
   position: Vector3Config;
   color: string;
   isEnabled: boolean;
+  info: HotspotInfo;
+}
+
+export interface HotspotsConfig {
+  defaults: {
+    pdf: string;
+    video: string;
+  };
+  light: HotspotConfig[];
+  commercial: HotspotConfig[];
+  rail: HotspotConfig[];
 }
 
 export interface TransitionConfig {
@@ -160,7 +178,12 @@ export interface ViewerConfig {
 // Export typed configs
 export const vehicles = vehiclesConfig as Record<VehicleType, VehicleConfig>;
 export const brakes = brakesConfig as Record<VehicleType, BrakeConfig>;
-export const hotspots = hotspotsConfig as Record<VehicleType, HotspotConfig[]>;
+export const hotspotsData = hotspotsConfig as HotspotsConfig;
+export const hotspots = {
+  light: hotspotsData.light,
+  commercial: hotspotsData.commercial,
+  rail: hotspotsData.rail
+} as Record<VehicleType, HotspotConfig[]>;
 export const transition = transitionConfig as TransitionConfig;
 export const homepage = homepageConfig as HomepageConfig;
 export const viewer = viewerConfig as ViewerConfig;

@@ -19,8 +19,8 @@
     "position": { "x": 0, "y": 0, "z": 0 },
     "centerModel": true,
     "scaleConfig": {
-      "transitionScale": 1.0,
-      "viewerScale": 0.01
+     "transitionScale": 0.2,
+      "viewerScale": 0.2
     }
   },
   "rail": {
@@ -31,8 +31,8 @@
     "position": { "x": 0, "y": 0, "z": 0 },
     "centerModel": true,
     "scaleConfig": {
-      "transitionScale": 1.0,
-      "viewerScale": 1.0
+     "transitionScale": 0.2,
+      "viewerScale": 0.2
     }
   }
 }

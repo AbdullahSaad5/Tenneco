@@ -5,12 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Video } from "lucide-react";
 import PDFModal from "../PDFModal";
 import VideoModal from "../VideoModal";
-import { useContent } from "../../providers/ContentProvider";
-
-type ModelType = "lv" | "asm" | "j4444" | "pad";
+import { HotspotConfig, hotspotsData } from "../../config";
 
 interface ModelInfoProps {
-  activeModel: ModelType;
+  hotspot: HotspotConfig | null;
 }
 
 const getColorClass = (color: string): string => {
@@ -21,30 +19,27 @@ const getColorClass = (color: string): string => {
   return 'bg-blue-600';
 };
 
-const ModelInfo: React.FC<ModelInfoProps> = ({ activeModel }) => {
+const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [isPDFOpen, setIsPDFOpen] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
-  const { modelConfigs } = useContent();
+  // Get PDF and Video URLs (use hotspot's or defaults)
+  const pdfUrl = useMemo(() => {
+    return hotspot?.info.pdf || hotspotsData.defaults.pdf;
+  }, [hotspot]);
 
-  // Get the model configuration for the active model
-  const modelConfig = useMemo(() => modelConfigs[activeModel], [modelConfigs, activeModel]);
+  const videoUrl = useMemo(() => {
+    return hotspot?.info.video || hotspotsData.defaults.video;
+  }, [hotspot]);
 
-  // Get model info details
-  const details = useMemo(() => {
-    if (!modelConfig?.info) return null;
+  if (!hotspot) return null;
 
-    return {
-      name: modelConfig.info.name,
-      description: modelConfig.info.description,
-      specs: modelConfig.info.specs,
-      color: `from-${modelConfig.info.color.gradient?.from} to-${modelConfig.info.color.gradient?.to}`,
-      solidColor: modelConfig.info.color.solid || 'blue-600',
-    };
-  }, [modelConfig]);
-
-  if (!details) return null;
+  const details = {
+    name: hotspot.info.title,
+    description: hotspot.info.description,
+    color: hotspot.color,
+  };
 
   return (
     <>
@@ -55,13 +50,11 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ activeModel }) => {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           onClick={() => setIsOpen(!isOpen)}
-          className={`p-3 rounded-lg border border-slate-200 transition-colors shadow-lg ${
-            isOpen ? "bg-white" : getColorClass(details.solidColor)
-          }`}
+          className="p-3 rounded-lg border border-white/20 transition-colors shadow-lg bg-white hover:bg-slate-50"
           title={isOpen ? "Hide Info" : "Show Info"}
         >
           <svg
-            className={`w-6 h-6 transition-colors ${isOpen ? "text-slate-700" : "text-white"}`}
+            className="w-6 h-6 text-slate-700 transition-colors"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -104,53 +97,33 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ activeModel }) => {
       <AnimatePresence mode="wait">
         {isOpen && (
           <motion.div
-            key={activeModel}
+            key={hotspot.id}
             initial={{ opacity: 0, x: 100, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 100, scale: 0.9 }}
             transition={{ duration: 0.3, type: "spring" }}
-            className="fixed bottom-24 right-6 z-20 w-80 bg-white rounded-lg border border-slate-200 overflow-hidden"
+            className="fixed bottom-24 right-6 z-20 w-80 bg-white/95 backdrop-blur-sm rounded-lg border border-white/20 overflow-hidden shadow-2xl"
           >
             {/* Header */}
-            <div className={`${getColorClass(details.solidColor)} p-4`}>
-              <h3 className="text-white font-bold text-lg">{details.name}</h3>
+            <div className="p-4 flex items-center gap-3 border-b border-slate-200">
+              <div
+                className="w-3 h-3 rounded-full shadow-lg"
+                style={{ backgroundColor: details.color }}
+              />
+              <h3 className="text-slate-800 font-bold text-lg">{details.name}</h3>
             </div>
 
             {/* Content */}
-            <div className="p-4 space-y-3">
-              <p className="text-sm text-slate-600">{details.description}</p>
-
-              <div className="space-y-2">
-                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Key Features
-                </h4>
-                {details.specs.map((spec, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center gap-2 text-sm text-slate-700"
-                  >
-                    <div className={`w-2 h-2 rounded-full ${getColorClass(details.solidColor)}`} />
-                    <span>{spec}</span>
-                  </motion.div>
-                ))}
-              </div>
-
-              <div className="pt-3 border-t border-slate-200">
-                <p className="text-xs text-slate-500 italic">
-                  Tap on parts to discover how the braking system works, from friction to comfort!
-                </p>
-              </div>
+            <div className="p-4">
+              <p className="text-sm text-slate-600 leading-relaxed">{details.description}</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Modals */}
-      <PDFModal isOpen={isPDFOpen} onClose={() => setIsPDFOpen(false)} />
-      <VideoModal isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} />
+      <PDFModal isOpen={isPDFOpen} onClose={() => setIsPDFOpen(false)} pdfUrl={pdfUrl} />
+      <VideoModal isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} videoUrl={videoUrl} />
     </>
   );
 };

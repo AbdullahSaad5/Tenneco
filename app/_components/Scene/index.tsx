@@ -6,13 +6,14 @@ import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import BrakeModel from "../Models/BrakeModel";
-import { viewer, transition, VehicleType } from "../../config";
+import { viewer, transition, VehicleType, HotspotConfig } from "../../config";
 
 interface SceneProps {
   vehicleType: VehicleType;
+  onHotspotClick?: (hotspot: HotspotConfig) => void;
 }
 
-const Scene = forwardRef(({ vehicleType }: SceneProps, ref) => {
+const Scene = forwardRef(({ vehicleType, onHotspotClick }: SceneProps, ref) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const controlsRef = useRef<any>(null);
   const groupRef = useRef<THREE.Group | null>(null);
@@ -156,7 +157,7 @@ const Scene = forwardRef(({ vehicleType }: SceneProps, ref) => {
         floatingRange={floatConfig.floatingRange}
       >
         <group ref={groupRef}>
-          <BrakeModel vehicleType={vehicleType} />
+          <BrakeModel vehicleType={vehicleType} onHotspotClick={onHotspotClick} />
         </group>
       </Float>
 
