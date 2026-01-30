@@ -1,12 +1,13 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useGLTF, Environment, PerspectiveCamera } from "@react-three/drei";
+import { useGLTF, Environment, PerspectiveCamera, ContactShadows } from "@react-three/drei";
 import { Suspense, useRef, useState, useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { motion, AnimatePresence } from "framer-motion";
-import { vehicles, brakes, transition, VehicleType } from "../../config";
+import { vehicles, brakes, transition, viewer, VehicleType } from "../../config";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 
 interface VehicleZoomTransitionProps {
   vehicleType: VehicleType;
@@ -31,21 +32,15 @@ const VehicleModel = ({ vehicleType, opacity }: VehicleModelProps) => {
     // Use SkeletonUtils.clone for proper animation and hierarchy support
     const cloned = clone(scene) as THREE.Group;
 
-    // Apply scale to EVERY object in the hierarchy
-    cloned.traverse((child) => {
-      if (child instanceof THREE.Object3D) {
-        child.scale.set(modelScale, modelScale, modelScale);
-      }
-    });
-
-    // Calculate center immediately when cloning (after scaling)
+    // Calculate center BEFORE scaling (use original size for offset calculation)
     const box = new THREE.Box3().setFromObject(cloned);
     const center = new THREE.Vector3();
     box.getCenter(center);
-
-    const offset = center.clone().negate();
     const minY = box.min.y;
-    offset.y = -minY - 0.5; // Position on ground
+
+    // Calculate offset and scale it appropriately
+    const offset = center.clone().negate().multiplyScalar(modelScale);
+    offset.y = (-minY - 0.5) * modelScale; // Position on ground, scaled
 
     return { clonedScene: cloned, centerOffset: offset };
   }, [scene, modelScale]);
@@ -69,6 +64,7 @@ const VehicleModel = ({ vehicleType, opacity }: VehicleModelProps) => {
     <group
       ref={groupRef}
       position={[centerOffset.x, centerOffset.y, centerOffset.z]}
+      scale={[modelScale, modelScale, modelScale]}
     >
       <primitive
         object={clonedScene}
@@ -102,21 +98,14 @@ const BrakeTransitionModel = ({ vehicleType, opacity }: BrakeModelProps) => {
     // Use SkeletonUtils.clone for proper animation and hierarchy support
     const cloned = clone(scene) as THREE.Group;
 
-    // Apply scale to EVERY object in the hierarchy
-    cloned.traverse((child) => {
-      if (child instanceof THREE.Object3D) {
-        child.scale.set(brakeScale, brakeScale, brakeScale);
-      }
-    });
-
-    // Calculate center immediately when cloning (after scaling)
+    // Calculate center BEFORE scaling (use original size for offset calculation)
     const box = new THREE.Box3().setFromObject(cloned);
     const center = new THREE.Vector3();
     box.getCenter(center);
 
-    const offset = center.clone().negate();
-    const minY = box.min.y;
-    offset.y = -minY - 0.5;
+    // Calculate offset to center the brake model at origin (0, 0, 0)
+    // Scale the offset by brakeScale so it works with the scaled model
+    const offset = center.clone().negate().multiplyScalar(brakeScale);
 
     return { clonedScene: cloned, centerOffset: offset };
   }, [scene, brakeScale]);
@@ -148,6 +137,7 @@ const BrakeTransitionModel = ({ vehicleType, opacity }: BrakeModelProps) => {
     <group
       ref={groupRef}
       position={[centerOffset.x, centerOffset.y, centerOffset.z]}
+      scale={[brakeScale, brakeScale, brakeScale]}
     >
       <primitive
         object={clonedScene}
@@ -283,28 +273,44 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
     }
   });
 
-  const effects = transition.effects;
+  const lighting = viewer.lighting;
+  const sceneConfig = viewer.scene;
 
   return (
     <>
       <PerspectiveCamera
         makeDefault
         position={[initialPosition.current.x, initialPosition.current.y, initialPosition.current.z]}
-        fov={transition.camera.fov}
+        fov={viewer.camera.fov}
       />
 
-      {/* Lighting */}
-      <ambientLight intensity={effects.ambientLightIntensity} />
-      <directionalLight position={[10, 10, 5]} intensity={effects.directionalLightIntensity} castShadow />
-      <directionalLight position={[-10, -10, -5]} intensity={0.3} />
-      <spotLight position={[0, 15, 0]} intensity={effects.spotLightIntensity} angle={0.3} penumbra={1} />
-      <hemisphereLight groundColor="#222222" intensity={0.4} />
+      {/* Lighting - Same as viewer */}
+      <ambientLight intensity={lighting.ambient.intensity} />
+      <directionalLight
+        position={[lighting.directional1.position.x, lighting.directional1.position.y, lighting.directional1.position.z]}
+        intensity={lighting.directional1.intensity}
+        castShadow
+      />
+      <directionalLight
+        position={[lighting.directional2.position.x, lighting.directional2.position.y, lighting.directional2.position.z]}
+        intensity={lighting.directional2.intensity}
+      />
+      <spotLight
+        position={[lighting.spot.position.x, lighting.spot.position.y, lighting.spot.position.z]}
+        intensity={lighting.spot.intensity}
+        angle={lighting.spot.angle}
+        penumbra={1}
+        castShadow
+      />
+      <hemisphereLight groundColor={lighting.hemisphere.groundColor} intensity={lighting.hemisphere.intensity} />
 
-      {/* Background */}
-      <color attach="background" args={[effects.backgroundColor]} />
-      <fog attach="fog" args={[effects.backgroundColor, effects.fogNear, effects.fogFar]} />
+      {/* Background - Same as viewer */}
+      <color attach="background" args={[sceneConfig.backgroundColor]} />
 
-      {/* Environment for reflections */}
+      {/* Fog - Same as viewer */}
+      <fog attach="fog" args={[sceneConfig.fogColor, sceneConfig.fogNear, sceneConfig.fogFar]} />
+
+      {/* Environment for reflections - Same as viewer */}
       <Environment preset="city" background={false} />
 
       {/* Vehicle Model */}
@@ -317,11 +323,30 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
         <BrakeTransitionModel vehicleType={vehicleType} opacity={brakeOpacity} />
       )}
 
-      {/* Ground plane */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]} receiveShadow>
-        <planeGeometry args={[100, 100]} />
-        <meshStandardMaterial color="#111118" metalness={0.8} roughness={0.4} />
-      </mesh>
+      {/* Ground Shadow - Same as viewer */}
+      <ContactShadows
+        position={[0, -2, 0]}
+        opacity={0.4}
+        scale={500}
+        blur={2}
+        far={100}
+      />
+
+      {/* Infinite Ground Grid - Same as viewer */}
+      <gridHelper
+        args={[sceneConfig.gridSize, sceneConfig.gridDivisions, sceneConfig.gridColor1, sceneConfig.gridColor2]}
+        position={[0, -2, 0]}
+      />
+
+      {/* Post Processing Effects - Same as viewer */}
+      <EffectComposer>
+        <Bloom
+          luminanceThreshold={viewer.postProcessing.bloom.luminanceThreshold}
+          luminanceSmoothing={viewer.postProcessing.bloom.luminanceSmoothing}
+          intensity={viewer.postProcessing.bloom.intensity}
+        />
+        <Vignette offset={viewer.postProcessing.vignette.offset} darkness={viewer.postProcessing.vignette.darkness} eskil={false} />
+      </EffectComposer>
     </>
   );
 };
@@ -335,66 +360,31 @@ const VehicleZoomTransition: React.FC<VehicleZoomTransitionProps> = ({
 
   const handleZoomComplete = () => {
     setIsComplete(true);
-    setTimeout(() => {
-      onComplete();
-    }, 400);
+    // Call immediately for seamless transition
+    onComplete();
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-[#0a0a0f] overflow-hidden">
-      {/* Vignette overlay */}
-      <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black/60 z-10 pointer-events-none" />
-
-      {/* Ambient particles/stars */}
-      <div className="absolute inset-0 z-5 pointer-events-none">
-        {[...Array(30)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-white/30 rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              opacity: [0.2, 0.6, 0.2],
-              scale: [1, 1.5, 1],
-            }}
-            transition={{
-              duration: 2 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* 3D Canvas */}
-      <AnimatePresence>
-        <motion.div
-          className="absolute inset-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isComplete ? 0 : 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.4 }}
+      {/* 3D Canvas - No fade effects for seamless transition */}
+      <div className="absolute inset-0">
+        <Canvas
+          shadows
+          gl={{
+            antialias: true,
+            powerPreference: "high-performance",
+            alpha: true,
+          }}
+          dpr={[1, 2]}
         >
-          <Canvas
-            shadows
-            gl={{
-              antialias: true,
-              powerPreference: "high-performance",
-              alpha: true,
-            }}
-            dpr={[1, 2]}
-          >
-            <Suspense fallback={null}>
-              <TransitionScene
-                vehicleType={vehicleType}
-                onZoomComplete={handleZoomComplete}
-              />
-            </Suspense>
-          </Canvas>
-        </motion.div>
-      </AnimatePresence>
+          <Suspense fallback={null}>
+            <TransitionScene
+              vehicleType={vehicleType}
+              onZoomComplete={handleZoomComplete}
+            />
+          </Suspense>
+        </Canvas>
+      </div>
 
       {/* Vehicle type label */}
       <motion.div

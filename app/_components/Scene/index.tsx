@@ -6,7 +6,7 @@ import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import BrakeModel from "../Models/BrakeModel";
-import { viewer, VehicleType } from "../../config";
+import { viewer, transition, VehicleType } from "../../config";
 
 interface SceneProps {
   vehicleType: VehicleType;
@@ -21,10 +21,18 @@ const Scene = forwardRef(({ vehicleType }: SceneProps, ref) => {
 
   const config = viewer;
 
-  // Camera view from config
+  // Camera view from config - Start from transition's brake view position for seamless transition
   const cameraView = {
-    position: new THREE.Vector3(config.camera.position.x, config.camera.position.y, config.camera.position.z),
-    target: new THREE.Vector3(config.camera.target.x, config.camera.target.y, config.camera.target.z),
+    position: new THREE.Vector3(
+      transition.camera.brakeViewPosition.x,
+      transition.camera.brakeViewPosition.y,
+      transition.camera.brakeViewPosition.z
+    ),
+    target: new THREE.Vector3(
+      transition.camera.brakeViewTarget.x,
+      transition.camera.brakeViewTarget.y,
+      transition.camera.brakeViewTarget.z
+    ),
     zoomFactor: config.camera.zoomFactor,
     maxDistance: config.camera.maxDistance,
     minDistance: config.camera.minDistance,

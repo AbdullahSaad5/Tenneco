@@ -11,10 +11,10 @@
   },
   "camera": {
     "fov": 50,
-    "position": { "x": 5, "y": 3, "z": 20 },
+    "position": { "x": 5, "y": 3, "z": 40 },
     "target": { "x": 0, "y": 0, "z": 0 },
     "zoomFactor": 1,
-    "maxDistance": 30,
+    "maxDistance": 50,
     "minDistance": 0.1
   },
   "lighting": {

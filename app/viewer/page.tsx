@@ -2,25 +2,47 @@
 
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useRef, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Scene from "../_components/Scene";
 import LoadingScreen from "../_components/LoadingScreen";
 import ViewControls from "../_components/ViewControls";
 import Navbar from "../_components/Navbar";
+import VehicleZoomTransition from "../_components/VehicleZoomTransition";
 import { VehicleType } from "../config";
 
 function ViewerContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const vehicleType = (searchParams.get("vehicle") as VehicleType) || "light";
+  const shouldAnimate = searchParams.get("animate") === "true";
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sceneRef = useRef<any>(null);
   const [isReady, setIsReady] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(shouldAnimate);
+  const [animationComplete, setAnimationComplete] = useState(!shouldAnimate);
 
   useEffect(() => {
-    // Small delay to ensure smooth transition from the zoom animation
-    const timer = setTimeout(() => setIsReady(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!shouldAnimate) {
+      // Small delay to ensure smooth loading when no animation
+      const timer = setTimeout(() => setIsReady(true), 100);
+      return () => clearTimeout(timer);
+    } else {
+      // Ready immediately for animation
+      setIsReady(false);
+    }
+  }, [shouldAnimate]);
+
+  const handleAnimationComplete = () => {
+    setShowAnimation(false);
+    setAnimationComplete(true);
+    setIsReady(true);
+
+    // Remove the animate parameter from URL without reloading
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("animate");
+    router.replace(`/viewer?${params.toString()}`, { scroll: false });
+  };
 
   const handleResetCamera = () => {
     window.dispatchEvent(new CustomEvent("resetCamera"));
@@ -39,44 +61,61 @@ function ViewerContent() {
   };
 
   return (
-    <div className="h-screen bg-slate-50 relative overflow-hidden">
-      {/* Navbar */}
-      <Navbar showBackButton={true} />
+    <>
+      {/* Show animation if needed */}
+      {showAnimation && (
+        <VehicleZoomTransition
+          vehicleType={vehicleType}
+          onComplete={handleAnimationComplete}
+        />
+      )}
 
-      {/* View Controls */}
-      <ViewControls
-        onResetCamera={handleResetCamera}
-        onZoomIn={handleZoomIn}
-        onZoomOut={handleZoomOut}
-        onPlayExplosion={handlePlayExplosion}
-        showExplosionButton={true}
-      />
+      {/* Show viewer after animation or if no animation needed */}
+      {!showAnimation && (
+        <div className="h-screen bg-slate-50 relative overflow-hidden">
+          {/* Navbar - only show after animation complete */}
+          {animationComplete && <Navbar showBackButton={true} />}
 
-      {/* 3D Canvas */}
-      <div className="absolute inset-0 top-[72px]">
-        {isReady && (
-          <Canvas
-            shadows
-            gl={{
-              antialias: true,
-              powerPreference: "high-performance",
-              alpha: true,
-              preserveDrawingBuffer: true,
-            }}
-            dpr={[1, 2]}
-          >
-            <Suspense fallback={null}>
-              <Scene vehicleType={vehicleType} ref={sceneRef} />
-            </Suspense>
-          </Canvas>
-        )}
-      </div>
+          {/* View Controls - only show after animation complete */}
+          {animationComplete && (
+            <ViewControls
+              onResetCamera={handleResetCamera}
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
+              onPlayExplosion={handlePlayExplosion}
+              showExplosionButton={true}
+            />
+          )}
 
-      {/* Watermark */}
-      <div className="fixed bottom-6 right-6 z-10 text-slate-400 text-xs font-medium">
-        Tenneco 3D Viewer
-      </div>
-    </div>
+          {/* 3D Canvas */}
+          <div className={`absolute inset-0 ${animationComplete ? 'top-[72px]' : 'top-0'}`}>
+            {isReady && (
+              <Canvas
+                shadows
+                gl={{
+                  antialias: true,
+                  powerPreference: "high-performance",
+                  alpha: true,
+                  preserveDrawingBuffer: true,
+                }}
+                dpr={[1, 2]}
+              >
+                <Suspense fallback={null}>
+                  <Scene vehicleType={vehicleType} ref={sceneRef} />
+                </Suspense>
+              </Canvas>
+            )}
+          </div>
+
+          {/* Watermark - only show after animation complete */}
+          {animationComplete && (
+            <div className="fixed bottom-6 right-6 z-10 text-slate-400 text-xs font-medium">
+              Tenneco 3D Viewer
+            </div>
+          )}
+        </div>
+      )}
+    </>
   );
 }
 

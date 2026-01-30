@@ -4,14 +4,11 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
-import VehicleZoomTransition from "./_components/VehicleZoomTransition";
 import { homepage, VehicleType } from "./config";
 
 export default function Home() {
   const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-  const [showAnimation, setShowAnimation] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState<VehicleType | null>(null);
 
   // Get sorted and enabled categories from static config
   const categories = homepage.categories
@@ -19,24 +16,12 @@ export default function Home() {
     .sort((a, b) => a.order - b.order);
 
   const handleCardClick = (vehicleType: VehicleType) => {
-    setSelectedVehicle(vehicleType);
-    setShowAnimation(true);
-  };
-
-  const handleAnimationComplete = () => {
-    if (selectedVehicle) {
-      router.push(`/viewer?vehicle=${selectedVehicle}`);
-    }
+    // Navigate directly to viewer with animation flag
+    router.push(`/viewer?vehicle=${vehicleType}&animate=true`);
   };
 
   return (
     <>
-      {showAnimation && selectedVehicle && (
-        <VehicleZoomTransition
-          vehicleType={selectedVehicle}
-          onComplete={handleAnimationComplete}
-        />
-      )}
 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
         {/* Animated Background */}

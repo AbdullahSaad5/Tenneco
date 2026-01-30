@@ -198,24 +198,14 @@ const BrakeModel = ({ vehicleType }: BrakeModelProps) => {
     // Use SkeletonUtils.clone for proper animation support
     const cloned = clone(scene) as THREE.Group;
 
-    // Apply scale to EVERY object in the hierarchy
-    cloned.traverse((child) => {
-      if (child instanceof THREE.Object3D) {
-        child.scale.set(brakeScale, brakeScale, brakeScale);
-      }
-    });
-
-    // Calculate center immediately when cloning (after scaling)
+    // Calculate center BEFORE scaling (use original size for offset calculation)
     const box = new THREE.Box3().setFromObject(cloned);
     const center = new THREE.Vector3();
     box.getCenter(center);
 
-    // Calculate offset to center the model at origin
-    const offset = center.clone().negate();
-
-    // Also adjust Y so model sits on ground (y = -2)
-    const minY = box.min.y;
-    offset.y = -minY - 2;
+    // Calculate offset to center the model at origin (0, 0, 0)
+    // Scale the offset by brakeScale so it works with the scaled model
+    const offset = center.clone().negate().multiplyScalar(brakeScale);
 
     return { clonedScene: cloned, centerOffset: offset };
   }, [scene, brakeScale]);
@@ -338,6 +328,7 @@ const BrakeModel = ({ vehicleType }: BrakeModelProps) => {
       <group
         ref={modelRef}
         position={[centerOffset.x, centerOffset.y, centerOffset.z]}
+        scale={[brakeScale, brakeScale, brakeScale]}
       >
         <primitive
           object={clonedScene}
