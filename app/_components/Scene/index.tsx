@@ -163,6 +163,9 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
   const [brakeOpacity, setBrakeOpacity] = useState(isAnimating ? 0 : 1);
   const startTime = useRef(Date.now());
   const completedRef = useRef(false);
+  const zoomCompletedRef = useRef(false);
+  const transitionCompletedRef = useRef(false);
+  const cameraLockedToBrakeRef = useRef(false);
 
   // Prevent animation from restarting - if isAnimating becomes false while animating, complete immediately
   useEffect(() => {
@@ -231,8 +234,8 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
 
   // Animation frame loop
   useFrame(() => {
-    // Don't run animation if completed or not animating
-    if (!isAnimating || phase === "complete" || completedRef.current) return;
+    // Don't run animation if completed or not animating or not initialized
+    if (!isAnimating || phase === "complete" || completedRef.current || !isInitialized) return;
 
     const elapsed = Date.now() - startTime.current;
 
@@ -247,9 +250,8 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
         startTime.current = Date.now();
       }
     }
-
     // Phase 2: Transition to blue
-    if (phase === "blueTransition") {
+    else if (phase === "blueTransition") {
       camera.lookAt(initialLookAt.current);
 
       const blueElapsed = Date.now() - startTime.current;
@@ -263,9 +265,8 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
         startTime.current = Date.now();
       }
     }
-
     // Phase 3: Zoom into brake area
-    if (phase === "zooming") {
+    else if (phase === "zooming" && !zoomCompletedRef.current && !cameraLockedToBrakeRef.current) {
       const zoomElapsed = Date.now() - startTime.current;
       const progress = Math.min(zoomElapsed / zoomDuration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
@@ -278,13 +279,13 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
       camera.lookAt(currentLookAt.current);
 
       if (progress >= 1) {
+        zoomCompletedRef.current = true;
         setPhase("transitioning");
         startTime.current = Date.now();
       }
     }
-
     // Phase 4: Fade out vehicle completely (no brake yet)
-    if (phase === "transitioning") {
+    else if (phase === "transitioning" && !transitionCompletedRef.current) {
       const transitionElapsed = Date.now() - startTime.current;
       const progress = Math.min(transitionElapsed / transitionDuration, 1);
 
@@ -292,12 +293,16 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
       setVehicleOpacity(0.7 * (1 - progress));
       setBrakeOpacity(0);
 
-      if (progress >= 1) {
-        // Vehicle is completely gone, move camera to final position
+      if (progress >= 1 && !cameraLockedToBrakeRef.current) {
+        // Transition complete - immediately move to brake phase
+        transitionCompletedRef.current = true;
+        cameraLockedToBrakeRef.current = true;
         setVehicleOpacity(0);
         setBrakeOpacity(0);
+        setPhase("brake");
+        startTime.current = Date.now();
 
-        // Set final camera position BEFORE showing brake
+        // Set final camera position for brake view - this should only happen ONCE
         camera.position.set(
           transition.camera.brakeViewPosition.x,
           transition.camera.brakeViewPosition.y,
@@ -309,13 +314,19 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
           transition.camera.brakeViewTarget.z
         );
 
-        setPhase("brake");
-        startTime.current = Date.now();
+        // Update OrbitControls target to match
+        if (controlsRef.current) {
+          controlsRef.current.target.set(
+            transition.camera.brakeViewTarget.x,
+            transition.camera.brakeViewTarget.y,
+            transition.camera.brakeViewTarget.z
+          );
+          controlsRef.current.update();
+        }
       }
     }
-
     // Phase 5: Fade in brake at final camera position
-    if (phase === "brake") {
+    else if (phase === "brake") {
       const brakeElapsed = Date.now() - startTime.current;
       const fadeProgress = Math.min(brakeElapsed / showBrakeDuration, 1);
 
@@ -351,6 +362,8 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
         // Start from animation initial position
         camera.position.set(initialPosition.current.x, initialPosition.current.y, initialPosition.current.z);
         camera.lookAt(initialLookAt.current);
+        // Reset animation start time to NOW to prevent skipping on first load
+        startTime.current = Date.now();
       } else {
         // Start from brake view position
         camera.position.set(cameraView.position.x, cameraView.position.y, cameraView.position.z);
