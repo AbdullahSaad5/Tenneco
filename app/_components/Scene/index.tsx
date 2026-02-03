@@ -162,6 +162,7 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
   const [vehicleOpacity, setVehicleOpacity] = useState(isAnimating ? 1 : 0);
   const [blueTransitionProgress, setBlueTransitionProgress] = useState(0);
   const [brakeOpacity, setBrakeOpacity] = useState(isAnimating ? 0 : 1);
+  const [brakeFadeComplete, setBrakeFadeComplete] = useState(!isAnimating);
   const startTime = useRef(Date.now());
   const completedRef = useRef(false);
   const zoomCompletedRef = useRef(false);
@@ -354,6 +355,11 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
       // Fade in brake from 0 to 1
       setBrakeOpacity(fadeProgress);
 
+      // Mark fade as complete when opacity reaches 1
+      if (fadeProgress >= 1 && !brakeFadeComplete) {
+        setBrakeFadeComplete(true);
+      }
+
       if (fadeProgress >= 1 && !completedRef.current) {
         completedRef.current = true;
         setBrakeOpacity(1);
@@ -508,6 +514,7 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
               vehicleType={vehicleType}
               onHotspotClick={onHotspotClick}
               opacity={1}
+              showExplosionHotspot={true}
             />
           </group>
         </Float>
@@ -518,6 +525,7 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
             vehicleType={vehicleType}
             onHotspotClick={undefined} // Disable hotspots during animation
             opacity={brakeOpacity}
+            showExplosionHotspot={brakeFadeComplete}
           />
         </group>
       ) : null}

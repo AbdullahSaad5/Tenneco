@@ -367,9 +367,10 @@ interface BrakeModelProps {
   vehicleType: VehicleType;
   onHotspotClick?: (hotspot: HotspotConfig) => void;
   opacity?: number;
+  showExplosionHotspot?: boolean;
 }
 
-const BrakeModel = ({ vehicleType, onHotspotClick, opacity = 1 }: BrakeModelProps) => {
+const BrakeModel = ({ vehicleType, onHotspotClick, opacity = 1, showExplosionHotspot: showExplosionHotspotProp = true }: BrakeModelProps) => {
   const config = brakes[vehicleType];
   const vehicleHotspots = hotspots[vehicleType];
 
@@ -387,8 +388,8 @@ const BrakeModel = ({ vehicleType, onHotspotClick, opacity = 1 }: BrakeModelProp
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
   // Show hotspots immediately if no animations, otherwise wait for animation to complete
   const [showHotspots, setShowHotspots] = useState(false);
-  // Show explosion hotspot initially, hide after clicking
-  const [showExplosionHotspot, setShowExplosionHotspot] = useState(true);
+  // Control explosion hotspot visibility - hide after clicking
+  const [explosionHotspotClicked, setExplosionHotspotClicked] = useState(false);
 
   // Use viewerScale from scaleConfig
   const brakeScale = config.scaleConfig.viewerScale * config.scale;
@@ -433,7 +434,7 @@ const BrakeModel = ({ vehicleType, onHotspotClick, opacity = 1 }: BrakeModelProp
       console.log('[BrakeModel] Explosion hotspot clicked, starting animation');
       setIsAnimationPlaying(true);
       setShowHotspots(false);
-      setShowExplosionHotspot(false); // Hide explosion hotspot
+      setExplosionHotspotClicked(true); // Mark as clicked to hide it
       actionRef.current.reset();
       actionRef.current.play();
     }
@@ -536,7 +537,7 @@ const BrakeModel = ({ vehicleType, onHotspotClick, opacity = 1 }: BrakeModelProp
         console.log('[BrakeModel] Starting explosion animation');
         setIsAnimationPlaying(true);
         setShowHotspots(false);
-        setShowExplosionHotspot(false); // Hide explosion hotspot
+        setExplosionHotspotClicked(true); // Mark as clicked to hide it
         actionRef.current.reset();
         actionRef.current.play();
         console.log('[BrakeModel] Animation play() called, time:', actionRef.current.time);
@@ -591,8 +592,8 @@ const BrakeModel = ({ vehicleType, onHotspotClick, opacity = 1 }: BrakeModelProp
         />
       </group>
 
-      {/* Explosion Hotspot - only show before animation is played */}
-      {showExplosionHotspot && config.explosionHotspot && animations && animations.length > 0 && (
+      {/* Explosion Hotspot - only show after fade-in completes and before animation is played */}
+      {showExplosionHotspotProp && !explosionHotspotClicked && config.explosionHotspot && animations && animations.length > 0 && (
         <ExplosionHotspot
           position={config.explosionHotspot.position}
           color={config.explosionHotspot.color}
