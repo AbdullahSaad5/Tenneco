@@ -2,7 +2,7 @@ import { useGLTF, Html } from "@react-three/drei";
 import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { brakes, hotspots, VehicleType, HotspotConfig } from "../../config";
+import { brakes, hotspots, VehicleType, HotspotConfig, Vector3Config } from "../../config";
 import { AnimationMixer, AnimationAction } from "three";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 
@@ -366,9 +366,10 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
 interface BrakeModelProps {
   vehicleType: VehicleType;
   onHotspotClick?: (hotspot: HotspotConfig) => void;
+  opacity?: number;
 }
 
-const BrakeModel = ({ vehicleType, onHotspotClick }: BrakeModelProps) => {
+const BrakeModel = ({ vehicleType, onHotspotClick, opacity = 1 }: BrakeModelProps) => {
   const config = brakes[vehicleType];
   const vehicleHotspots = hotspots[vehicleType];
 
@@ -377,6 +378,9 @@ const BrakeModel = ({ vehicleType, onHotspotClick }: BrakeModelProps) => {
   const modelRef = useRef<THREE.Group>(null);
   const mixerRef = useRef<AnimationMixer | null>(null);
   const actionRef = useRef<AnimationAction | null>(null);
+
+  // Store original material properties
+  const originalMaterialProps = useRef<Map<THREE.Material, { transparent: boolean; opacity: number }>>(new Map());
 
   // Animation state
   const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
@@ -393,6 +397,20 @@ const BrakeModel = ({ vehicleType, onHotspotClick }: BrakeModelProps) => {
   const { clonedScene, centerOffset } = useMemo(() => {
     // Use SkeletonUtils.clone for proper animation support
     const cloned = clone(scene) as THREE.Group;
+
+    // Store original material properties
+    cloned.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        if (mesh.material) {
+          const material = mesh.material as THREE.Material;
+          originalMaterialProps.current.set(material, {
+            transparent: material.transparent,
+            opacity: material.opacity,
+          });
+        }
+      }
+    });
 
     // Calculate center BEFORE scaling (use original size for offset calculation)
     const box = new THREE.Box3().setFromObject(cloned);
@@ -420,6 +438,34 @@ const BrakeModel = ({ vehicleType, onHotspotClick }: BrakeModelProps) => {
       actionRef.current.play();
     }
   };
+
+  // Apply opacity to all materials
+  useEffect(() => {
+    clonedScene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        if (mesh.material) {
+          const material = mesh.material as THREE.Material;
+          const originalProps = originalMaterialProps.current.get(material);
+
+          if (originalProps) {
+            if (opacity < 1) {
+              // Make transparent and apply fade opacity
+              material.transparent = true;
+              material.opacity = opacity * originalProps.opacity;
+              material.depthWrite = opacity > 0.5; // Prevent z-fighting when very transparent
+            } else {
+              // Restore original transparency state
+              material.transparent = originalProps.transparent;
+              material.opacity = originalProps.opacity;
+              material.depthWrite = true;
+            }
+            material.needsUpdate = true;
+          }
+        }
+      }
+    });
+  }, [clonedScene, opacity]);
 
   // Show hotspots immediately if no animations
   useEffect(() => {

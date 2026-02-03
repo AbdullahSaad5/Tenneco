@@ -1,28 +1,218 @@
 "use client";
 
-import { Environment, OrbitControls, PerspectiveCamera, ContactShadows, Float } from "@react-three/drei";
-import { useRef, useEffect, useState, forwardRef, useImperativeHandle } from "react";
+import { Environment, OrbitControls, PerspectiveCamera, ContactShadows, Float, useGLTF } from "@react-three/drei";
+import { useRef, useEffect, useState, forwardRef, useImperativeHandle, useMemo } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import BrakeModel from "../Models/BrakeModel";
-import { viewer, transition, VehicleType, HotspotConfig } from "../../config";
+import { viewer, transition, VehicleType, HotspotConfig, vehicles } from "../../config";
+import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 
 interface SceneProps {
   vehicleType: VehicleType;
   onHotspotClick?: (hotspot: HotspotConfig) => void;
+  isAnimating?: boolean;
+  onAnimationComplete?: () => void;
 }
 
-const Scene = forwardRef(({ vehicleType, onHotspotClick }: SceneProps, ref) => {
+// Vehicle model component for transition animation
+interface VehicleModelProps {
+  vehicleType: VehicleType;
+  opacity: number;
+  blueTransitionProgress?: number;
+}
+
+const VehicleModel = ({ vehicleType, opacity, blueTransitionProgress = 0 }: VehicleModelProps) => {
+  const config = vehicles[vehicleType];
+  const { scene } = useGLTF(config.modelPath);
+  const groupRef = useRef<THREE.Group>(null);
+
+  const modelScale = config.zoomConfig.initialScale * config.scale;
+
+  const originalMaterials = useRef<Map<THREE.Material, {
+    color: THREE.Color;
+    metalness: number;
+    roughness: number;
+    emissive: THREE.Color;
+    emissiveIntensity: number;
+  }>>(new Map());
+
+  const { clonedScene, centerOffset } = useMemo(() => {
+    const cloned = clone(scene) as THREE.Group;
+
+    cloned.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        if (mesh.material) {
+          if (Array.isArray(mesh.material)) {
+            mesh.material = mesh.material.map(mat => mat.clone());
+          } else {
+            mesh.material = mesh.material.clone();
+          }
+
+          if ((mesh.material as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+            const stdMat = mesh.material as THREE.MeshStandardMaterial;
+            originalMaterials.current.set(stdMat, {
+              color: stdMat.color.clone(),
+              metalness: stdMat.metalness,
+              roughness: stdMat.roughness,
+              emissive: stdMat.emissive.clone(),
+              emissiveIntensity: stdMat.emissiveIntensity,
+            });
+          }
+        }
+      }
+    });
+
+    const box = new THREE.Box3().setFromObject(cloned);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    const minY = box.min.y;
+
+    const offset = center.clone().negate().multiplyScalar(modelScale);
+    offset.y = (-minY - 0.5) * modelScale;
+
+    return { clonedScene: cloned, centerOffset: offset };
+  }, [scene, modelScale]);
+
+  useEffect(() => {
+    clonedScene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        if (mesh.material && (mesh.material as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+          const stdMat = mesh.material as THREE.MeshStandardMaterial;
+          const original = originalMaterials.current.get(stdMat);
+
+          if (original) {
+            stdMat.color.copy(original.color);
+            stdMat.metalness = Math.min(original.metalness, 0.3);
+            stdMat.roughness = Math.max(original.roughness, 0.7);
+            stdMat.emissiveIntensity = 0;
+            stdMat.emissive.set(0x000000);
+          }
+
+          stdMat.transparent = true;
+          stdMat.needsUpdate = true;
+        }
+      }
+    });
+  }, [clonedScene]);
+
+  useEffect(() => {
+    const blueColor = new THREE.Color(0x5BA3F5);
+    const blueEmissive = new THREE.Color(0x3A80D5);
+    const blackEmissive = new THREE.Color(0x000000);
+
+    clonedScene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        if (mesh.material) {
+          const material = mesh.material as THREE.Material;
+          material.transparent = true;
+          material.opacity = opacity;
+
+          if ((material as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+            const stdMat = material as THREE.MeshStandardMaterial;
+            const original = originalMaterials.current.get(stdMat);
+
+            if (original) {
+              stdMat.color.lerpColors(original.color, blueColor, blueTransitionProgress);
+              const targetMetalness = blueTransitionProgress > 0 ? 0.3 : Math.min(original.metalness, 0.3);
+              stdMat.metalness = THREE.MathUtils.lerp(Math.min(original.metalness, 0.3), targetMetalness, blueTransitionProgress);
+              const targetRoughness = blueTransitionProgress > 0 ? 0.5 : Math.max(original.roughness, 0.7);
+              stdMat.roughness = THREE.MathUtils.lerp(Math.max(original.roughness, 0.7), targetRoughness, blueTransitionProgress);
+              stdMat.emissive.lerpColors(blackEmissive, blueEmissive, blueTransitionProgress);
+              stdMat.emissiveIntensity = THREE.MathUtils.lerp(0, 0.4, blueTransitionProgress);
+            }
+          }
+
+          material.needsUpdate = true;
+        }
+      }
+    });
+  }, [clonedScene, opacity, blueTransitionProgress]);
+
+  return (
+    <group
+      ref={groupRef}
+      position={[centerOffset.x, centerOffset.y, centerOffset.z]}
+      scale={[modelScale, modelScale, modelScale]}
+    >
+      <primitive
+        object={clonedScene}
+        rotation={[config.rotation.x, config.rotation.y, config.rotation.z]}
+      />
+    </group>
+  );
+};
+
+const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, onAnimationComplete }: SceneProps, ref) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const controlsRef = useRef<any>(null);
   const groupRef = useRef<THREE.Group | null>(null);
   const { camera } = useThree();
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const config = viewer;
+  // Animation state - component remounts on vehicle change so state is always fresh
+  const [phase, setPhase] = useState<"showing" | "blueTransition" | "zooming" | "transitioning" | "brake" | "complete">(
+    isAnimating ? "showing" : "complete"
+  );
+  const [vehicleOpacity, setVehicleOpacity] = useState(isAnimating ? 1 : 0);
+  const [blueTransitionProgress, setBlueTransitionProgress] = useState(0);
+  const [brakeOpacity, setBrakeOpacity] = useState(isAnimating ? 0 : 1);
+  const startTime = useRef(Date.now());
+  const completedRef = useRef(false);
 
-  // Camera view from config - Start from transition's brake view position for seamless transition
+  // Prevent animation from restarting - if isAnimating becomes false while animating, complete immediately
+  useEffect(() => {
+    if (!isAnimating && phase !== "complete" && !completedRef.current) {
+      console.log('[Scene] isAnimating became false, completing animation immediately');
+      setPhase("complete");
+      setBrakeOpacity(1);
+      setVehicleOpacity(0);
+      completedRef.current = true;
+    }
+  }, [isAnimating, phase]);
+
+  const config = viewer;
+  const vehicleConfig = vehicles[vehicleType];
+  const zoomConfig = vehicleConfig.zoomConfig;
+
+  // Timing from config
+  const { showVehicleDuration, zoomDuration, transitionDuration, showBrakeDuration } = transition.timing;
+  const blueTransitionDuration = 800;
+
+  // Camera positions for animation
+  const initialPosition = useRef(new THREE.Vector3(
+    vehicleConfig.cameraStart.x,
+    vehicleConfig.cameraStart.y,
+    vehicleConfig.cameraStart.z
+  ));
+  const zoomTargetPosition = useRef(new THREE.Vector3(
+    vehicleConfig.cameraZoomTarget.x * zoomConfig.zoomIntensity,
+    vehicleConfig.cameraZoomTarget.y * zoomConfig.zoomIntensity,
+    vehicleConfig.cameraZoomTarget.z * zoomConfig.zoomIntensity
+  ));
+
+  const initialLookAt = useRef(new THREE.Vector3(
+    zoomConfig.initialLookAtTarget.x,
+    zoomConfig.initialLookAtTarget.y,
+    zoomConfig.initialLookAtTarget.z
+  ));
+  const zoomLookAt = useRef(new THREE.Vector3(
+    zoomConfig.zoomLookAtTarget.x,
+    zoomConfig.zoomLookAtTarget.y,
+    zoomConfig.zoomLookAtTarget.z
+  ));
+
+  const currentLookAt = useRef(new THREE.Vector3(
+    zoomConfig.initialLookAtTarget.x,
+    zoomConfig.initialLookAtTarget.y,
+    zoomConfig.initialLookAtTarget.z
+  ));
+
+  // Camera view from config - Final position after animation
   const cameraView = {
     position: new THREE.Vector3(
       transition.camera.brakeViewPosition.x,
@@ -39,6 +229,110 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick }: SceneProps, ref) => {
     minDistance: config.camera.minDistance,
   };
 
+  // Animation frame loop
+  useFrame(() => {
+    // Don't run animation if completed or not animating
+    if (!isAnimating || phase === "complete" || completedRef.current) return;
+
+    const elapsed = Date.now() - startTime.current;
+
+    // Phase 1: Show vehicle
+    if (phase === "showing") {
+      camera.lookAt(initialLookAt.current);
+
+      if (elapsed < showVehicleDuration) {
+        setVehicleOpacity(1);
+      } else {
+        setPhase("blueTransition");
+        startTime.current = Date.now();
+      }
+    }
+
+    // Phase 2: Transition to blue
+    if (phase === "blueTransition") {
+      camera.lookAt(initialLookAt.current);
+
+      const blueElapsed = Date.now() - startTime.current;
+      const progress = Math.min(blueElapsed / blueTransitionDuration, 1);
+
+      setBlueTransitionProgress(progress);
+      setVehicleOpacity(1 - progress * 0.3); // 1.0 to 0.7
+
+      if (progress >= 1) {
+        setPhase("zooming");
+        startTime.current = Date.now();
+      }
+    }
+
+    // Phase 3: Zoom into brake area
+    if (phase === "zooming") {
+      const zoomElapsed = Date.now() - startTime.current;
+      const progress = Math.min(zoomElapsed / zoomDuration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+
+      setVehicleOpacity(0.7);
+      setBlueTransitionProgress(1);
+
+      camera.position.lerpVectors(initialPosition.current, zoomTargetPosition.current, eased);
+      currentLookAt.current.lerpVectors(initialLookAt.current, zoomLookAt.current, eased);
+      camera.lookAt(currentLookAt.current);
+
+      if (progress >= 1) {
+        setPhase("transitioning");
+        startTime.current = Date.now();
+      }
+    }
+
+    // Phase 4: Fade out vehicle completely (no brake yet)
+    if (phase === "transitioning") {
+      const transitionElapsed = Date.now() - startTime.current;
+      const progress = Math.min(transitionElapsed / transitionDuration, 1);
+
+      // Fade out vehicle to 0, keep brake hidden
+      setVehicleOpacity(0.7 * (1 - progress));
+      setBrakeOpacity(0);
+
+      if (progress >= 1) {
+        // Vehicle is completely gone, move camera to final position
+        setVehicleOpacity(0);
+        setBrakeOpacity(0);
+
+        // Set final camera position BEFORE showing brake
+        camera.position.set(
+          transition.camera.brakeViewPosition.x,
+          transition.camera.brakeViewPosition.y,
+          transition.camera.brakeViewPosition.z
+        );
+        camera.lookAt(
+          transition.camera.brakeViewTarget.x,
+          transition.camera.brakeViewTarget.y,
+          transition.camera.brakeViewTarget.z
+        );
+
+        setPhase("brake");
+        startTime.current = Date.now();
+      }
+    }
+
+    // Phase 5: Fade in brake at final camera position
+    if (phase === "brake") {
+      const brakeElapsed = Date.now() - startTime.current;
+      const fadeProgress = Math.min(brakeElapsed / showBrakeDuration, 1);
+
+      // Fade in brake from 0 to 1
+      setBrakeOpacity(fadeProgress);
+
+      if (fadeProgress >= 1 && !completedRef.current) {
+        completedRef.current = true;
+        setBrakeOpacity(1);
+        setPhase("complete");
+        if (onAnimationComplete) {
+          onAnimationComplete();
+        }
+      }
+    }
+  });
+
   // Expose reset camera function
   useImperativeHandle(ref, () => ({
     resetCamera: () => {
@@ -53,18 +347,24 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick }: SceneProps, ref) => {
   // Set initial camera position
   useEffect(() => {
     if (!isInitialized) {
-      camera.position.set(cameraView.position.x, cameraView.position.y, cameraView.position.z);
-
-      if (controlsRef.current) {
-        controlsRef.current.target.set(cameraView.target.x, cameraView.target.y, cameraView.target.z);
-        controlsRef.current.update();
+      if (isAnimating) {
+        // Start from animation initial position
+        camera.position.set(initialPosition.current.x, initialPosition.current.y, initialPosition.current.z);
+        camera.lookAt(initialLookAt.current);
+      } else {
+        // Start from brake view position
+        camera.position.set(cameraView.position.x, cameraView.position.y, cameraView.position.z);
+        if (controlsRef.current) {
+          controlsRef.current.target.set(cameraView.target.x, cameraView.target.y, cameraView.target.z);
+          controlsRef.current.update();
+        }
       }
 
       camera.zoom = cameraView.zoomFactor;
       camera.updateProjectionMatrix();
       setIsInitialized(true);
     }
-  }, [camera, isInitialized, cameraView]);
+  }, [camera, isInitialized, cameraView, isAnimating]);
 
   // Listen for camera reset event
   useEffect(() => {
@@ -118,30 +418,33 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick }: SceneProps, ref) => {
   const postProcessing = config.postProcessing;
   const controls = config.controls;
 
+  // Reduce lighting during animation to prevent overexposure
+  const lightingMultiplier = isAnimating && phase !== "complete" ? 0.6 : 1;
+
   return (
     <>
       {/* Camera Setup */}
       <PerspectiveCamera makeDefault fov={config.camera.fov} />
 
       {/* Lighting */}
-      <ambientLight intensity={lighting.ambient.intensity} />
+      <ambientLight intensity={lighting.ambient.intensity * lightingMultiplier} />
       <directionalLight
         position={[lighting.directional1.position.x, lighting.directional1.position.y, lighting.directional1.position.z]}
-        intensity={lighting.directional1.intensity}
+        intensity={lighting.directional1.intensity * (isAnimating && phase !== "complete" ? 0.5 : 1)}
         castShadow
       />
       <directionalLight
         position={[lighting.directional2.position.x, lighting.directional2.position.y, lighting.directional2.position.z]}
-        intensity={lighting.directional2.intensity}
+        intensity={lighting.directional2.intensity * (isAnimating && phase !== "complete" ? 0.5 : 1)}
       />
       <spotLight
         position={[lighting.spot.position.x, lighting.spot.position.y, lighting.spot.position.z]}
-        intensity={lighting.spot.intensity}
+        intensity={lighting.spot.intensity * (isAnimating && phase !== "complete" ? 0.4 : 1)}
         angle={lighting.spot.angle}
         penumbra={1}
         castShadow
       />
-      <hemisphereLight groundColor={lighting.hemisphere.groundColor} intensity={lighting.hemisphere.intensity} />
+      <hemisphereLight groundColor={lighting.hemisphere.groundColor} intensity={lighting.hemisphere.intensity * lightingMultiplier} />
 
       {/* Background */}
       <color attach="background" args={[config.scene.backgroundColor]} />
@@ -149,17 +452,41 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick }: SceneProps, ref) => {
       {/* Fog */}
       <fog attach="fog" args={[config.scene.fogColor, config.scene.fogNear, config.scene.fogFar]} />
 
-      {/* 3D Model with Float animation */}
-      <Float
-        speed={floatConfig.speed}
-        rotationIntensity={floatConfig.rotationIntensity}
-        floatIntensity={floatConfig.floatIntensity}
-        floatingRange={floatConfig.floatingRange}
-      >
+      {/* Vehicle Model - only show before brake appears */}
+      {isAnimating && (phase === "showing" || phase === "blueTransition" || phase === "zooming" || (phase === "transitioning" && vehicleOpacity > 0)) && (
+        <VehicleModel
+          vehicleType={vehicleType}
+          opacity={vehicleOpacity}
+          blueTransitionProgress={blueTransitionProgress}
+        />
+      )}
+
+      {/* Brake Model - only render during transition/brake phases or when animation complete */}
+      {!isAnimating || phase === "complete" ? (
+        <Float
+          speed={floatConfig.speed}
+          rotationIntensity={floatConfig.rotationIntensity}
+          floatIntensity={floatConfig.floatIntensity}
+          floatingRange={floatConfig.floatingRange}
+        >
+          <group ref={groupRef}>
+            <BrakeModel
+              vehicleType={vehicleType}
+              onHotspotClick={onHotspotClick}
+              opacity={1}
+            />
+          </group>
+        </Float>
+      ) : (phase === "transitioning" || phase === "brake") ? (
+        // During transition - render brake for fade-in
         <group ref={groupRef}>
-          <BrakeModel vehicleType={vehicleType} onHotspotClick={onHotspotClick} />
+          <BrakeModel
+            vehicleType={vehicleType}
+            onHotspotClick={undefined} // Disable hotspots during animation
+            opacity={brakeOpacity}
+          />
         </group>
-      </Float>
+      ) : null}
 
       {/* Ground Shadow */}
       <ContactShadows
@@ -176,9 +503,10 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick }: SceneProps, ref) => {
         position={[0, -2, 0]}
       />
 
-      {/* Camera Controls */}
+      {/* Camera Controls - disabled during animation */}
       <OrbitControls
         ref={controlsRef}
+        enabled={!isAnimating || phase === "complete"}
         enableDamping={controls.enableDamping}
         dampingFactor={controls.dampingFactor}
         rotateSpeed={controls.rotateSpeed}
@@ -196,9 +524,9 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick }: SceneProps, ref) => {
       {/* Post Processing Effects */}
       <EffectComposer>
         <Bloom
-          luminanceThreshold={postProcessing.bloom.luminanceThreshold}
-          luminanceSmoothing={postProcessing.bloom.luminanceSmoothing}
-          intensity={postProcessing.bloom.intensity}
+          luminanceThreshold={isAnimating && phase !== "complete" ? 0.95 : postProcessing.bloom.luminanceThreshold}
+          luminanceSmoothing={isAnimating && phase !== "complete" ? 0.9 : postProcessing.bloom.luminanceSmoothing}
+          intensity={isAnimating && phase !== "complete" ? 0.15 : postProcessing.bloom.intensity}
         />
         <Vignette offset={postProcessing.vignette.offset} darkness={postProcessing.vignette.darkness} eskil={false} />
       </EffectComposer>
