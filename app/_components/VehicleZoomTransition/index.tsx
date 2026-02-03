@@ -4,7 +4,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useGLTF, Environment, PerspectiveCamera, ContactShadows } from "@react-three/drei";
 import { Suspense, useRef, useState, useEffect, useMemo } from "react";
 import * as THREE from "three";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { vehicles, brakes, transition, viewer, VehicleType } from "../../config";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
@@ -255,7 +255,7 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
   const zoomConfig = vehicleConfig.zoomConfig;
 
   // Timing from config
-  const { fadeInDuration, showVehicleDuration, zoomDuration, transitionDuration, showBrakeDuration } = transition.timing;
+  const { showVehicleDuration, zoomDuration, transitionDuration, showBrakeDuration } = transition.timing;
   const blueTransitionDuration = 800; // Duration for transitioning to blue variant
 
   // Camera positions from config

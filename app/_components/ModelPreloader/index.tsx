@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, createContext, useContext, ReactNode } from "react";
+import Image from "next/image";
 import { getAllModelPaths } from "../../config";
 
 interface PreloadContextType {
@@ -98,11 +99,13 @@ export function PreloadingScreen() {
     <div className="fixed inset-0 z-[100] bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center">
       <div className="text-center">
         {/* Logo */}
-        <div className="mb-8">
-          <img
+        <div className="mb-8 relative w-48 h-16 mx-auto">
+          <Image
             src="/tenneco-logo.png"
             alt="Tenneco"
-            className="h-16 w-auto mx-auto brightness-0 invert"
+            fill
+            className="object-contain brightness-0 invert"
+            priority
           />
         </div>
 

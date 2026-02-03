@@ -238,7 +238,7 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
   ));
 
   // Camera view from config - Final position after animation
-  const cameraView = {
+  const cameraView = useMemo(() => ({
     position: new THREE.Vector3(
       transition.camera.brakeViewPosition.x,
       transition.camera.brakeViewPosition.y,
@@ -252,7 +252,7 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
     zoomFactor: config.camera.zoomFactor,
     maxDistance: config.camera.maxDistance,
     minDistance: config.camera.minDistance,
-  };
+  }), [config.camera.zoomFactor, config.camera.maxDistance, config.camera.minDistance]);
 
   // Animation frame loop
   useFrame(() => {

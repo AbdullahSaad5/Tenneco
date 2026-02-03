@@ -84,7 +84,16 @@ export const useAxios = () => {
           subtitle: data.hero?.subtitle || FALLBACK_HOMEPAGE_CONTENT.hero.subtitle,
           description: data.hero?.description || FALLBACK_HOMEPAGE_CONTENT.hero.description,
         },
-        vehicleCategories: (data.vehicleCategories || []).map((cat: any) => ({
+        vehicleCategories: (data.vehicleCategories || []).map((cat: {
+          id: string;
+          order?: number;
+          title: string;
+          subtitle: string;
+          image?: { id: string };
+          gradient?: { from: string; to: string };
+          targetRoute?: string;
+          isEnabled?: boolean;
+        }) => ({
           id: cat.id,
           order: cat.order || 1,
           title: cat.title,
@@ -187,7 +196,16 @@ export const useAxios = () => {
           fallbackPath: data.modelFile?.fallbackPath || FALLBACK_MODEL_CONFIGS[modelType].modelFile.fallbackPath,
         },
         transform: data.transform || FALLBACK_MODEL_CONFIGS[modelType].transform,
-        hotspots: (data.hotspots || []).map((hs: any) => ({
+        hotspots: (data.hotspots || []).map((hs: {
+          id: string;
+          order?: number;
+          position?: { x: number; y: number; z: number };
+          label?: string;
+          color?: string;
+          targetModel?: string;
+          action?: { type: string; payload: string };
+          isEnabled?: boolean;
+        }) => ({
           id: hs.id,
           order: hs.order || 1,
           position: hs.position || { x: 0, y: 0, z: 0 },
@@ -278,7 +296,15 @@ export const useAxios = () => {
       const zoomAnimation: ZoomAnimationContent = {
         id: data.id,
         vehicleType: data.vehicleType,
-        stages: (data.stages || []).map((stage: any) => ({
+        stages: (data.stages || []).map((stage: {
+          order?: number;
+          name: string;
+          image?: { id: string };
+          title: string;
+          label: unknown;
+          duration?: number;
+          effects?: { scale: { from: number; to: number }; blur: { from: number; to: number } };
+        }) => ({
           order: stage.order || 1,
           name: stage.name,
           imageMediaId: stage.image?.id || "",
@@ -342,7 +368,15 @@ export const useAxios = () => {
   /**
    * Fetch available languages
    */
-  const getLanguages = useCallback(async (): Promise<any[]> => {
+  const getLanguages = useCallback(async (): Promise<Array<{
+    id: string;
+    code: string;
+    name: string;
+    nativeName: string;
+    isDefault: boolean;
+    isEnabled: boolean;
+    order: number;
+  }>> => {
     const controller = createAbortController("getLanguages");
     try {
       const response = await instance.get("/languages", {
@@ -352,7 +386,15 @@ export const useAxios = () => {
 
       const data = Array.isArray(response.data?.docs) ? response.data.docs : [];
 
-      return data.map((lang: any) => ({
+      return data.map((lang: {
+        id: string;
+        code: string;
+        name: string;
+        nativeName: string;
+        isDefault?: boolean;
+        isEnabled?: boolean;
+        order?: number;
+      }) => ({
         id: lang.id,
         code: lang.code,
         name: lang.name,
@@ -380,6 +422,40 @@ export const useAxios = () => {
     }
   }, []);
 
+  /**
+   * Stub functions for missing APIs
+   */
+  const getComponentsData = useCallback(async () => {
+    return {
+      mainData: { title: "", description: "" },
+      overviewDialogsData: []
+    };
+  }, []);
+
+  const getModelsData = useCallback(async () => {
+    return {
+      mediaData: {}
+    };
+  }, []);
+
+  const getTechnologiesData = useCallback(async () => {
+    return {
+      productDialogData: []
+    };
+  }, []);
+
+  const getSetupData = useCallback(async () => {
+    return {};
+  }, []);
+
+  const getBenefitsData = useCallback(async () => {
+    return {
+      videos: [],
+      reverseVideos: [],
+      stillImages: []
+    };
+  }, []);
+
   return {
     getHomepageContent,
     getAppSettings,
@@ -388,6 +464,11 @@ export const useAxios = () => {
     getZoomAnimationContent,
     getMediaById,
     getLanguages,
+    getComponentsData,
+    getModelsData,
+    getTechnologiesData,
+    getSetupData,
+    getBenefitsData,
   };
 };
 

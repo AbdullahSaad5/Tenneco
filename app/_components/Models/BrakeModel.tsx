@@ -385,7 +385,6 @@ const BrakeModel = ({ vehicleType, onHotspotClick, opacity = 1, showExplosionHot
 
   // Animation state
   const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
-  const [isAnimationComplete, setIsAnimationComplete] = useState(false);
   // Show hotspots immediately if no animations, otherwise wait for animation to complete
   const [showHotspots, setShowHotspots] = useState(false);
   // Control explosion hotspot visibility - hide after clicking
@@ -506,11 +505,10 @@ const BrakeModel = ({ vehicleType, onHotspotClick, opacity = 1, showExplosionHot
       });
 
       // Listen for animation completion
-      const onFinished = (e: any) => {
+      const onFinished = (e: { action: AnimationAction }) => {
         if (e.action === action) {
           console.log('[BrakeModel] Animation completed');
           setIsAnimationPlaying(false);
-          setIsAnimationComplete(true);
           setShowHotspots(true);
         }
       };

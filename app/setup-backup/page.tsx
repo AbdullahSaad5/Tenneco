@@ -83,6 +83,7 @@ const Setup = () => {
 
   useEffect(() => {
     if (videoRef.current && showingVideo) {
+      const video = videoRef.current;
       const playVideo = async () => {
         try {
           videoRef.current!.currentTime = 0;
@@ -104,9 +105,9 @@ const Setup = () => {
       setTimeout(playVideo, 100);
 
       return () => {
-        if (videoRef.current) {
-          videoRef.current.pause();
-          videoRef.current.currentTime = 0;
+        if (video) {
+          video.pause();
+          video.currentTime = 0;
         }
       };
     }

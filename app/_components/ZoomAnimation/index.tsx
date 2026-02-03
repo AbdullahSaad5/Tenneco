@@ -45,12 +45,6 @@ const ZoomAnimation: React.FC<ZoomAnimationProps> = ({ vehicleType, onComplete }
   useEffect(() => {
     if (!stages.length) return;
 
-    // Calculate cumulative duration for this stage
-    let cumulativeDuration = 0;
-    for (let i = 0; i <= currentStageIndex; i++) {
-      cumulativeDuration += stages[i]?.duration || 2000;
-    }
-
     const timer = setTimeout(() => {
       if (currentStageIndex < stages.length - 1) {
         setCurrentStageIndex(currentStageIndex + 1);

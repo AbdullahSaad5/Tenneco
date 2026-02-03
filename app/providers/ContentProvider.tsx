@@ -102,18 +102,18 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
       ]);
 
       // Extract results (all should be fulfilled due to fallback wrapper)
-      const [
-        homepageResult,
-        appSettingsResult,
-        lvConfigResult,
-        asmConfigResult,
-        j4444ConfigResult,
-        padConfigResult,
-        loadingScreenResult,
-        lightAnimResult,
-        commercialAnimResult,
-        railAnimResult,
-      ] = results.map((r) => (r.status === "fulfilled" ? r.value : null));
+      const resultsArray = results.map((r) => (r.status === "fulfilled" ? r.value : null));
+
+      const homepageResult = resultsArray[0] as HomepageContent | null;
+      const appSettingsResult = resultsArray[1] as AppSettings | null;
+      const lvConfigResult = resultsArray[2] as ModelConfiguration | null;
+      const asmConfigResult = resultsArray[3] as ModelConfiguration | null;
+      const j4444ConfigResult = resultsArray[4] as ModelConfiguration | null;
+      const padConfigResult = resultsArray[5] as ModelConfiguration | null;
+      const loadingScreenResult = resultsArray[6] as LoadingScreenContent | null;
+      const lightAnimResult = resultsArray[7] as ZoomAnimationContent | null;
+      const commercialAnimResult = resultsArray[8] as ZoomAnimationContent | null;
+      const railAnimResult = resultsArray[9] as ZoomAnimationContent | null;
 
       setHomepage(homepageResult || FALLBACK_HOMEPAGE_CONTENT);
       setAppSettings(appSettingsResult || FALLBACK_APP_SETTINGS);

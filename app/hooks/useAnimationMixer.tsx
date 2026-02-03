@@ -56,7 +56,7 @@ export const useAnimationMixer = ({ modelRef, animations, isActive }: UseAnimati
       });
       setIsAnimationPlaying(true);
     }
-  }, [isActive]);
+  }, [isActive, setShowComponentDetails]);
 
   return { mixer: mixerRef, isAnimationPlaying };
 };

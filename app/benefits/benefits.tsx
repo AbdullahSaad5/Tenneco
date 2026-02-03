@@ -48,55 +48,55 @@ const Benefits = () => {
         x: 49.65,
         y: 31.5,
         color: "white",
-        video: videoCache[benefitsData?.videos[0]?.url ?? ""] ?? benefitsData?.videos[0]?.url ?? "",
+        video: videoCache[benefitsData?.videos?.[0]?.url ?? ""] ?? benefitsData?.videos?.[0]?.url ?? "",
         displayMode: "modal",
       },
       {
         x: 44.5,
         y: 20,
         color: "white",
-        video: videoCache[benefitsData?.videos[1]?.url ?? ""] ?? benefitsData?.videos[1]?.url ?? "",
+        video: videoCache[benefitsData?.videos?.[1]?.url ?? ""] ?? benefitsData?.videos?.[1]?.url ?? "",
         displayMode: "modal",
       },
       {
         x: 62.5,
         y: 55.5,
         color: "white",
-        video: videoCache[benefitsData?.videos[2]?.url ?? ""] ?? benefitsData?.videos[2]?.url ?? "",
+        video: videoCache[benefitsData?.videos?.[2]?.url ?? ""] ?? benefitsData?.videos?.[2]?.url ?? "",
         reverseVideo:
-          videoCache[benefitsData?.reverseVideos[0]?.url ?? ""] ?? benefitsData?.reverseVideos[0]?.url ?? "",
+          videoCache[benefitsData?.reverseVideos?.[0]?.url ?? ""] ?? benefitsData?.reverseVideos?.[0]?.url ?? "",
         displayMode: "fullscreen",
-        stillImage: benefitsData?.stillImages[0]?.url || "",
+        stillImage: benefitsData?.stillImages?.[0]?.url || "",
       },
       {
         x: 83,
         y: 66.75,
         color: "white",
-        video: videoCache[benefitsData?.videos[3]?.url ?? ""] ?? benefitsData?.videos[3]?.url ?? "",
+        video: videoCache[benefitsData?.videos?.[3]?.url ?? ""] ?? benefitsData?.videos?.[3]?.url ?? "",
         reverseVideo:
-          videoCache[benefitsData?.reverseVideos[1]?.url ?? ""] ?? benefitsData?.reverseVideos[1]?.url ?? "",
+          videoCache[benefitsData?.reverseVideos?.[1]?.url ?? ""] ?? benefitsData?.reverseVideos?.[1]?.url ?? "",
         displayMode: "fullscreen",
-        stillImage: benefitsData?.stillImages[1]?.url || "",
+        stillImage: benefitsData?.stillImages?.[1]?.url || "",
       },
       {
         x: 56.5,
         y: 42.5,
         color: "secondary",
-        video: videoCache[benefitsData?.videos[4]?.url ?? ""] ?? benefitsData?.videos[4]?.url ?? "",
+        video: videoCache[benefitsData?.videos?.[4]?.url ?? ""] ?? benefitsData?.videos?.[4]?.url ?? "",
         displayMode: "modal",
       },
       {
         x: 37.25,
         y: 60,
         color: "secondary",
-        video: videoCache[benefitsData?.videos[5]?.url ?? ""] ?? benefitsData?.videos[5]?.url ?? "",
+        video: videoCache[benefitsData?.videos?.[5]?.url ?? ""] ?? benefitsData?.videos?.[5]?.url ?? "",
         displayMode: "modal",
       },
       {
         x: 51,
         y: 69.75,
         color: "secondary",
-        video: videoCache[benefitsData?.videos[6]?.url ?? ""] ?? benefitsData?.videos[6]?.url ?? "",
+        video: videoCache[benefitsData?.videos?.[6]?.url ?? ""] ?? benefitsData?.videos?.[6]?.url ?? "",
         displayMode: "modal",
       },
     ],
@@ -110,10 +110,10 @@ const Benefits = () => {
 
     let loadedCount = 0;
 
-    const imageUrls: string[] = [DEFAULT_IMAGE, ...benefitsData.stillImages.map((m) => m.url)];
+    const imageUrls: string[] = [DEFAULT_IMAGE, ...(benefitsData.stillImages?.map((m) => m.url) ?? [])];
     const videoUrls: string[] = [
-      ...benefitsData.videos.map((m) => m.url),
-      ...benefitsData.reverseVideos.map((m) => m.url),
+      ...(benefitsData.videos?.map((m) => m.url) ?? []),
+      ...(benefitsData.reverseVideos?.map((m) => m.url) ?? []),
     ];
 
     const totalAssets = imageUrls.length + videoUrls.length;

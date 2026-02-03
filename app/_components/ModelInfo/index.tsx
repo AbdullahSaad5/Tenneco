@@ -11,14 +11,6 @@ interface ModelInfoProps {
   hotspot: HotspotConfig | null;
 }
 
-const getColorClass = (color: string): string => {
-  if (color.includes('blue')) return 'bg-blue-600';
-  if (color.includes('purple')) return 'bg-purple-600';
-  if (color.includes('green')) return 'bg-green-600';
-  if (color.includes('orange')) return 'bg-orange-600';
-  return 'bg-blue-600';
-};
-
 const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [isPDFOpen, setIsPDFOpen] = useState(false);
