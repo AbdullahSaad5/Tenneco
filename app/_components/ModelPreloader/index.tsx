@@ -146,7 +146,7 @@ export function PreloadingScreen() {
         {/* Progress bar */}
         <div className="w-80 h-2 bg-white/10 rounded-full overflow-hidden mb-4 mx-auto">
           <div
-            className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-300 ease-out rounded-full"
+            className="h-full bg-primary transition-all duration-300 ease-out rounded-full"
             style={{ width: `${progress}%` }}
           />
         </div>

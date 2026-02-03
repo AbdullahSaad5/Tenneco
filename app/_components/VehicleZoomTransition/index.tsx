@@ -517,7 +517,7 @@ const VehicleZoomTransition: React.FC<VehicleZoomTransitionProps> = ({
         animate={{ opacity: isComplete ? 0 : 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.5 }}
       >
-        <div className="bg-gradient-to-r from-blue-600/90 to-cyan-500/90 backdrop-blur-md px-8 py-4 rounded-full border border-white/20">
+        <div className="bg-primary/90 backdrop-blur-md px-8 py-4 rounded-full border border-white/20">
           <p className="text-white font-bold text-xl tracking-wide text-center">
             {vehicleConfig.name}
           </p>

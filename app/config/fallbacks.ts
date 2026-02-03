@@ -129,7 +129,7 @@ export const FALLBACK_LOADING_SCREEN: LoadingScreenContent = {
   ],
   animation: {
     colors: {
-      primary: "#2563eb",
+      primary: "#012e87",
       secondary: "#0ea5e9",
     },
     duration: 2000,
@@ -153,7 +153,7 @@ export const FALLBACK_ZOOM_ANIMATION_LIGHT: ZoomAnimationContent = {
         text: "VEHICLE",
         subtext: "Initializing scan...",
         color: {
-          primary: "#3b82f6",
+          primary: "#012e87",
           secondary: "#60a5fa",
         },
       },
@@ -172,7 +172,7 @@ export const FALLBACK_ZOOM_ANIMATION_LIGHT: ZoomAnimationContent = {
         text: "WHEEL SYSTEM",
         subtext: "Analyzing braking components...",
         color: {
-          primary: "#06b6d4",
+          primary: "#012e87",
           secondary: "#22d3ee",
         },
       },
@@ -191,7 +191,7 @@ export const FALLBACK_ZOOM_ANIMATION_LIGHT: ZoomAnimationContent = {
         text: "BRAKE DISC",
         subtext: "Friction surface analysis",
         color: {
-          primary: "#f97316",
+          primary: "#012e87",
           secondary: "#fb923c",
         },
       },
@@ -210,7 +210,7 @@ export const FALLBACK_ZOOM_ANIMATION_LIGHT: ZoomAnimationContent = {
         text: "BRAKE PAD",
         subtext: "Entering 3D Analysis Mode",
         color: {
-          primary: "#8b5cf6",
+          primary: "#012e87",
           secondary: "#a78bfa",
         },
       },
@@ -236,7 +236,7 @@ export const FALLBACK_ZOOM_ANIMATION_COMMERCIAL: ZoomAnimationContent = {
         text: "VEHICLE",
         subtext: "Initializing scan...",
         color: {
-          primary: "#f97316",
+          primary: "#012e87",
           secondary: "#fb923c",
         },
       },
@@ -255,7 +255,7 @@ export const FALLBACK_ZOOM_ANIMATION_COMMERCIAL: ZoomAnimationContent = {
         text: "WHEEL SYSTEM",
         subtext: "Analyzing braking components...",
         color: {
-          primary: "#06b6d4",
+          primary: "#012e87",
           secondary: "#22d3ee",
         },
       },
@@ -274,7 +274,7 @@ export const FALLBACK_ZOOM_ANIMATION_COMMERCIAL: ZoomAnimationContent = {
         text: "BRAKE DISC",
         subtext: "Friction surface analysis",
         color: {
-          primary: "#f97316",
+          primary: "#012e87",
           secondary: "#fb923c",
         },
       },
@@ -293,7 +293,7 @@ export const FALLBACK_ZOOM_ANIMATION_COMMERCIAL: ZoomAnimationContent = {
         text: "BRAKE PAD",
         subtext: "Entering 3D Analysis Mode",
         color: {
-          primary: "#8b5cf6",
+          primary: "#012e87",
           secondary: "#a78bfa",
         },
       },
@@ -319,7 +319,7 @@ export const FALLBACK_ZOOM_ANIMATION_RAIL: ZoomAnimationContent = {
         text: "VEHICLE",
         subtext: "Initializing scan...",
         color: {
-          primary: "#a855f7",
+          primary: "#012e87",
           secondary: "#c084fc",
         },
       },
@@ -338,7 +338,7 @@ export const FALLBACK_ZOOM_ANIMATION_RAIL: ZoomAnimationContent = {
         text: "WHEEL SYSTEM",
         subtext: "Analyzing braking components...",
         color: {
-          primary: "#06b6d4",
+          primary: "#012e87",
           secondary: "#22d3ee",
         },
       },
@@ -357,7 +357,7 @@ export const FALLBACK_ZOOM_ANIMATION_RAIL: ZoomAnimationContent = {
         text: "BRAKE DISC",
         subtext: "Friction surface analysis",
         color: {
-          primary: "#f97316",
+          primary: "#012e87",
           secondary: "#fb923c",
         },
       },
@@ -376,7 +376,7 @@ export const FALLBACK_ZOOM_ANIMATION_RAIL: ZoomAnimationContent = {
         text: "BRAKE PAD",
         subtext: "Entering 3D Analysis Mode",
         color: {
-          primary: "#8b5cf6",
+          primary: "#012e87",
           secondary: "#a78bfa",
         },
       },
@@ -435,7 +435,7 @@ export const FALLBACK_MODEL_CONFIG_LV: ModelConfiguration = {
       order: 1,
       position: { x: 0.75, y: 0, z: 7.5 },
       label: "Brake Pad Assembly",
-      color: "#f59e0b",
+      color: "#012e87",
       targetModel: "pad",
       action: {
         type: "navigate",
@@ -448,7 +448,7 @@ export const FALLBACK_MODEL_CONFIG_LV: ModelConfiguration = {
       order: 2,
       position: { x: -0.85, y: 2.65, z: 8.5 },
       label: "J-4444 Component",
-      color: "#8b5cf6",
+      color: "#012e87",
       targetModel: "j4444",
       action: {
         type: "navigate",
@@ -461,7 +461,7 @@ export const FALLBACK_MODEL_CONFIG_LV: ModelConfiguration = {
       order: 3,
       position: { x: -0.85, y: -2.75, z: 5.75 },
       label: "ASM Assembly",
-      color: "#ec4899",
+      color: "#012e87",
       targetModel: "asm",
       action: {
         type: "navigate",
@@ -650,9 +650,9 @@ export const FALLBACK_APP_SETTINGS: AppSettings = {
       fallbackPath: "/tenneco-logo.png",
     },
     colorPalette: {
-      primary: "#2563eb",
+      primary: "#012e87",
       secondary: "#0ea5e9",
-      accent: "#8b5cf6",
+      accent: "#012e87",
       background: "#0f172a",
       text: "#ffffff",
     },

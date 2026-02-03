@@ -78,7 +78,7 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot }) => {
           animate={{ scale: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           onClick={() => setIsVideoOpen(true)}
-          className="p-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors shadow-lg group"
+          className="p-3 rounded-lg bg-primary hover:opacity-90 transition-all shadow-lg group"
           title="Watch Video"
         >
           <Video className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />

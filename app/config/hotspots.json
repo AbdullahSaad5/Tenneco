@@ -8,7 +8,7 @@
       "id": "hotspot-1",
       "label": "Brake Caliper Assembly",
       "position": { "x": 1, "y": 1.1, "z": 0 },
-      "color": "#3b82f6",
+      "color": "#012e87",
       "targetModel": "asm",
       "isEnabled": true,
       "info": {
@@ -22,7 +22,7 @@
       "id": "hotspot-2",
       "label": "Brake Rotor Disc",
       "position": { "x": -1, "y": 3, "z": 1 },
-      "color": "#10b981",
+      "color": "#012e87",
       "targetModel": "j4444",
       "isEnabled": true,
       "info": {
@@ -36,7 +36,7 @@
       "id": "hotspot-3",
       "label": "Ceramic Brake Pad",
       "position": { "x": 0, "y": 0.5, "z": 2 },
-      "color": "#f59e0b",
+      "color": "#012e87",
       "targetModel": "pad",
       "isEnabled": true,
       "info": {
@@ -50,7 +50,7 @@
       "id": "hotspot-4",
       "label": "Master Cylinder",
       "position": { "x": -1, "y": 2, "z": -1 },
-      "color": "#8b5cf6",
+      "color": "#012e87",
       "targetModel": "asm",
       "isEnabled": true,
       "info": {
@@ -64,7 +64,7 @@
       "id": "hotspot-5",
       "label": "Brake Lines",
       "position": { "x": 1.2, "y": -1.70, "z": 1.5 },
-      "color": "#ec4899",
+      "color": "#012e87",
       "targetModel": "j4444",
       "isEnabled": true,
       "info": {
@@ -78,7 +78,7 @@
       "id": "hotspot-6",
       "label": "ABS Sensor",
       "position": { "x": 0.5, "y": -1, "z": -1.5 },
-      "color": "#06b6d4",
+      "color": "#012e87",
       "targetModel": "pad",
       "isEnabled": true,
       "info": {
@@ -92,7 +92,7 @@
       "id": "hotspot-7",
       "label": "Parking Brake",
       "position": { "x": -1.5, "y": -0.1, "z": 2 },
-      "color": "#f43f5e",
+      "color": "#012e87",
       "targetModel": "asm",
       "isEnabled": true,
       "info": {
@@ -108,7 +108,7 @@
       "id": "hotspot-1",
       "label": "Heavy-Duty Caliper",
       "position": { "x": 2, "y": 1, "z": 0 },
-      "color": "#3b82f6",
+      "color": "#012e87",
       "targetModel": "asm",
       "isEnabled": true,
       "info": {
@@ -122,7 +122,7 @@
       "id": "hotspot-2",
       "label": "Heavy-Duty Rotor",
       "position": { "x": -1, "y": 2, "z": 1 },
-      "color": "#10b981",
+      "color": "#012e87",
       "targetModel": "j4444",
       "isEnabled": true,
       "info": {
@@ -136,7 +136,7 @@
       "id": "hotspot-3",
       "label": "Semi-Metallic Pad",
       "position": { "x": 0, "y": 0.5, "z": 2 },
-      "color": "#f59e0b",
+      "color": "#012e87",
       "targetModel": "pad",
       "isEnabled": true,
       "info": {
@@ -150,7 +150,7 @@
       "id": "hotspot-4",
       "label": "Air Brake Chamber",
       "position": { "x": -1.5, "y": -0.5, "z": -1 },
-      "color": "#8b5cf6",
+      "color": "#012e87",
       "targetModel": "asm",
       "isEnabled": true,
       "info": {
@@ -166,7 +166,7 @@
       "id": "hotspot-1",
       "label": "Pneumatic Brake Unit",
       "position": { "x": 2, "y": 1, "z": 0 },
-      "color": "#3b82f6",
+      "color": "#012e87",
       "targetModel": "asm",
       "isEnabled": true,
       "info": {
@@ -180,7 +180,7 @@
       "id": "hotspot-2",
       "label": "Brake Disc & Clamp",
       "position": { "x": -1, "y": 2, "z": 1 },
-      "color": "#10b981",
+      "color": "#012e87",
       "targetModel": "j4444",
       "isEnabled": true,
       "info": {
@@ -194,7 +194,7 @@
       "id": "hotspot-3",
       "label": "Composite Brake Block",
       "position": { "x": 0, "y": 0.5, "z": 2 },
-      "color": "#f59e0b",
+      "color": "#012e87",
       "targetModel": "pad",
       "isEnabled": true,
       "info": {

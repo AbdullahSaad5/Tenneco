@@ -134,7 +134,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                       onClick={() => handleVehicleSelect(vehicle.id)}
                       className={`w-full p-4 rounded-xl text-left transition-all ${
                         isActive
-                          ? "bg-gradient-to-r from-blue-600 to-cyan-600 shadow-lg shadow-blue-500/30"
+                          ? "bg-primary shadow-lg shadow-primary/30"
                           : "bg-white/5 hover:bg-white/10 border border-white/10"
                       }`}
                     >

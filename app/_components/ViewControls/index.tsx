@@ -56,7 +56,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({
       {/* Reset Camera Button */}
       <button
         onClick={onResetCamera}
-        className="group p-3 bg-white hover:bg-blue-600 rounded-lg border border-slate-200 transition-colors"
+        className="group p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
         title="Reset Camera"
       >
         <svg
@@ -78,7 +78,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({
       {showExplosionButton && onPlayExplosion && (
         <button
           onClick={onPlayExplosion}
-          className="group p-3 bg-white hover:bg-orange-600 rounded-lg border border-slate-200 transition-colors"
+          className="group p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
           title="Play Explosion Animation"
         >
           <svg
@@ -100,7 +100,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({
       {/* Zoom In Button */}
       <button
         onClick={onZoomIn}
-        className="group p-3 bg-white hover:bg-blue-600 rounded-lg border border-slate-200 transition-colors"
+        className="group p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
         title="Zoom In"
       >
         <svg
@@ -121,7 +121,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({
       {/* Zoom Out Button */}
       <button
         onClick={onZoomOut}
-        className="group p-3 bg-white hover:bg-blue-600 rounded-lg border border-slate-200 transition-colors"
+        className="group p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
         title="Zoom Out"
       >
         <svg
@@ -142,7 +142,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({
       {/* Fullscreen Button */}
       <button
         onClick={toggleFullscreen}
-        className="group p-3 bg-white hover:bg-blue-600 rounded-lg border border-slate-200 transition-colors"
+        className="group p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
         title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
       >
         {isFullscreen ? (
