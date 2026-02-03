@@ -6,7 +6,7 @@ import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import BrakeModel from "../Models/BrakeModel";
-import { viewer, transition, VehicleType, HotspotConfig, vehicles } from "../../config";
+import { viewer, transition, VehicleType, HotspotConfig, vehicles, brakes } from "../../config";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 
 interface SceneProps {
@@ -153,6 +153,7 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
   const groupRef = useRef<THREE.Group | null>(null);
   const { camera } = useThree();
   const [isInitialized, setIsInitialized] = useState(false);
+  const [modelsPreloaded, setModelsPreloaded] = useState(false);
 
   // Animation state - component remounts on vehicle change so state is always fresh
   const [phase, setPhase] = useState<"showing" | "blueTransition" | "zooming" | "transitioning" | "brake" | "complete">(
@@ -181,6 +182,26 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
   const config = viewer;
   const vehicleConfig = vehicles[vehicleType];
   const zoomConfig = vehicleConfig.zoomConfig;
+  const brakeConfig = brakes[vehicleType];
+
+  // Preload both vehicle and brake models on mount
+  useEffect(() => {
+    const preloadModels = async () => {
+      try {
+        // Preload vehicle model
+        await useGLTF.preload(vehicleConfig.modelPath);
+        // Preload brake model
+        await useGLTF.preload(brakeConfig.modelPath);
+        setModelsPreloaded(true);
+      } catch (error) {
+        console.error('Error preloading models:', error);
+        // Set to true anyway to allow animation to proceed
+        setModelsPreloaded(true);
+      }
+    };
+
+    preloadModels();
+  }, [vehicleConfig.modelPath, brakeConfig.modelPath]);
 
   // Timing from config
   const { showVehicleDuration, zoomDuration, transitionDuration, showBrakeDuration } = transition.timing;
@@ -234,8 +255,8 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
 
   // Animation frame loop
   useFrame(() => {
-    // Don't run animation if completed or not animating or not initialized
-    if (!isAnimating || phase === "complete" || completedRef.current || !isInitialized) return;
+    // Don't run animation if completed or not animating or not initialized or models not preloaded
+    if (!isAnimating || phase === "complete" || completedRef.current || !isInitialized || !modelsPreloaded) return;
 
     const elapsed = Date.now() - startTime.current;
 
