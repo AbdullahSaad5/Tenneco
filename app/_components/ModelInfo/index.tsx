@@ -5,32 +5,58 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Video } from "lucide-react";
 import PDFModal from "../PDFModal";
 import VideoModal from "../VideoModal";
-import { HotspotItem } from "../../_types/content";
+import { HotspotItem, BrakeMedia } from "../../_types/content";
 import { getMediaUrl } from "../../utils/mediaUrl";
-
-// Default paths if not specified in hotspot
-const DEFAULT_PDF = "./documents/default-brake-info.pdf";
-const DEFAULT_VIDEO = "./videos/default-brake-overview.mp4";
 
 interface ModelInfoProps {
   hotspot: HotspotItem | null;
+  brakeMedia?: BrakeMedia | null; // Fallback media from brake config
 }
 
-const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot }) => {
+const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot, brakeMedia }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [isPDFOpen, setIsPDFOpen] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
-  // Get PDF and Video URLs (use hotspot's or defaults)
+  // Get PDF URL: hotspot → brake → null (hidden)
   const pdfUrl = useMemo(() => {
-    const url = hotspot?.info?.pdf;
-    return getMediaUrl(url) || DEFAULT_PDF;
-  }, [hotspot]);
+    // First check hotspot
+    const hotspotPdf = hotspot?.info?.pdf;
+    if (hotspotPdf) {
+      return getMediaUrl(hotspotPdf);
+    }
 
+    // Fallback to brake media
+    const brakePdf = brakeMedia?.pdfUrl || brakeMedia?.fallbackPdfPath;
+    if (brakePdf) {
+      return getMediaUrl(brakePdf);
+    }
+
+    // Neither has PDF - return null to hide button
+    return null;
+  }, [hotspot, brakeMedia]);
+
+  // Get Video URL: hotspot → brake → null (hidden)
   const videoUrl = useMemo(() => {
-    const url = hotspot?.info?.video;
-    return getMediaUrl(url) || DEFAULT_VIDEO;
-  }, [hotspot]);
+    // First check hotspot
+    const hotspotVideo = hotspot?.info?.video;
+    if (hotspotVideo) {
+      return getMediaUrl(hotspotVideo);
+    }
+
+    // Fallback to brake media
+    const brakeVideo = brakeMedia?.videoUrl || brakeMedia?.fallbackVideoUrl;
+    if (brakeVideo) {
+      return getMediaUrl(brakeVideo);
+    }
+
+    // Neither has video - return null to hide button
+    return null;
+  }, [hotspot, brakeMedia]);
+
+  // Determine which buttons to show
+  const showPdfButton = !!pdfUrl;
+  const showVideoButton = !!videoUrl;
 
   if (!hotspot) return null;
 
@@ -67,29 +93,33 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot }) => {
           </svg>
         </motion.button>
 
-        {/* PDF Button */}
-        <motion.button
-          initial={{ scale: 0, y: 20 }}
-          animate={{ scale: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          onClick={() => setIsPDFOpen(true)}
-          className="p-3 rounded-lg bg-red-600 hover:bg-red-700 transition-colors shadow-lg group"
-          title="View Documentation"
-        >
-          <FileText className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
-        </motion.button>
+        {/* PDF Button - only show if PDF exists */}
+        {showPdfButton && (
+          <motion.button
+            initial={{ scale: 0, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            onClick={() => setIsPDFOpen(true)}
+            className="p-3 rounded-lg bg-red-600 hover:bg-red-700 transition-colors shadow-lg group"
+            title="View Documentation"
+          >
+            <FileText className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+          </motion.button>
+        )}
 
-        {/* Video Button */}
-        <motion.button
-          initial={{ scale: 0, y: 20 }}
-          animate={{ scale: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          onClick={() => setIsVideoOpen(true)}
-          className="p-3 rounded-lg bg-primary hover:opacity-90 transition-all shadow-lg group"
-          title="Watch Video"
-        >
-          <Video className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
-        </motion.button>
+        {/* Video Button - only show if video exists */}
+        {showVideoButton && (
+          <motion.button
+            initial={{ scale: 0, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            onClick={() => setIsVideoOpen(true)}
+            className="p-3 rounded-lg bg-primary hover:opacity-90 transition-all shadow-lg group"
+            title="Watch Video"
+          >
+            <Video className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+          </motion.button>
+        )}
       </div>
 
       {/* Info Panel */}
@@ -120,9 +150,13 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot }) => {
         )}
       </AnimatePresence>
 
-      {/* Modals */}
-      <PDFModal isOpen={isPDFOpen} onClose={() => setIsPDFOpen(false)} pdfUrl={pdfUrl} />
-      <VideoModal isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} videoUrl={videoUrl} />
+      {/* Modals - only render if URL exists */}
+      {pdfUrl && (
+        <PDFModal isOpen={isPDFOpen} onClose={() => setIsPDFOpen(false)} pdfUrl={pdfUrl} />
+      )}
+      {videoUrl && (
+        <VideoModal isOpen={isVideoOpen} onClose={() => setIsVideoOpen(false)} videoUrl={videoUrl} />
+      )}
     </>
   );
 };

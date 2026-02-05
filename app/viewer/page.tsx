@@ -144,7 +144,7 @@ function ViewerContent() {
       </div>
 
       {/* Model Info - show when hotspot is selected */}
-      {animationComplete && <ModelInfo hotspot={selectedHotspot} />}
+      {animationComplete && <ModelInfo hotspot={selectedHotspot} brakeMedia={brakeConfig?.media} />}
 
       {/* Watermark - only show after animation complete */}
       {animationComplete && (
