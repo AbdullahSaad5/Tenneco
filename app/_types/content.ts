@@ -60,6 +60,7 @@ export interface GradientColors {
 
 export interface VehicleCategory {
   id: string
+  vehicleType: VehicleType
   order: number
   title: string
   titleTranslations?: Translation[]
@@ -67,7 +68,7 @@ export interface VehicleCategory {
   subtitleTranslations?: Translation[]
   imageMediaId: string
   gradient: GradientColors
-  targetRoute: string
+  targetRoute?: string
   isEnabled: boolean
 }
 
@@ -80,10 +81,18 @@ export interface HeroSection {
   descriptionTranslations?: Translation[]
 }
 
+export interface SectionText {
+  sectionTitle?: string
+  sectionTitleTranslations?: Translation[]
+  sectionSubtitle?: string
+  sectionSubtitleTranslations?: Translation[]
+}
+
 export interface HomepageContent {
   id: string
   logo: MediaReference
   hero: HeroSection
+  section?: SectionText
   vehicleCategories: VehicleCategory[]
 }
 
@@ -324,4 +333,109 @@ export interface FetchOptions {
   timeout?: number
   retries?: number
   useFallback?: boolean
+}
+
+// ----------------------------------------------------------------------------
+// Vehicle Configuration Types (keyed by vehicleType)
+// ----------------------------------------------------------------------------
+
+export interface ZoomConfig {
+  initialScale: number
+  initialLookAtTarget: Vector3
+  zoomLookAtTarget: Vector3
+  zoomIntensity: number
+}
+
+export interface VehicleConfiguration {
+  id: string
+  vehicleType: VehicleType
+  name: string
+  modelFile: MediaReference
+  scale: Vector3
+  rotation: Vector3
+  position: Vector3
+  tirePosition: Vector3
+  cameraStart: Vector3
+  cameraZoomTarget: Vector3
+  zoomConfig: ZoomConfig
+  isActive: boolean
+}
+
+// ----------------------------------------------------------------------------
+// Brake Configuration Types (keyed by vehicleType)
+// ----------------------------------------------------------------------------
+
+export interface ScaleConfig {
+  transitionScale: number
+  viewerScale: number
+}
+
+export interface ExplosionHotspot {
+  position: Vector3
+  color: string
+  label: string
+  labelTranslations?: Translation[]
+}
+
+export interface BrakeConfiguration {
+  id: string
+  vehicleType: VehicleType
+  name: string
+  modelFile: MediaReference
+  scale: Vector3
+  rotation: Vector3
+  position: Vector3
+  centerModel: boolean
+  scaleConfig: ScaleConfig
+  explosionHotspot: ExplosionHotspot
+  media?: ModelMedia
+  isActive: boolean
+}
+
+// ----------------------------------------------------------------------------
+// Hotspot Configuration Types (keyed by vehicleType)
+// ----------------------------------------------------------------------------
+
+export interface HotspotInfo {
+  title?: string
+  titleTranslations?: Translation[]
+  description?: string
+  descriptionTranslations?: Translation[]
+  pdf?: string
+  pdfMediaId?: string
+  video?: string
+  videoMediaId?: string
+}
+
+export interface HotspotItem {
+  hotspotId: string
+  label: string
+  labelTranslations?: Translation[]
+  position: Vector3
+  color: string
+  targetModel?: ModelType
+  isEnabled: boolean
+  info?: HotspotInfo
+}
+
+export interface HotspotDefaults {
+  pdf?: string
+  video?: string
+}
+
+export interface HotspotConfiguration {
+  id: string
+  vehicleType: VehicleType
+  defaults?: HotspotDefaults
+  hotspots: HotspotItem[]
+}
+
+// ----------------------------------------------------------------------------
+// Extended Context Types (with new configurations)
+// ----------------------------------------------------------------------------
+
+export interface ExtendedContentContextValue extends ContentContextValue {
+  vehicleConfigs: Record<VehicleType, VehicleConfiguration | null>
+  brakeConfigs: Record<VehicleType, BrakeConfiguration | null>
+  hotspotConfigs: Record<VehicleType, HotspotConfiguration | null>
 }
