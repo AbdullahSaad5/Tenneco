@@ -20,6 +20,16 @@ const nextConfig = {
         hostname: "images.unsplash.com",
         protocol: "https",
       },
+      {
+        // S3 bucket for media storage
+        hostname: "tenneco-test.s3.eu-central-1.amazonaws.com",
+        protocol: "https",
+      },
+      {
+        // Wildcard for any S3 bucket (fallback)
+        hostname: "*.s3.*.amazonaws.com",
+        protocol: "https",
+      },
     ],
   },
 };
