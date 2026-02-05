@@ -6,7 +6,7 @@ import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import BrakeModel from "../Models/BrakeModel";
-import { getMediaUrl } from "../../utils/mediaUrl";
+import { usePreload } from "../ModelPreloader";
 import { viewer, transition } from "../../config";
 import { VehicleType, VehicleConfiguration, BrakeConfiguration, HotspotConfiguration, HotspotItem } from "../../_types/content";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
@@ -23,13 +23,16 @@ interface SceneProps {
 
 // Vehicle model component for transition animation
 interface VehicleModelProps {
+  vehicleType: VehicleType;
   vehicleConfig: VehicleConfiguration;
   opacity: number;
   blueTransitionProgress?: number;
 }
 
-const VehicleModel = ({ vehicleConfig, opacity, blueTransitionProgress = 0 }: VehicleModelProps) => {
-  const modelPath = getMediaUrl(vehicleConfig.modelFile.mediaUrl) || vehicleConfig.modelFile.fallbackPath || "";
+const VehicleModel = ({ vehicleType, vehicleConfig, opacity, blueTransitionProgress = 0 }: VehicleModelProps) => {
+  // Use preloaded URL to avoid double-loading
+  const { resolvedUrls } = usePreload();
+  const modelPath = resolvedUrls.vehicles[vehicleType] || vehicleConfig.modelFile.fallbackPath || "";
   const { scene } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
 
@@ -192,28 +195,17 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
   const config = viewer;
   const zoomConfig = vehicleConfig.zoomConfig;
 
-  // Get model paths from config
-  const vehicleModelPath = getMediaUrl(vehicleConfig.modelFile.mediaUrl) || vehicleConfig.modelFile.fallbackPath || "";
-  const brakeModelPath = getMediaUrl(brakeConfig.modelFile.mediaUrl) || brakeConfig.modelFile.fallbackPath || "";
+  // Get model paths from preload context (already preloaded by ModelPreloader)
+  const { resolvedUrls, isPreloaded } = usePreload();
+  const vehicleModelPath = resolvedUrls.vehicles[vehicleType] || vehicleConfig.modelFile.fallbackPath || "";
+  const brakeModelPath = resolvedUrls.brakes[vehicleType] || brakeConfig.modelFile.fallbackPath || "";
 
-  // Preload both vehicle and brake models on mount
+  // Models are already preloaded by ModelPreloader, just mark as ready
   useEffect(() => {
-    const preloadModels = async () => {
-      try {
-        // Preload vehicle model
-        await useGLTF.preload(vehicleModelPath);
-        // Preload brake model
-        await useGLTF.preload(brakeModelPath);
-        setModelsPreloaded(true);
-      } catch (error) {
-        console.error('Error preloading models:', error);
-        // Set to true anyway to allow animation to proceed
-        setModelsPreloaded(true);
-      }
-    };
-
-    preloadModels();
-  }, [vehicleModelPath, brakeModelPath]);
+    if (isPreloaded) {
+      setModelsPreloaded(true);
+    }
+  }, [isPreloaded]);
 
   // Timing from config
   const { showVehicleDuration, zoomDuration, transitionDuration, showBrakeDuration } = transition.timing;
@@ -506,6 +498,7 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
       {/* Vehicle Model - only show before brake appears */}
       {isAnimating && (phase === "showing" || phase === "blueTransition" || phase === "zooming" || (phase === "transitioning" && vehicleOpacity > 0)) && (
         <VehicleModel
+          vehicleType={vehicleType}
           vehicleConfig={vehicleConfig}
           opacity={vehicleOpacity}
           blueTransitionProgress={blueTransitionProgress}

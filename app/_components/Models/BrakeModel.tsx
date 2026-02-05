@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { VehicleType, BrakeConfiguration, HotspotConfiguration, HotspotItem, Vector3 } from "../../_types/content";
 import { AnimationMixer, AnimationAction } from "three";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { getMediaUrl } from "../../utils/mediaUrl";
+import { usePreload } from "../ModelPreloader";
 
 interface HotspotProps {
   config: HotspotItem;
@@ -275,7 +275,9 @@ interface BrakeModelProps {
 }
 
 const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, opacity = 1, showExplosionHotspot: showExplosionHotspotProp = true }: BrakeModelProps) => {
-  const modelPath = getMediaUrl(brakeConfig.modelFile.mediaUrl) || brakeConfig.modelFile.fallbackPath || "";
+  // Use preloaded URL to avoid double-loading
+  const { resolvedUrls } = usePreload();
+  const modelPath = resolvedUrls.brakes[vehicleType] || brakeConfig.modelFile.fallbackPath || "";
   const vehicleHotspots = hotspotConfig?.hotspots || [];
 
   const { scene, animations } = useGLTF(modelPath);
