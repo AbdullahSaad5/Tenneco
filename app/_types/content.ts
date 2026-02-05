@@ -42,6 +42,7 @@ export interface MediaItem {
 
 export interface MediaReference {
   mediaId: string
+  mediaUrl?: string
   alt?: string
   altTranslations?: Translation[]
   width?: number
@@ -67,6 +68,7 @@ export interface VehicleCategory {
   subtitle: string
   subtitleTranslations?: Translation[]
   imageMediaId: string
+  imageUrl?: string
   gradient: GradientColors
   targetRoute?: string
   isEnabled: boolean

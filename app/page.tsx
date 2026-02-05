@@ -29,9 +29,22 @@ export default function Home() {
     router.push(`/viewer?vehicle=${vehicleType}&animate=true`);
   };
 
-  // Get category image - use fallback if CMS image not available
-  const getCategoryImage = (vehicleType: VehicleType): string => {
-    return CATEGORY_FALLBACK_IMAGES[vehicleType] || "";
+  // Helper to construct full image URL from API response
+  const getFullImageUrl = (relativeUrl?: string): string | undefined => {
+    if (!relativeUrl) return undefined;
+
+    // If the URL is relative (starts with /), prefix it with the API base URL
+    if (relativeUrl.startsWith('/')) {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3001';
+      return `${apiBaseUrl}${relativeUrl}`;
+    }
+    return relativeUrl;
+  };
+
+  // Get category image - use API image if available, otherwise use fallback
+  const getCategoryImage = (vehicleType: VehicleType, apiImageUrl?: string): string => {
+    const fullUrl = getFullImageUrl(apiImageUrl);
+    return fullUrl || CATEGORY_FALLBACK_IMAGES[vehicleType] || "";
   };
 
   return (
@@ -49,7 +62,7 @@ export default function Home() {
           <header className="pt-8 pb-4 px-6">
             <div className="max-w-7xl mx-auto flex items-center justify-center">
               <Image
-                src={homepage.logo.fallbackPath || "/tenneco-logo.png"}
+                src={getFullImageUrl(homepage.logo.mediaUrl) || homepage.logo.fallbackPath || "/tenneco-logo.png"}
                 alt={homepage.logo.alt || "Tenneco Logo"}
                 width={homepage.logo.width || 180}
                 height={homepage.logo.height || 50}
@@ -102,7 +115,7 @@ export default function Home() {
                       <div className={`absolute inset-0 bg-gradient-to-br from-${category.gradient.from} to-${category.gradient.to} opacity-30 group-hover:opacity-40 transition-opacity z-10`} />
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={getCategoryImage(category.vehicleType)}
+                        src={getCategoryImage(category.vehicleType, category.imageUrl)}
                         alt={category.title}
                         className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                       />

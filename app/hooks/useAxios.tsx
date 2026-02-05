@@ -75,6 +75,7 @@ export const useAxios = () => {
         id: data.id,
         logo: {
           mediaId: data.logo?.media?.id || "",
+          mediaUrl: data.logo?.media?.url || "",
           alt: data.logo?.alt || "Tenneco Logo",
           width: data.logo?.width || 180,
           height: data.logo?.height || 50,
@@ -87,19 +88,22 @@ export const useAxios = () => {
         },
         vehicleCategories: (data.vehicleCategories || []).map((cat: {
           id: string;
+          vehicleType: string;
           order?: number;
           title: string;
           subtitle: string;
-          image?: { id: string };
+          image?: { id: string; url: string };
           gradient?: { from: string; to: string };
           targetRoute?: string;
           isEnabled?: boolean;
         }) => ({
           id: cat.id,
+          vehicleType: cat.vehicleType as VehicleType,
           order: cat.order || 1,
           title: cat.title,
           subtitle: cat.subtitle,
           imageMediaId: cat.image?.id || "",
+          imageUrl: cat.image?.url || "",
           gradient: {
             from: cat.gradient?.from || "blue-600",
             to: cat.gradient?.to || "cyan-500",
