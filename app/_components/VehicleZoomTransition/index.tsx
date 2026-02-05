@@ -5,7 +5,9 @@ import { useGLTF, Environment, PerspectiveCamera, ContactShadows } from "@react-
 import { Suspense, useRef, useState, useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { motion } from "framer-motion";
-import { vehicles, brakes, transition, viewer, VehicleType } from "../../config";
+import { VEHICLE_CONFIGS } from "../../config/vehicles.config";
+import { BRAKE_CONFIGS } from "../../config/brakes.config";
+import { transition, viewer, VehicleType } from "../../config";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 
@@ -21,12 +23,14 @@ interface VehicleModelProps {
 }
 
 const VehicleModel = ({ vehicleType, opacity, blueTransitionProgress = 0 }: VehicleModelProps) => {
-  const config = vehicles[vehicleType];
-  const { scene } = useGLTF(config.modelPath);
+  const config = VEHICLE_CONFIGS[vehicleType];
+  const modelPath = config.modelFile.fallbackPath || "";
+  const { scene } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
 
-  // Use initialScale from zoomConfig
-  const modelScale = config.zoomConfig.initialScale * config.scale;
+  // Use scale from config - handle Vector3 format
+  const baseScale = typeof config.scale === 'number' ? config.scale : config.scale.x;
+  const modelScale = config.zoomConfig.initialScale * baseScale;
 
   // Store original material properties
   const originalMaterials = useRef<Map<THREE.Material, {
@@ -170,18 +174,20 @@ interface BrakeModelProps {
 }
 
 const BrakeTransitionModel = ({ vehicleType, opacity }: BrakeModelProps) => {
-  const config = brakes[vehicleType];
+  const config = BRAKE_CONFIGS[vehicleType];
+  const modelPath = config.modelFile.fallbackPath || "";
 
   // Debug: Log entire config on mount
   useEffect(() => {
     console.log('[BrakeTransitionModel] Full config:', config);
   }, [config]);
 
-  const { scene } = useGLTF(config.modelPath);
+  const { scene } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
 
-  // Use transitionScale from scaleConfig
-  const brakeScale = config.scaleConfig.transitionScale * config.scale;
+  // Use scale from config - handle Vector3 format
+  const baseScale = typeof config.scale === 'number' ? config.scale : config.scale.x;
+  const brakeScale = config.scaleConfig.transitionScale * baseScale;
 
   // Clone and calculate offset synchronously
   const { clonedScene, centerOffset } = useMemo(() => {
@@ -251,7 +257,7 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
   const completedRef = useRef(false);
 
   const startTime = useRef(Date.now());
-  const vehicleConfig = vehicles[vehicleType];
+  const vehicleConfig = VEHICLE_CONFIGS[vehicleType];
   const zoomConfig = vehicleConfig.zoomConfig;
 
   // Timing from config
@@ -478,7 +484,7 @@ const VehicleZoomTransition: React.FC<VehicleZoomTransitionProps> = ({
   onComplete,
 }) => {
   const [isComplete, setIsComplete] = useState(false);
-  const vehicleConfig = vehicles[vehicleType];
+  const vehicleConfig = VEHICLE_CONFIGS[vehicleType];
 
   const handleZoomComplete = () => {
     setIsComplete(true);

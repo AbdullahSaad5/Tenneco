@@ -2,7 +2,7 @@
 
 import { useEffect, useState, createContext, useContext, ReactNode } from "react";
 import Image from "next/image";
-import { getAllModelPaths } from "../../config";
+import { VEHICLE_CONFIGS, BRAKE_CONFIGS } from "../../config";
 
 interface PreloadContextType {
   isPreloaded: boolean;
@@ -51,7 +51,22 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
   const [loadedModels, setLoadedModels] = useState<string[]>([]);
 
   useEffect(() => {
-    const modelPaths = getAllModelPaths();
+    // Get all model paths from config
+    const modelPaths: string[] = [];
+
+    // Vehicle models
+    Object.values(VEHICLE_CONFIGS).forEach(config => {
+      if (config.modelFile.fallbackPath) {
+        modelPaths.push(config.modelFile.fallbackPath);
+      }
+    });
+
+    // Brake models
+    Object.values(BRAKE_CONFIGS).forEach(config => {
+      if (config.modelFile.fallbackPath) {
+        modelPaths.push(config.modelFile.fallbackPath);
+      }
+    });
     let loadedCount = 0;
     const loaded: string[] = [];
 

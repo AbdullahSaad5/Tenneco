@@ -4,14 +4,23 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
-import { homepage, VehicleType } from "./config";
+import { useContent } from "./providers/ContentProvider";
+import { CATEGORY_FALLBACK_IMAGES } from "./config/homepage.config";
+import { VehicleType } from "./_types/content";
+import LoadingScreen from "./_components/LoadingScreen";
 
 export default function Home() {
   const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const { homepage, isLoading } = useContent();
 
-  // Get sorted and enabled categories from static config
-  const categories = homepage.categories
+  // Show loading screen while content is loading
+  if (isLoading || !homepage) {
+    return <LoadingScreen />;
+  }
+
+  // Get sorted and enabled categories from dynamic content
+  const categories = homepage.vehicleCategories
     .filter(cat => cat.isEnabled)
     .sort((a, b) => a.order - b.order);
 
@@ -20,9 +29,13 @@ export default function Home() {
     router.push(`/viewer?vehicle=${vehicleType}&animate=true`);
   };
 
+  // Get category image - use fallback if CMS image not available
+  const getCategoryImage = (vehicleType: VehicleType): string => {
+    return CATEGORY_FALLBACK_IMAGES[vehicleType] || "";
+  };
+
   return (
     <>
-
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 overflow-hidden">
@@ -36,10 +49,10 @@ export default function Home() {
           <header className="pt-8 pb-4 px-6">
             <div className="max-w-7xl mx-auto flex items-center justify-center">
               <Image
-                src={homepage.logo.path}
-                alt={homepage.logo.alt}
-                width={homepage.logo.width}
-                height={homepage.logo.height}
+                src={homepage.logo.fallbackPath || "/tenneco-logo.png"}
+                alt={homepage.logo.alt || "Tenneco Logo"}
+                width={homepage.logo.width || 180}
+                height={homepage.logo.height || 50}
                 className="h-12 w-auto brightness-0 invert"
               />
             </div>
@@ -67,10 +80,10 @@ export default function Home() {
             <div className="max-w-6xl mx-auto">
               <div className="text-center mb-12">
                 <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                  {homepage.sectionTitle}
+                  {homepage.section?.sectionTitle}
                 </h2>
                 <p className="text-lg text-blue-100">
-                  {homepage.sectionSubtitle}
+                  {homepage.section?.sectionSubtitle}
                 </p>
               </div>
 
@@ -89,7 +102,7 @@ export default function Home() {
                       <div className={`absolute inset-0 bg-gradient-to-br from-${category.gradient.from} to-${category.gradient.to} opacity-30 group-hover:opacity-40 transition-opacity z-10`} />
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={category.image}
+                        src={getCategoryImage(category.vehicleType)}
                         alt={category.title}
                         className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                       />

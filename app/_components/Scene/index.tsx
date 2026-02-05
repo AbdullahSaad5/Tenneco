@@ -6,29 +6,37 @@ import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import BrakeModel from "../Models/BrakeModel";
-import { viewer, transition, VehicleType, HotspotConfig, vehicles, brakes } from "../../config";
+import { viewer, transition } from "../../config";
+import { VehicleType, VehicleConfiguration, BrakeConfiguration, HotspotConfiguration, HotspotItem } from "../../_types/content";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 
 interface SceneProps {
   vehicleType: VehicleType;
-  onHotspotClick?: (hotspot: HotspotConfig) => void;
+  vehicleConfig: VehicleConfiguration;
+  brakeConfig: BrakeConfiguration;
+  hotspotConfig?: HotspotConfiguration | null;
+  onHotspotClick?: (hotspot: HotspotItem) => void;
   isAnimating?: boolean;
   onAnimationComplete?: () => void;
 }
 
 // Vehicle model component for transition animation
 interface VehicleModelProps {
-  vehicleType: VehicleType;
+  vehicleConfig: VehicleConfiguration;
   opacity: number;
   blueTransitionProgress?: number;
 }
 
-const VehicleModel = ({ vehicleType, opacity, blueTransitionProgress = 0 }: VehicleModelProps) => {
-  const config = vehicles[vehicleType];
-  const { scene } = useGLTF(config.modelPath);
+const VehicleModel = ({ vehicleConfig, opacity, blueTransitionProgress = 0 }: VehicleModelProps) => {
+  const modelPath = vehicleConfig.modelFile.fallbackPath || "";
+  const { scene } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
 
-  const modelScale = config.zoomConfig.initialScale * config.scale;
+  // Use scale from config - handle both Vector3 and number formats
+  const baseScale = typeof vehicleConfig.scale === 'number'
+    ? vehicleConfig.scale
+    : vehicleConfig.scale.x;
+  const modelScale = vehicleConfig.zoomConfig.initialScale * baseScale;
 
   const originalMaterials = useRef<Map<THREE.Material, {
     color: THREE.Color;
@@ -141,13 +149,13 @@ const VehicleModel = ({ vehicleType, opacity, blueTransitionProgress = 0 }: Vehi
     >
       <primitive
         object={clonedScene}
-        rotation={[config.rotation.x, config.rotation.y, config.rotation.z]}
+        rotation={[vehicleConfig.rotation.x, vehicleConfig.rotation.y, vehicleConfig.rotation.z]}
       />
     </group>
   );
 };
 
-const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, onAnimationComplete }: SceneProps, ref) => {
+const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConfig, onHotspotClick, isAnimating = false, onAnimationComplete }: SceneProps, ref) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const controlsRef = useRef<any>(null);
   const groupRef = useRef<THREE.Group | null>(null);
@@ -181,18 +189,20 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
   }, [isAnimating, phase]);
 
   const config = viewer;
-  const vehicleConfig = vehicles[vehicleType];
   const zoomConfig = vehicleConfig.zoomConfig;
-  const brakeConfig = brakes[vehicleType];
+
+  // Get model paths from config
+  const vehicleModelPath = vehicleConfig.modelFile.fallbackPath || "";
+  const brakeModelPath = brakeConfig.modelFile.fallbackPath || "";
 
   // Preload both vehicle and brake models on mount
   useEffect(() => {
     const preloadModels = async () => {
       try {
         // Preload vehicle model
-        await useGLTF.preload(vehicleConfig.modelPath);
+        await useGLTF.preload(vehicleModelPath);
         // Preload brake model
-        await useGLTF.preload(brakeConfig.modelPath);
+        await useGLTF.preload(brakeModelPath);
         setModelsPreloaded(true);
       } catch (error) {
         console.error('Error preloading models:', error);
@@ -202,7 +212,7 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
     };
 
     preloadModels();
-  }, [vehicleConfig.modelPath, brakeConfig.modelPath]);
+  }, [vehicleModelPath, brakeModelPath]);
 
   // Timing from config
   const { showVehicleDuration, zoomDuration, transitionDuration, showBrakeDuration } = transition.timing;
@@ -495,7 +505,7 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
       {/* Vehicle Model - only show before brake appears */}
       {isAnimating && (phase === "showing" || phase === "blueTransition" || phase === "zooming" || (phase === "transitioning" && vehicleOpacity > 0)) && (
         <VehicleModel
-          vehicleType={vehicleType}
+          vehicleConfig={vehicleConfig}
           opacity={vehicleOpacity}
           blueTransitionProgress={blueTransitionProgress}
         />
@@ -512,6 +522,8 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
           <group ref={groupRef}>
             <BrakeModel
               vehicleType={vehicleType}
+              brakeConfig={brakeConfig}
+              hotspotConfig={hotspotConfig}
               onHotspotClick={onHotspotClick}
               opacity={1}
               showExplosionHotspot={true}
@@ -523,6 +535,8 @@ const Scene = forwardRef(({ vehicleType, onHotspotClick, isAnimating = false, on
         <group ref={groupRef}>
           <BrakeModel
             vehicleType={vehicleType}
+            brakeConfig={brakeConfig}
+            hotspotConfig={hotspotConfig}
             onHotspotClick={undefined} // Disable hotspots during animation
             opacity={brakeOpacity}
             showExplosionHotspot={brakeFadeComplete}

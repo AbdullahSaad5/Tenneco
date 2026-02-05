@@ -2,18 +2,18 @@ import { useGLTF, Html } from "@react-three/drei";
 import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { brakes, hotspots, VehicleType, HotspotConfig, Vector3Config } from "../../config";
+import { VehicleType, BrakeConfiguration, HotspotConfiguration, HotspotItem, Vector3 } from "../../_types/content";
 import { AnimationMixer, AnimationAction } from "three";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 
 interface HotspotProps {
-  config: HotspotConfig;
+  config: HotspotItem;
   onClick?: () => void;
   occludeRef?: React.RefObject<THREE.Group>;
 }
 
 interface ExplosionHotspotProps {
-  position: Vector3Config;
+  position: Vector3;
   color: string;
   label: string;
   onClick?: () => void;
@@ -86,63 +86,6 @@ const ExplosionHotspot = ({ position, color, label, onClick, occludeRef }: Explo
         <sphereGeometry args={[0.1, 32, 32]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
-
-      {/* <mesh ref={glowRef}>
-        <sphereGeometry args={[0.5, 32, 32]} />
-        <meshBasicMaterial color={color} transparent opacity={0.2} side={THREE.BackSide} />
-      </mesh> */}
-
-      {/* Center star/explosion shape */}
-      {/* <mesh>
-        <circleGeometry args={[0.28, 32]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={hovered ? 1.2 : 0.8}
-          metalness={0.9}
-          roughness={0.1}
-        />
-      </mesh> */}
-
-      {/* Three animated rings */}
-      {/* <mesh ref={ring1Ref}>
-        <torusGeometry args={[0.35, 0.03, 16, 32]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={hovered ? 2.0 : 1.5}
-          transparent
-          opacity={hovered ? 1 : 0.9}
-          metalness={0.8}
-          roughness={0.1}
-        />
-      </mesh>
-
-      <mesh ref={ring2Ref}>
-        <torusGeometry args={[0.45, 0.025, 16, 32]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={hovered ? 1.6 : 1.2}
-          transparent
-          opacity={hovered ? 0.95 : 0.75}
-          metalness={0.7}
-          roughness={0.15}
-        />
-      </mesh>
-
-      <mesh ref={ring3Ref}>
-        <torusGeometry args={[0.55, 0.02, 16, 32]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={hovered ? 1.3 : 0.9}
-          transparent
-          opacity={hovered ? 0.85 : 0.6}
-          metalness={0.6}
-          roughness={0.2}
-        />
-      </mesh> */}
 
       {/* Lightning/Explosion icon */}
       <Html
@@ -268,48 +211,6 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* <mesh ref={glowRef}>
-        <sphereGeometry args={[0.45, 32, 32]} />
-        <meshBasicMaterial color={color} transparent opacity={0.15} side={THREE.BackSide} />
-      </mesh> */}
-
-      {/* <mesh>
-        <circleGeometry args={[0.22, 32]} />
-        <meshStandardMaterial
-          color="#ffffff"
-          emissive="#ffffff"
-          emissiveIntensity={hovered ? 0.8 : 0.5}
-          metalness={0.9}
-          roughness={0.1}
-        />
-      </mesh> */}
-
-      {/* <mesh ref={ring1Ref}>
-        <torusGeometry args={[0.28, 0.025, 16, 32]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={hovered ? 1.8 : 1.2}
-          transparent
-          opacity={hovered ? 1 : 0.85}
-          metalness={0.7}
-          roughness={0.2}
-        />
-      </mesh>
-
-      <mesh ref={ring2Ref}>
-        <torusGeometry args={[0.37, 0.018, 16, 32]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={hovered ? 1.4 : 0.9}
-          transparent
-          opacity={hovered ? 0.9 : 0.65}
-          metalness={0.6}
-          roughness={0.25}
-        />
-      </mesh> */}
-
       <Html
         center
         distanceFactor={distanceFactor}
@@ -365,16 +266,18 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
 
 interface BrakeModelProps {
   vehicleType: VehicleType;
-  onHotspotClick?: (hotspot: HotspotConfig) => void;
+  brakeConfig: BrakeConfiguration;
+  hotspotConfig?: HotspotConfiguration | null;
+  onHotspotClick?: (hotspot: HotspotItem) => void;
   opacity?: number;
   showExplosionHotspot?: boolean;
 }
 
-const BrakeModel = ({ vehicleType, onHotspotClick, opacity = 1, showExplosionHotspot: showExplosionHotspotProp = true }: BrakeModelProps) => {
-  const config = brakes[vehicleType];
-  const vehicleHotspots = hotspots[vehicleType];
+const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, opacity = 1, showExplosionHotspot: showExplosionHotspotProp = true }: BrakeModelProps) => {
+  const modelPath = brakeConfig.modelFile.fallbackPath || "";
+  const vehicleHotspots = hotspotConfig?.hotspots || [];
 
-  const { scene, animations } = useGLTF(config.modelPath);
+  const { scene, animations } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
   const modelRef = useRef<THREE.Group>(null);
   const mixerRef = useRef<AnimationMixer | null>(null);
@@ -390,8 +293,11 @@ const BrakeModel = ({ vehicleType, onHotspotClick, opacity = 1, showExplosionHot
   // Control explosion hotspot visibility - hide after clicking
   const [explosionHotspotClicked, setExplosionHotspotClicked] = useState(false);
 
-  // Use viewerScale from scaleConfig
-  const brakeScale = config.scaleConfig.viewerScale * config.scale;
+  // Use scale from config - handle both Vector3 and number formats
+  const baseScale = typeof brakeConfig.scale === 'number'
+    ? brakeConfig.scale
+    : brakeConfig.scale.x;
+  const brakeScale = brakeConfig.scaleConfig.viewerScale * baseScale;
 
   // Clone and calculate offset synchronously
   const { clonedScene, centerOffset } = useMemo(() => {
@@ -571,8 +477,8 @@ const BrakeModel = ({ vehicleType, onHotspotClick, opacity = 1, showExplosionHot
   // Debug logging
   console.log('[BrakeModel Viewer]', {
     vehicleType,
-    viewerScale: config.scaleConfig.viewerScale,
-    baseScale: config.scale,
+    viewerScale: brakeConfig.scaleConfig.viewerScale,
+    baseScale: baseScale,
     finalScale: brakeScale,
     hasAnimations: animations && animations.length > 0
   });
@@ -586,28 +492,28 @@ const BrakeModel = ({ vehicleType, onHotspotClick, opacity = 1, showExplosionHot
       >
         <primitive
           object={clonedScene}
-          rotation={[config.rotation.x, config.rotation.y, config.rotation.z]}
+          rotation={[brakeConfig.rotation.x, brakeConfig.rotation.y, brakeConfig.rotation.z]}
         />
       </group>
 
       {/* Explosion Hotspot - only show after fade-in completes and before animation is played */}
-      {showExplosionHotspotProp && !explosionHotspotClicked && config.explosionHotspot && animations && animations.length > 0 && (
+      {showExplosionHotspotProp && !explosionHotspotClicked && brakeConfig.explosionHotspot && animations && animations.length > 0 && (
         <ExplosionHotspot
-          position={config.explosionHotspot.position}
-          color={config.explosionHotspot.color}
-          label={config.explosionHotspot.label}
+          position={brakeConfig.explosionHotspot.position}
+          color={brakeConfig.explosionHotspot.color}
+          label={brakeConfig.explosionHotspot.label}
           occludeRef={modelRef}
           onClick={handleExplosionHotspotClick}
         />
       )}
 
       {/* Dynamic Hotspots from config - only show after animation completes */}
-      {showHotspots && activeHotspots.map((hotspotConfig) => (
+      {showHotspots && activeHotspots.map((hotspotItem) => (
         <Hotspot
-          key={hotspotConfig.id}
-          config={hotspotConfig}
+          key={hotspotItem.hotspotId}
+          config={hotspotItem}
           occludeRef={modelRef}
-          onClick={() => onHotspotClick?.(hotspotConfig)}
+          onClick={() => onHotspotClick?.(hotspotItem)}
         />
       ))}
     </group>

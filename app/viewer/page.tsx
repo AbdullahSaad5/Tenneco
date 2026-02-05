@@ -11,7 +11,8 @@ import ViewControls from "../_components/ViewControls";
 import Navbar from "../_components/Navbar";
 import ModelInfo from "../_components/ModelInfo";
 import ModelSelector from "../_components/ModelSelector";
-import { VehicleType, HotspotConfig, vehicles } from "../config";
+import { useContent } from "../providers/ContentProvider";
+import { VehicleType, HotspotItem } from "../_types/content";
 
 function ViewerContent() {
   const searchParams = useSearchParams();
@@ -19,13 +20,21 @@ function ViewerContent() {
   const vehicleType = (searchParams.get("vehicle") as VehicleType) || "light";
   const shouldAnimate = searchParams.get("animate") === "true";
 
+  // Get configs from content provider
+  const { vehicleConfigs, brakeConfigs, hotspotConfigs, isLoading } = useContent();
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sceneRef = useRef<any>(null);
   const [showAnimation, setShowAnimation] = useState(shouldAnimate);
   const [animationComplete, setAnimationComplete] = useState(!shouldAnimate);
-  const [selectedHotspot, setSelectedHotspot] = useState<HotspotConfig | null>(null);
+  const [selectedHotspot, setSelectedHotspot] = useState<HotspotItem | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const prevVehicleType = useRef(vehicleType);
+
+  // Get the current configs for the selected vehicle type
+  const vehicleConfig = vehicleConfigs[vehicleType];
+  const brakeConfig = brakeConfigs[vehicleType];
+  const hotspotConfig = hotspotConfigs[vehicleType];
 
   // Reset states when vehicle type changes
   useEffect(() => {
@@ -66,9 +75,14 @@ function ViewerContent() {
     window.dispatchEvent(new CustomEvent("playExplosion"));
   };
 
-  const handleHotspotClick = (hotspot: HotspotConfig) => {
+  const handleHotspotClick = (hotspot: HotspotItem) => {
     setSelectedHotspot(hotspot);
   };
+
+  // Show loading screen while content is loading
+  if (isLoading || !vehicleConfig || !brakeConfig) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div className="h-screen bg-white relative overflow-hidden">
@@ -117,6 +131,9 @@ function ViewerContent() {
             <Scene
               key={vehicleType}
               vehicleType={vehicleType}
+              vehicleConfig={vehicleConfig}
+              brakeConfig={brakeConfig}
+              hotspotConfig={hotspotConfig}
               ref={sceneRef}
               onHotspotClick={handleHotspotClick}
               isAnimating={showAnimation}
@@ -146,7 +163,7 @@ function ViewerContent() {
         >
           <div className="bg-gradient-to-r from-blue-600/90 to-cyan-500/90 backdrop-blur-md px-8 py-4 rounded-full border border-white/20">
             <p className="text-white font-bold text-xl tracking-wide text-center">
-              {vehicles[vehicleType].name}
+              {vehicleConfig.name}
             </p>
           </div>
         </motion.div>

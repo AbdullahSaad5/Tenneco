@@ -5,6 +5,7 @@ import { Urbanist } from "next/font/google";
 import "./globals.css";
 import "./polyfills";
 import { ModelPreloaderProvider, PreloadingScreen, usePreload } from "./_components/ModelPreloader";
+import { ContentProvider } from "./providers/ContentProvider";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -46,9 +47,11 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Tenneco 3D Viewer" />
       </head>
       <body className={`${urbanist.className} antialiased min-h-screen h-full w-full bg-white`}>
-        <ModelPreloaderProvider>
-          <AppContent>{children}</AppContent>
-        </ModelPreloaderProvider>
+        <ContentProvider>
+          <ModelPreloaderProvider>
+            <AppContent>{children}</AppContent>
+          </ModelPreloaderProvider>
+        </ContentProvider>
       </body>
     </html>
   );

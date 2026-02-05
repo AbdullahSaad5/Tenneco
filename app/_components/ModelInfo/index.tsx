@@ -5,10 +5,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Video } from "lucide-react";
 import PDFModal from "../PDFModal";
 import VideoModal from "../VideoModal";
-import { HotspotConfig, hotspotsData } from "../../config";
+import { HotspotItem } from "../../_types/content";
+
+// Default paths if not specified in hotspot
+const DEFAULT_PDF = "./documents/default-brake-info.pdf";
+const DEFAULT_VIDEO = "./videos/default-brake-overview.mp4";
 
 interface ModelInfoProps {
-  hotspot: HotspotConfig | null;
+  hotspot: HotspotItem | null;
 }
 
 const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot }) => {
@@ -18,18 +22,18 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot }) => {
 
   // Get PDF and Video URLs (use hotspot's or defaults)
   const pdfUrl = useMemo(() => {
-    return hotspot?.info.pdf || hotspotsData.defaults.pdf;
+    return hotspot?.info?.pdf || DEFAULT_PDF;
   }, [hotspot]);
 
   const videoUrl = useMemo(() => {
-    return hotspot?.info.video || hotspotsData.defaults.video;
+    return hotspot?.info?.video || DEFAULT_VIDEO;
   }, [hotspot]);
 
   if (!hotspot) return null;
 
   const details = {
-    name: hotspot.info.title,
-    description: hotspot.info.description,
+    name: hotspot.info?.title || hotspot.label,
+    description: hotspot.info?.description || "",
     color: hotspot.color,
   };
 
@@ -89,7 +93,7 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot }) => {
       <AnimatePresence mode="wait">
         {isOpen && (
           <motion.div
-            key={hotspot.id}
+            key={hotspot.hotspotId}
             initial={{ opacity: 0, x: 100, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 100, scale: 0.9 }}

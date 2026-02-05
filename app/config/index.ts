@@ -1,85 +1,19 @@
-// Static configuration imports
-import vehiclesConfig from './vehicles.json';
-import brakesConfig from './brakes.json';
-import hotspotsConfig from './hotspots.json';
-import transitionConfig from './transition.json';
-import homepageConfig from './homepage.json';
-import viewerConfig from './viewer.json';
+// ============================================================================
+// Config Index - Scene-specific configs only
+// Vehicle, brake, and hotspot configs now come from ContentProvider
+// ============================================================================
 
-// Types
+// Scene rendering settings (no CMS equivalent)
+import viewerConfig from './viewer.json';
+import transitionConfig from './transition.json';
+
+// Types from old config (keeping for backward compatibility during transition)
 export type VehicleType = 'light' | 'commercial' | 'rail';
 
 export interface Vector3Config {
   x: number;
   y: number;
   z: number;
-}
-
-export interface ZoomConfig {
-  initialScale: number;
-  initialLookAtTarget: Vector3Config;
-  zoomLookAtTarget: Vector3Config;
-  zoomIntensity: number;
-}
-
-export interface VehicleConfig {
-  name: string;
-  modelPath: string;
-  scale: number;
-  rotation: Vector3Config;
-  position: Vector3Config;
-  tirePosition: Vector3Config;
-  cameraStart: Vector3Config;
-  cameraZoomTarget: Vector3Config;
-  zoomConfig: ZoomConfig;
-}
-
-export interface BrakeScaleConfig {
-  transitionScale: number;
-  viewerScale: number;
-}
-
-export interface ExplosionHotspotConfig {
-  position: Vector3Config;
-  color: string;
-  label: string;
-}
-
-export interface BrakeConfig {
-  name: string;
-  modelPath: string;
-  scale: number;
-  rotation: Vector3Config;
-  position: Vector3Config;
-  centerModel: boolean;
-  scaleConfig: BrakeScaleConfig;
-  explosionHotspot?: ExplosionHotspotConfig;
-}
-
-export interface HotspotInfo {
-  title: string;
-  description: string;
-  pdf: string | null;
-  video: string | null;
-}
-
-export interface HotspotConfig {
-  id: string;
-  label: string;
-  position: Vector3Config;
-  color: string;
-  isEnabled: boolean;
-  info: HotspotInfo;
-}
-
-export interface HotspotsConfig {
-  defaults: {
-    pdf: string;
-    video: string;
-  };
-  light: HotspotConfig[];
-  commercial: HotspotConfig[];
-  rail: HotspotConfig[];
 }
 
 export interface TransitionConfig {
@@ -103,37 +37,6 @@ export interface TransitionConfig {
     directionalLightIntensity: number;
     spotLightIntensity: number;
   };
-}
-
-export interface HomepageCategory {
-  id: string;
-  vehicleType: VehicleType;
-  title: string;
-  subtitle: string;
-  image: string;
-  gradient: {
-    from: string;
-    to: string;
-  };
-  isEnabled: boolean;
-  order: number;
-}
-
-export interface HomepageConfig {
-  logo: {
-    path: string;
-    alt: string;
-    width: number;
-    height: number;
-  };
-  hero: {
-    title: string;
-    subtitle: string;
-    description: string;
-  };
-  sectionTitle: string;
-  sectionSubtitle: string;
-  categories: HomepageCategory[];
 }
 
 export interface ViewerConfig {
@@ -182,28 +85,12 @@ export interface ViewerConfig {
   };
 }
 
-// Export typed configs
-export const vehicles = vehiclesConfig as Record<VehicleType, VehicleConfig>;
-export const brakes = brakesConfig as Record<VehicleType, BrakeConfig>;
-export const hotspotsData = hotspotsConfig as HotspotsConfig;
-export const hotspots = {
-  light: hotspotsData.light,
-  commercial: hotspotsData.commercial,
-  rail: hotspotsData.rail
-} as Record<VehicleType, HotspotConfig[]>;
+// Export typed scene configs (these don't have CMS equivalents)
 export const transition = transitionConfig as TransitionConfig;
-export const homepage = homepageConfig as HomepageConfig;
 export const viewer = viewerConfig as ViewerConfig;
 
-// Helper to get all model paths for preloading
-export function getAllModelPaths(): string[] {
-  const paths: string[] = [];
-
-  // Vehicle models
-  Object.values(vehicles).forEach(v => paths.push(v.modelPath));
-
-  // Brake models
-  Object.values(brakes).forEach(b => paths.push(b.modelPath));
-
-  return paths;
-}
+// Re-export CMS-structured configs for convenience
+export { HOMEPAGE_CONFIG, CATEGORY_FALLBACK_IMAGES } from './homepage.config';
+export { VEHICLE_CONFIGS } from './vehicles.config';
+export { BRAKE_CONFIGS } from './brakes.config';
+export { HOTSPOT_CONFIGS } from './hotspots.config';
