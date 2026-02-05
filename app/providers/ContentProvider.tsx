@@ -2,13 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import {
-  ContentContextValue,
   HomepageContent,
   AppSettings,
-  ModelConfiguration,
   LoadingScreenContent,
-  ZoomAnimationContent,
-  ModelType,
   VehicleType,
   VehicleConfiguration,
   BrakeConfiguration,
@@ -18,9 +14,7 @@ import {
 import {
   FALLBACK_HOMEPAGE_CONTENT,
   FALLBACK_APP_SETTINGS,
-  FALLBACK_MODEL_CONFIGS,
   FALLBACK_LOADING_SCREEN,
-  FALLBACK_ZOOM_ANIMATIONS,
   FALLBACK_VEHICLE_CONFIGS,
   FALLBACK_BRAKE_CONFIGS,
   FALLBACK_HOTSPOT_CONFIGS,
@@ -44,20 +38,7 @@ interface ContentProviderProps {
 export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) => {
   const [homepage, setHomepage] = useState<HomepageContent | null>(null);
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
-  const [modelConfigs, setModelConfigs] = useState<Record<ModelType, ModelConfiguration | null>>({
-    lv: null,
-    asm: null,
-    j4444: null,
-    pad: null,
-  });
   const [loadingScreen, setLoadingScreen] = useState<LoadingScreenContent | null>(null);
-  const [zoomAnimations, setZoomAnimations] = useState<
-    Record<VehicleType, ZoomAnimationContent | null>
-  >({
-    light: null,
-    commercial: null,
-    rail: null,
-  });
   const [vehicleConfigs, setVehicleConfigs] = useState<
     Record<VehicleType, VehicleConfiguration | null>
   >({
@@ -86,9 +67,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
   const {
     getHomepageContent,
     getAppSettings,
-    getModelConfiguration,
     getLoadingScreenContent,
-    getZoomAnimationContent,
     getVehicleConfiguration,
     getBrakeConfiguration,
     getHotspotConfiguration,
@@ -111,9 +90,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
         console.log("CMS disabled - using fallback content");
         setHomepage(FALLBACK_HOMEPAGE_CONTENT);
         setAppSettings(FALLBACK_APP_SETTINGS);
-        setModelConfigs(FALLBACK_MODEL_CONFIGS);
         setLoadingScreen(FALLBACK_LOADING_SCREEN);
-        setZoomAnimations(FALLBACK_ZOOM_ANIMATIONS);
         setVehicleConfigs(FALLBACK_VEHICLE_CONFIGS);
         setBrakeConfigs(FALLBACK_BRAKE_CONFIGS);
         setHotspotConfigs(FALLBACK_HOTSPOT_CONFIGS);
@@ -125,15 +102,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
       const results = await Promise.allSettled([
         getHomepageContent(),
         getAppSettings(),
-        getModelConfiguration("lv"),
-        getModelConfiguration("asm"),
-        getModelConfiguration("j4444"),
-        getModelConfiguration("pad"),
         getLoadingScreenContent(),
-        getZoomAnimationContent("light"),
-        getZoomAnimationContent("commercial"),
-        getZoomAnimationContent("rail"),
-        // New vehicle-type-based configurations
         getVehicleConfiguration("light"),
         getVehicleConfiguration("commercial"),
         getVehicleConfiguration("rail"),
@@ -150,39 +119,20 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
 
       const homepageResult = resultsArray[0] as HomepageContent | null;
       const appSettingsResult = resultsArray[1] as AppSettings | null;
-      const lvConfigResult = resultsArray[2] as ModelConfiguration | null;
-      const asmConfigResult = resultsArray[3] as ModelConfiguration | null;
-      const j4444ConfigResult = resultsArray[4] as ModelConfiguration | null;
-      const padConfigResult = resultsArray[5] as ModelConfiguration | null;
-      const loadingScreenResult = resultsArray[6] as LoadingScreenContent | null;
-      const lightAnimResult = resultsArray[7] as ZoomAnimationContent | null;
-      const commercialAnimResult = resultsArray[8] as ZoomAnimationContent | null;
-      const railAnimResult = resultsArray[9] as ZoomAnimationContent | null;
-      // New vehicle-type-based results
-      const lightVehicleResult = resultsArray[10] as VehicleConfiguration | null;
-      const commercialVehicleResult = resultsArray[11] as VehicleConfiguration | null;
-      const railVehicleResult = resultsArray[12] as VehicleConfiguration | null;
-      const lightBrakeResult = resultsArray[13] as BrakeConfiguration | null;
-      const commercialBrakeResult = resultsArray[14] as BrakeConfiguration | null;
-      const railBrakeResult = resultsArray[15] as BrakeConfiguration | null;
-      const lightHotspotResult = resultsArray[16] as HotspotConfiguration | null;
-      const commercialHotspotResult = resultsArray[17] as HotspotConfiguration | null;
-      const railHotspotResult = resultsArray[18] as HotspotConfiguration | null;
+      const loadingScreenResult = resultsArray[2] as LoadingScreenContent | null;
+      const lightVehicleResult = resultsArray[3] as VehicleConfiguration | null;
+      const commercialVehicleResult = resultsArray[4] as VehicleConfiguration | null;
+      const railVehicleResult = resultsArray[5] as VehicleConfiguration | null;
+      const lightBrakeResult = resultsArray[6] as BrakeConfiguration | null;
+      const commercialBrakeResult = resultsArray[7] as BrakeConfiguration | null;
+      const railBrakeResult = resultsArray[8] as BrakeConfiguration | null;
+      const lightHotspotResult = resultsArray[9] as HotspotConfiguration | null;
+      const commercialHotspotResult = resultsArray[10] as HotspotConfiguration | null;
+      const railHotspotResult = resultsArray[11] as HotspotConfiguration | null;
 
       setHomepage(homepageResult || FALLBACK_HOMEPAGE_CONTENT);
       setAppSettings(appSettingsResult || FALLBACK_APP_SETTINGS);
-      setModelConfigs({
-        lv: lvConfigResult || FALLBACK_MODEL_CONFIGS.lv,
-        asm: asmConfigResult || FALLBACK_MODEL_CONFIGS.asm,
-        j4444: j4444ConfigResult || FALLBACK_MODEL_CONFIGS.j4444,
-        pad: padConfigResult || FALLBACK_MODEL_CONFIGS.pad,
-      });
       setLoadingScreen(loadingScreenResult || FALLBACK_LOADING_SCREEN);
-      setZoomAnimations({
-        light: lightAnimResult || FALLBACK_ZOOM_ANIMATIONS.light,
-        commercial: commercialAnimResult || FALLBACK_ZOOM_ANIMATIONS.commercial,
-        rail: railAnimResult || FALLBACK_ZOOM_ANIMATIONS.rail,
-      });
       setVehicleConfigs({
         light: lightVehicleResult || FALLBACK_VEHICLE_CONFIGS.light,
         commercial: commercialVehicleResult || FALLBACK_VEHICLE_CONFIGS.commercial,
@@ -205,9 +155,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
       // Use fallbacks on error
       setHomepage(FALLBACK_HOMEPAGE_CONTENT);
       setAppSettings(FALLBACK_APP_SETTINGS);
-      setModelConfigs(FALLBACK_MODEL_CONFIGS);
       setLoadingScreen(FALLBACK_LOADING_SCREEN);
-      setZoomAnimations(FALLBACK_ZOOM_ANIMATIONS);
       setVehicleConfigs(FALLBACK_VEHICLE_CONFIGS);
       setBrakeConfigs(FALLBACK_BRAKE_CONFIGS);
       setHotspotConfigs(FALLBACK_HOTSPOT_CONFIGS);
@@ -218,9 +166,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
     isCmsEnabled,
     getHomepageContent,
     getAppSettings,
-    getModelConfiguration,
     getLoadingScreenContent,
-    getZoomAnimationContent,
     getVehicleConfiguration,
     getBrakeConfiguration,
     getHotspotConfiguration,
@@ -234,9 +180,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
   const contextValue: ExtendedContentContextValue = {
     homepage,
     appSettings,
-    modelConfigs,
     loadingScreen,
-    zoomAnimations,
     vehicleConfigs,
     brakeConfigs,
     hotspotConfigs,

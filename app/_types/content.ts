@@ -119,57 +119,10 @@ export interface LoadingScreenContent {
 }
 
 // ----------------------------------------------------------------------------
-// Zoom Animation Types
+// Common Types
 // ----------------------------------------------------------------------------
-
-export interface AnimationEffects {
-  scale: {
-    from: number
-    to: number
-  }
-  blur: {
-    from: number
-    to: number
-  }
-  rotation?: {
-    from: number
-    to: number
-  }
-}
-
-export interface AnimationLabel {
-  text: string
-  textTranslations?: Translation[]
-  subtext?: string
-  subtextTranslations?: Translation[]
-  color: {
-    primary: string
-    secondary: string
-  }
-}
-
-export interface AnimationStage {
-  order: number
-  name: string
-  imageMediaId: string
-  title: string
-  titleTranslations?: Translation[]
-  label: AnimationLabel
-  duration: number
-  effects: AnimationEffects
-}
 
 export type VehicleType = 'light' | 'commercial' | 'rail'
-
-export interface ZoomAnimationContent {
-  id: string
-  vehicleType: VehicleType
-  stages: AnimationStage[]
-}
-
-// ----------------------------------------------------------------------------
-// Model Configuration Types
-// ----------------------------------------------------------------------------
 
 export interface Vector3 {
   x: number
@@ -177,69 +130,18 @@ export interface Vector3 {
   z: number
 }
 
-export interface Transform {
-  scale: number
-  position: Vector3
-  rotation: Vector3
-  groundY: number
-  groundOffset: number
-}
-
-export interface HotspotAction {
-  type: 'navigate' | 'modal' | 'info'
-  payload: string
-}
-
-export interface Hotspot {
-  id: string
-  order: number
-  position: Vector3
-  label: string
-  labelTranslations?: Translation[]
-  color: string
-  targetModel?: string
-  action: HotspotAction
-  isEnabled: boolean
-}
-
 export interface ColorConfig {
   gradient?: GradientColors
   solid?: string
 }
 
-export interface SpecItem {
-  spec: string
-  specTranslations?: Translation[]
-}
+export type ModelType = 'lv' | 'asm' | 'j4444' | 'pad'
 
-export interface ModelInfoContent {
-  name: string
-  nameTranslations?: Translation[]
-  description: string
-  descriptionTranslations?: Translation[]
-  specs: string[] | SpecItem[]
-  color: ColorConfig
-}
-
-export interface ModelMedia {
+export interface BrakeMedia {
   pdfMediaId?: string
   videoMediaId?: string
   fallbackPdfPath?: string
   fallbackVideoUrl?: string
-}
-
-export type ModelType = 'lv' | 'asm' | 'j4444' | 'pad'
-
-export interface ModelConfiguration {
-  id: string
-  modelType: ModelType
-  modelFile: MediaReference
-  transform: Transform
-  hotspots: Hotspot[]
-  info: ModelInfoContent
-  media: ModelMedia
-  version?: string
-  isActive?: boolean
 }
 
 // ----------------------------------------------------------------------------
@@ -315,9 +217,7 @@ export interface PaginatedResponse<T> {
 export interface ContentContextValue {
   homepage: HomepageContent | null
   appSettings: AppSettings | null
-  modelConfigs: Record<ModelType, ModelConfiguration | null>
   loadingScreen: LoadingScreenContent | null
-  zoomAnimations: Record<VehicleType, ZoomAnimationContent | null>
   isLoading: boolean
   error: string | null
   refetch: () => Promise<void>
@@ -388,7 +288,7 @@ export interface BrakeConfiguration {
   centerModel: boolean
   scaleConfig: ScaleConfig
   explosionHotspot: ExplosionHotspot
-  media?: ModelMedia
+  media?: BrakeMedia
   isActive: boolean
 }
 

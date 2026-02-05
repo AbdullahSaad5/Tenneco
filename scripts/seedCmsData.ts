@@ -20,14 +20,7 @@ import axios from "axios";
 import {
   FALLBACK_HOMEPAGE_CONTENT,
   FALLBACK_APP_SETTINGS,
-  FALLBACK_MODEL_CONFIG_LV,
-  FALLBACK_MODEL_CONFIG_ASM,
-  FALLBACK_MODEL_CONFIG_J4444,
-  FALLBACK_MODEL_CONFIG_PAD,
   FALLBACK_LOADING_SCREEN,
-  FALLBACK_ZOOM_ANIMATION_LIGHT,
-  FALLBACK_ZOOM_ANIMATION_COMMERCIAL,
-  FALLBACK_ZOOM_ANIMATION_RAIL,
 } from "../app/config/fallbacks";
 
 // Configuration
@@ -48,26 +41,9 @@ const question = (query: string): Promise<string> => {
 // Media ID storage
 interface MediaIds {
   logo: string;
-  lvModel: string;
-  asmModel: string;
-  j4444Model: string;
-  padModel: string;
-  pdf: string;
   lightVehicleImage: string;
   commercialVehicleImage: string;
   railVehicleImage: string;
-  lightStage1: string;
-  lightStage2: string;
-  lightStage3: string;
-  lightStage4: string;
-  commercialStage1: string;
-  commercialStage2: string;
-  commercialStage3: string;
-  commercialStage4: string;
-  railStage1: string;
-  railStage2: string;
-  railStage3: string;
-  railStage4: string;
 }
 
 // Helper to make API requests
@@ -97,26 +73,9 @@ async function collectMediaIds(): Promise<MediaIds> {
 
   return {
     logo: await question("Logo Media ID: "),
-    lvModel: await question("LV Model (lv_file.glb) Media ID: "),
-    asmModel: await question("ASM Model (asm.glb) Media ID: "),
-    j4444Model: await question("J-4444 Model (J-4444.glb) Media ID: "),
-    padModel: await question("Pad Model (pad.glb) Media ID: "),
-    pdf: await question("Pads.pdf Media ID: "),
     lightVehicleImage: await question("Light Vehicle Homepage Image Media ID: "),
     commercialVehicleImage: await question("Commercial Vehicle Homepage Image Media ID: "),
     railVehicleImage: await question("Rail Vehicle Homepage Image Media ID: "),
-    lightStage1: await question("Light Animation Stage 1 Image Media ID: "),
-    lightStage2: await question("Light Animation Stage 2 Image Media ID: "),
-    lightStage3: await question("Light Animation Stage 3 Image Media ID: "),
-    lightStage4: await question("Light Animation Stage 4 Image Media ID: "),
-    commercialStage1: await question("Commercial Animation Stage 1 Image Media ID: "),
-    commercialStage2: await question("Commercial Animation Stage 2 Image Media ID: "),
-    commercialStage3: await question("Commercial Animation Stage 3 Image Media ID: "),
-    commercialStage4: await question("Commercial Animation Stage 4 Image Media ID: "),
-    railStage1: await question("Rail Animation Stage 1 Image Media ID: "),
-    railStage2: await question("Rail Animation Stage 2 Image Media ID: "),
-    railStage3: await question("Rail Animation Stage 3 Image Media ID: "),
-    railStage4: await question("Rail Animation Stage 4 Image Media ID: "),
   };
 }
 
@@ -177,50 +136,6 @@ async function createAppSettings(mediaIds: MediaIds) {
   return result;
 }
 
-// Create Model Configuration
-async function createModelConfig(
-  modelType: string,
-  config: any,
-  modelMediaId: string,
-  pdfMediaId: string
-) {
-  console.log(`\nCreating Model Configuration: ${modelType}...`);
-
-  const modelData = {
-    modelType,
-    modelFile: {
-      media: modelMediaId,
-      fallbackPath: config.modelFile.fallbackPath,
-    },
-    transform: config.transform,
-    hotspots: config.hotspots.map((hs: any) => ({
-      order: hs.order,
-      position: hs.position,
-      label: hs.label,
-      color: hs.color,
-      targetModel: hs.targetModel,
-      action: hs.action,
-      isEnabled: hs.isEnabled,
-    })),
-    info: {
-      name: config.info.name,
-      description: config.info.description,
-      specs: config.info.specs.map((spec: string) => ({ spec })),
-      color: config.info.color,
-    },
-    media: {
-      pdf: pdfMediaId,
-      fallbackPdfPath: config.media.fallbackPdfPath,
-    },
-    version: config.version,
-    isActive: config.isActive,
-  };
-
-  const result = await apiRequest("POST", "/model-configurations", modelData);
-  console.log(`✅ Model Configuration ${modelType} created:`, result.doc?.id);
-  return result;
-}
-
 // Create Loading Screen
 async function createLoadingScreen() {
   console.log("\nCreating Loading Screen...");
@@ -235,32 +150,6 @@ async function createLoadingScreen() {
 
   const result = await apiRequest("POST", "/loading-screens", loadingData);
   console.log("✅ Loading Screen created:", result.doc?.id);
-  return result;
-}
-
-// Create Zoom Animation
-async function createZoomAnimation(
-  vehicleType: string,
-  config: any,
-  stageMediaIds: string[]
-) {
-  console.log(`\nCreating Zoom Animation: ${vehicleType}...`);
-
-  const animationData = {
-    vehicleType,
-    stages: config.stages.map((stage: any, index: number) => ({
-      order: stage.order,
-      name: stage.name,
-      image: stageMediaIds[index],
-      title: stage.title,
-      label: stage.label,
-      duration: stage.duration,
-      effects: stage.effects,
-    })),
-  };
-
-  const result = await apiRequest("POST", "/zoom-animations", animationData);
-  console.log(`✅ Zoom Animation ${vehicleType} created:`, result.doc?.id);
   return result;
 }
 
@@ -292,41 +181,8 @@ async function main() {
     await createHomepage(mediaIds);
     await createAppSettings(mediaIds);
 
-    // Create model configurations
-    await createModelConfig("lv", FALLBACK_MODEL_CONFIG_LV, mediaIds.lvModel, mediaIds.pdf);
-    await createModelConfig("asm", FALLBACK_MODEL_CONFIG_ASM, mediaIds.asmModel, mediaIds.pdf);
-    await createModelConfig(
-      "j4444",
-      FALLBACK_MODEL_CONFIG_J4444,
-      mediaIds.j4444Model,
-      mediaIds.pdf
-    );
-    await createModelConfig("pad", FALLBACK_MODEL_CONFIG_PAD, mediaIds.padModel, mediaIds.pdf);
-
     // Create loading screen
     await createLoadingScreen();
-
-    // Create zoom animations
-    await createZoomAnimation("light", FALLBACK_ZOOM_ANIMATION_LIGHT, [
-      mediaIds.lightStage1,
-      mediaIds.lightStage2,
-      mediaIds.lightStage3,
-      mediaIds.lightStage4,
-    ]);
-
-    await createZoomAnimation("commercial", FALLBACK_ZOOM_ANIMATION_COMMERCIAL, [
-      mediaIds.commercialStage1,
-      mediaIds.commercialStage2,
-      mediaIds.commercialStage3,
-      mediaIds.commercialStage4,
-    ]);
-
-    await createZoomAnimation("rail", FALLBACK_ZOOM_ANIMATION_RAIL, [
-      mediaIds.railStage1,
-      mediaIds.railStage2,
-      mediaIds.railStage3,
-      mediaIds.railStage4,
-    ]);
 
     console.log("\n" + "=".repeat(60));
     console.log("  🎉 Seeding Complete!");

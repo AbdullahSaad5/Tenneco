@@ -4,10 +4,7 @@ import { MediaResponse } from "../_types/axios";
 import {
   HomepageContent,
   AppSettings,
-  ModelConfiguration,
   LoadingScreenContent,
-  ZoomAnimationContent,
-  ModelType,
   VehicleType,
   MediaItem,
   VehicleConfiguration,
@@ -17,9 +14,7 @@ import {
 import {
   FALLBACK_HOMEPAGE_CONTENT,
   FALLBACK_APP_SETTINGS,
-  FALLBACK_MODEL_CONFIGS,
   FALLBACK_LOADING_SCREEN,
-  FALLBACK_ZOOM_ANIMATIONS,
   FALLBACK_VEHICLE_CONFIGS,
   FALLBACK_BRAKE_CONFIGS,
   FALLBACK_HOTSPOT_CONFIGS,
@@ -172,76 +167,6 @@ export const useAxios = () => {
   }, []);
 
   /**
-   * Fetch model configuration from CMS by model type
-   */
-  const getModelConfiguration = useCallback(async (modelType: ModelType): Promise<ModelConfiguration> => {
-    const controller = createAbortController(`getModelConfiguration-${modelType}`);
-    try {
-      const response = await instance.get("/model-configurations", {
-        signal: controller.signal,
-        timeout: 5000,
-        params: {
-          where: {
-            modelType: { equals: modelType },
-          },
-        },
-      });
-
-      const data = Array.isArray(response.data?.docs) ? response.data.docs[0] : response.data;
-
-      if (!data) {
-        throw new Error(`No configuration found for model type: ${modelType}`);
-      }
-
-      // Transform response
-      const modelConfig: ModelConfiguration = {
-        id: data.id,
-        modelType: data.modelType,
-        modelFile: {
-          mediaId: data.modelFile?.media?.id || "",
-          fallbackPath: data.modelFile?.fallbackPath || FALLBACK_MODEL_CONFIGS[modelType].modelFile.fallbackPath,
-        },
-        transform: data.transform || FALLBACK_MODEL_CONFIGS[modelType].transform,
-        hotspots: (data.hotspots || []).map((hs: {
-          id: string;
-          order?: number;
-          position?: { x: number; y: number; z: number };
-          label?: string;
-          color?: string;
-          targetModel?: string;
-          action?: { type: string; payload: string };
-          isEnabled?: boolean;
-        }) => ({
-          id: hs.id,
-          order: hs.order || 1,
-          position: hs.position || { x: 0, y: 0, z: 0 },
-          label: hs.label || "",
-          color: hs.color || "#3b82f6",
-          targetModel: hs.targetModel,
-          action: hs.action || { type: "navigate", payload: hs.targetModel },
-          isEnabled: hs.isEnabled !== false,
-        })),
-        info: data.info || FALLBACK_MODEL_CONFIGS[modelType].info,
-        media: {
-          pdfMediaId: data.media?.pdf?.id || "",
-          videoMediaId: data.media?.video?.id || "",
-          fallbackPdfPath: data.media?.fallbackPdfPath || FALLBACK_MODEL_CONFIGS[modelType].media.fallbackPdfPath,
-          fallbackVideoUrl: data.media?.fallbackVideoUrl,
-        },
-        version: data.version || "1.0.0",
-        isActive: data.isActive !== false,
-      };
-
-      return modelConfig;
-    } catch (error) {
-      console.warn(`Failed to fetch model configuration for ${modelType}, using fallback:`, error);
-      return FALLBACK_MODEL_CONFIGS[modelType];
-    } finally {
-      delete abortControllersRef.current[`getModelConfiguration-${modelType}`];
-    }
-  }, []);
-
-  /**
    * Fetch loading screen content from CMS
    */
   const getLoadingScreenContent = useCallback(async (): Promise<LoadingScreenContent> => {
@@ -274,59 +199,6 @@ export const useAxios = () => {
       return FALLBACK_LOADING_SCREEN;
     } finally {
       delete abortControllersRef.current["getLoadingScreenContent"];
-    }
-  }, []);
-
-  /**
-   * Fetch zoom animation content from CMS by vehicle type
-   */
-  const getZoomAnimationContent = useCallback(async (vehicleType: VehicleType): Promise<ZoomAnimationContent> => {
-    const controller = createAbortController(`getZoomAnimationContent-${vehicleType}`);
-    try {
-      const response = await instance.get("/zoom-animations", {
-        signal: controller.signal,
-        timeout: 5000,
-        params: {
-          where: {
-            vehicleType: { equals: vehicleType },
-          },
-        },
-      });
-
-      const data = Array.isArray(response.data?.docs) ? response.data.docs[0] : response.data;
-
-      if (!data) {
-        throw new Error(`No zoom animation found for vehicle type: ${vehicleType}`);
-      }
-
-      const zoomAnimation: ZoomAnimationContent = {
-        id: data.id,
-        vehicleType: data.vehicleType,
-        stages: (data.stages || []).map((stage: {
-          order?: number;
-          name: string;
-          image?: { id: string };
-          title: string;
-          label: unknown;
-          duration?: number;
-          effects?: { scale: { from: number; to: number }; blur: { from: number; to: number } };
-        }) => ({
-          order: stage.order || 1,
-          name: stage.name,
-          imageMediaId: stage.image?.id || "",
-          title: stage.title,
-          label: stage.label,
-          duration: stage.duration || 2000,
-          effects: stage.effects || { scale: { from: 1, to: 1 }, blur: { from: 0, to: 0 } },
-        })),
-      };
-
-      return zoomAnimation;
-    } catch (error) {
-      console.warn(`Failed to fetch zoom animation for ${vehicleType}, using fallback:`, error);
-      return FALLBACK_ZOOM_ANIMATIONS[vehicleType];
-    } finally {
-      delete abortControllersRef.current[`getZoomAnimationContent-${vehicleType}`];
     }
   }, []);
 
@@ -609,9 +481,7 @@ export const useAxios = () => {
   return {
     getHomepageContent,
     getAppSettings,
-    getModelConfiguration,
     getLoadingScreenContent,
-    getZoomAnimationContent,
     getVehicleConfiguration,
     getBrakeConfiguration,
     getHotspotConfiguration,
