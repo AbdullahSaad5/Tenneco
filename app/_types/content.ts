@@ -142,6 +142,8 @@ export type ModelType = 'lv' | 'asm' | 'j4444' | 'pad'
 export interface BrakeMedia {
   pdfMediaId?: string
   videoMediaId?: string
+  pdfUrl?: string
+  videoUrl?: string
   fallbackPdfPath?: string
   fallbackVideoUrl?: string
 }

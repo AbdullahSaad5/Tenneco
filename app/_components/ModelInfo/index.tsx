@@ -6,6 +6,7 @@ import { FileText, Video } from "lucide-react";
 import PDFModal from "../PDFModal";
 import VideoModal from "../VideoModal";
 import { HotspotItem } from "../../_types/content";
+import { getMediaUrl } from "../../utils/mediaUrl";
 
 // Default paths if not specified in hotspot
 const DEFAULT_PDF = "./documents/default-brake-info.pdf";
@@ -22,11 +23,13 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot }) => {
 
   // Get PDF and Video URLs (use hotspot's or defaults)
   const pdfUrl = useMemo(() => {
-    return hotspot?.info?.pdf || DEFAULT_PDF;
+    const url = hotspot?.info?.pdf;
+    return getMediaUrl(url) || DEFAULT_PDF;
   }, [hotspot]);
 
   const videoUrl = useMemo(() => {
-    return hotspot?.info?.video || DEFAULT_VIDEO;
+    const url = hotspot?.info?.video;
+    return getMediaUrl(url) || DEFAULT_VIDEO;
   }, [hotspot]);
 
   if (!hotspot) return null;

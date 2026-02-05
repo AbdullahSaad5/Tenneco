@@ -6,6 +6,7 @@ import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import BrakeModel from "../Models/BrakeModel";
+import { getMediaUrl } from "../../utils/mediaUrl";
 import { viewer, transition } from "../../config";
 import { VehicleType, VehicleConfiguration, BrakeConfiguration, HotspotConfiguration, HotspotItem } from "../../_types/content";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
@@ -28,7 +29,7 @@ interface VehicleModelProps {
 }
 
 const VehicleModel = ({ vehicleConfig, opacity, blueTransitionProgress = 0 }: VehicleModelProps) => {
-  const modelPath = vehicleConfig.modelFile.fallbackPath || "";
+  const modelPath = getMediaUrl(vehicleConfig.modelFile.mediaUrl) || vehicleConfig.modelFile.fallbackPath || "";
   const { scene } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
 
@@ -192,8 +193,8 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
   const zoomConfig = vehicleConfig.zoomConfig;
 
   // Get model paths from config
-  const vehicleModelPath = vehicleConfig.modelFile.fallbackPath || "";
-  const brakeModelPath = brakeConfig.modelFile.fallbackPath || "";
+  const vehicleModelPath = getMediaUrl(vehicleConfig.modelFile.mediaUrl) || vehicleConfig.modelFile.fallbackPath || "";
+  const brakeModelPath = getMediaUrl(brakeConfig.modelFile.mediaUrl) || brakeConfig.modelFile.fallbackPath || "";
 
   // Preload both vehicle and brake models on mount
   useEffect(() => {

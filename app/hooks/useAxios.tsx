@@ -332,6 +332,7 @@ export const useAxios = () => {
         name: data.name,
         modelFile: {
           mediaId: data.modelFile?.media?.id || "",
+          mediaUrl: data.modelFile?.media?.url || "",
           fallbackPath: data.modelFile?.fallbackPath || FALLBACK_VEHICLE_CONFIGS[vehicleType].modelFile.fallbackPath,
         },
         scale: data.scale || FALLBACK_VEHICLE_CONFIGS[vehicleType].scale,
@@ -381,6 +382,7 @@ export const useAxios = () => {
         name: data.name,
         modelFile: {
           mediaId: data.modelFile?.media?.id || "",
+          mediaUrl: data.modelFile?.media?.url || "",
           fallbackPath: data.modelFile?.fallbackPath || FALLBACK_BRAKE_CONFIGS[vehicleType].modelFile.fallbackPath,
         },
         scale: data.scale || FALLBACK_BRAKE_CONFIGS[vehicleType].scale,
@@ -392,6 +394,8 @@ export const useAxios = () => {
         media: {
           pdfMediaId: data.media?.pdf?.id || "",
           videoMediaId: data.media?.video?.id || "",
+          pdfUrl: data.media?.pdf?.url || "",
+          videoUrl: data.media?.video?.url || "",
           fallbackPdfPath: data.media?.fallbackPdfPath || FALLBACK_BRAKE_CONFIGS[vehicleType].media?.fallbackPdfPath,
           fallbackVideoUrl: data.media?.fallbackVideoUrl,
         },
@@ -448,9 +452,9 @@ export const useAxios = () => {
             description?: string;
             descriptionTranslations?: Array<{ language: string; value: string }>;
             pdf?: string;
-            pdfMedia?: { id: string };
+            pdfMedia?: { id: string; url: string };
             video?: string;
-            videoMedia?: { id: string };
+            videoMedia?: { id: string; url: string };
           };
         }) => ({
           hotspotId: hs.hotspotId || hs.id || "",
@@ -465,9 +469,9 @@ export const useAxios = () => {
             titleTranslations: hs.info.titleTranslations,
             description: hs.info.description,
             descriptionTranslations: hs.info.descriptionTranslations,
-            pdf: hs.info.pdf,
+            pdf: hs.info.pdfMedia?.url || hs.info.pdf,
             pdfMediaId: hs.info.pdfMedia?.id,
-            video: hs.info.video,
+            video: hs.info.videoMedia?.url || hs.info.video,
             videoMediaId: hs.info.videoMedia?.id,
           } : undefined,
         })),

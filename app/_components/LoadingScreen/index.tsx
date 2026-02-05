@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useContent } from "../../providers/ContentProvider";
 import Image from "next/image";
+import { getMediaUrlById } from "../../utils/mediaUrl";
 
 const LoadingScreen = () => {
   const { loadingScreen } = useContent();
@@ -29,7 +30,7 @@ const LoadingScreen = () => {
           >
             {loadingScreen?.logoType === "image" && loadingScreen.logoMediaId ? (
               <Image
-                src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}/media/${loadingScreen.logoMediaId}`}
+                src={getMediaUrlById(loadingScreen.logoMediaId) || "/tenneco-logo.png"}
                 alt="Logo"
                 width={48}
                 height={48}

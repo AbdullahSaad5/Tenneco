@@ -3,6 +3,7 @@
 import { useEffect, useState, createContext, useContext, ReactNode } from "react";
 import Image from "next/image";
 import { VEHICLE_CONFIGS, BRAKE_CONFIGS } from "../../config";
+import { getMediaUrl } from "../../utils/mediaUrl";
 
 interface PreloadContextType {
   isPreloaded: boolean;
@@ -56,15 +57,17 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
 
     // Vehicle models
     Object.values(VEHICLE_CONFIGS).forEach(config => {
-      if (config.modelFile.fallbackPath) {
-        modelPaths.push(config.modelFile.fallbackPath);
+      const modelPath = getMediaUrl(config.modelFile.mediaUrl) || config.modelFile.fallbackPath;
+      if (modelPath) {
+        modelPaths.push(modelPath);
       }
     });
 
     // Brake models
     Object.values(BRAKE_CONFIGS).forEach(config => {
-      if (config.modelFile.fallbackPath) {
-        modelPaths.push(config.modelFile.fallbackPath);
+      const modelPath = getMediaUrl(config.modelFile.mediaUrl) || config.modelFile.fallbackPath;
+      if (modelPath) {
+        modelPaths.push(modelPath);
       }
     });
     let loadedCount = 0;

@@ -10,6 +10,7 @@ import { BRAKE_CONFIGS } from "../../config/brakes.config";
 import { transition, viewer, VehicleType } from "../../config";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
+import { getMediaUrl } from "../../utils/mediaUrl";
 
 interface VehicleZoomTransitionProps {
   vehicleType: VehicleType;
@@ -24,7 +25,7 @@ interface VehicleModelProps {
 
 const VehicleModel = ({ vehicleType, opacity, blueTransitionProgress = 0 }: VehicleModelProps) => {
   const config = VEHICLE_CONFIGS[vehicleType];
-  const modelPath = config.modelFile.fallbackPath || "";
+  const modelPath = getMediaUrl(config.modelFile.mediaUrl) || config.modelFile.fallbackPath || "";
   const { scene } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
 
@@ -175,7 +176,7 @@ interface BrakeModelProps {
 
 const BrakeTransitionModel = ({ vehicleType, opacity }: BrakeModelProps) => {
   const config = BRAKE_CONFIGS[vehicleType];
-  const modelPath = config.modelFile.fallbackPath || "";
+  const modelPath = getMediaUrl(config.modelFile.mediaUrl) || config.modelFile.fallbackPath || "";
 
   // Debug: Log entire config on mount
   useEffect(() => {
