@@ -96,7 +96,7 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen = false,
           {/* Right Actions */}
           <div className="flex items-center gap-3">
             {/* Language Switcher */}
-            <LanguageSwitcher variant="dropdown" />
+            <LanguageSwitcher variant="dropdown" theme="light" />
 
             {onOpenHelp && (
               <button

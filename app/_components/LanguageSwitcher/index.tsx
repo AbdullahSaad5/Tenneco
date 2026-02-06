@@ -6,11 +6,13 @@ import { useLanguage } from "@/app/providers/LanguageProvider";
 interface LanguageSwitcherProps {
   className?: string;
   variant?: "dropdown" | "buttons";
+  theme?: "light" | "dark";
 }
 
 export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   className = "",
   variant = "dropdown",
+  theme = "dark",
 }) => {
   const { currentLanguage, availableLanguages, setLanguage, isLoading } =
     useLanguage();
@@ -89,13 +91,15 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="
-          flex items-center gap-2 px-4 py-2 rounded-lg
-          bg-white/10 hover:bg-white/20
-          text-white text-sm font-medium
+        className={`
+          flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
           transition-all duration-200
-          border border-white/10
-        "
+          ${
+            theme === "light"
+              ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300"
+              : "bg-white/10 hover:bg-white/20 text-white border border-white/10"
+          }
+        `}
         aria-label="Select language"
         aria-expanded={isOpen}
       >
@@ -132,12 +136,15 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
 
       {isOpen && (
         <div
-          className="
-            absolute top-full right-0 mt-2 w-48
-            bg-slate-800 rounded-lg shadow-xl
-            border border-white/10
+          className={`
+            absolute top-full right-0 mt-2 w-48 rounded-lg shadow-xl
             overflow-hidden z-50
-          "
+            ${
+              theme === "light"
+                ? "bg-white border border-slate-200"
+                : "bg-slate-800 border border-white/10"
+            }
+          `}
         >
           {sortedLanguages.map((lang) => (
             <button
@@ -149,6 +156,8 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
                 ${
                   lang.code === currentLanguage
                     ? "bg-blue-600 text-white"
+                    : theme === "light"
+                    ? "text-slate-700 hover:bg-slate-100"
                     : "text-white/80 hover:bg-white/10 hover:text-white"
                 }
               `}
