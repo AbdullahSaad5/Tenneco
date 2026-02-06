@@ -7,6 +7,7 @@ import PDFModal from "../PDFModal";
 import VideoModal from "../VideoModal";
 import { HotspotItem, BrakeMedia } from "../../_types/content";
 import { getMediaUrl } from "../../utils/mediaUrl";
+import { useLanguage } from "../../providers/LanguageProvider";
 
 interface ModelInfoProps {
   hotspot: HotspotItem | null;
@@ -17,6 +18,7 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot, brakeMedia }) => {
   const [isOpen, setIsOpen] = useState(true);
   const [isPDFOpen, setIsPDFOpen] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
+  const { getTranslation } = useLanguage();
 
   // Get PDF URL: hotspot → brake → null (hidden)
   const pdfUrl = useMemo(() => {
@@ -61,8 +63,14 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot, brakeMedia }) => {
   if (!hotspot) return null;
 
   const details = {
-    name: hotspot.info?.title || hotspot.label,
-    description: hotspot.info?.description || "",
+    name: getTranslation(
+      hotspot.info?.title || hotspot.label,
+      hotspot.info?.titleTranslations || hotspot.labelTranslations
+    ),
+    description: getTranslation(
+      hotspot.info?.description || "",
+      hotspot.info?.descriptionTranslations
+    ),
     color: hotspot.color,
   };
 

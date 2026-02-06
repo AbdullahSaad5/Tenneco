@@ -6,6 +6,7 @@ import { VehicleType, BrakeConfiguration, HotspotConfiguration, HotspotItem, Vec
 import { AnimationMixer, AnimationAction } from "three";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { usePreload } from "../ModelPreloader";
+import { useLanguage } from "../../providers/LanguageProvider";
 
 interface HotspotProps {
   config: HotspotItem;
@@ -157,10 +158,11 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const { camera } = useThree();
   const [distanceFactor, setDistanceFactor] = useState(8);
+  const { getTranslation } = useLanguage();
 
   const position: [number, number, number] = [config.position.x, config.position.y, config.position.z];
   const color = config.color;
-  const label = config.label;
+  const label = getTranslation(config.label, config.labelTranslations);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
@@ -277,6 +279,7 @@ interface BrakeModelProps {
 const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, opacity = 1, showExplosionHotspot: showExplosionHotspotProp = true }: BrakeModelProps) => {
   // Use preloaded URL to avoid double-loading
   const { resolvedUrls } = usePreload();
+  const { getTranslation } = useLanguage();
   const modelPath = resolvedUrls.brakes[vehicleType] || brakeConfig.modelFile.fallbackPath || "";
   const vehicleHotspots = hotspotConfig?.hotspots || [];
 
@@ -504,7 +507,7 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
         <ExplosionHotspot
           position={brakeConfig.explosionHotspot.position}
           color={brakeConfig.explosionHotspot.color}
-          label={brakeConfig.explosionHotspot.label}
+          label={getTranslation(brakeConfig.explosionHotspot.label, brakeConfig.explosionHotspot.labelTranslations)}
           occludeRef={modelRef}
           onClick={handleExplosionHotspotClick}
         />

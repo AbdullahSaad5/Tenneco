@@ -3,11 +3,13 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useContent } from "../../providers/ContentProvider";
+import { useLanguage } from "../../providers/LanguageProvider";
 import Image from "next/image";
 import { getMediaUrlById } from "../../utils/mediaUrl";
 
 const LoadingScreen = () => {
   const { loadingScreen } = useContent();
+  const { getTranslation } = useLanguage();
 
   const primaryColor = loadingScreen?.animation.colors.primary || "#2563eb";
   const secondaryColor = loadingScreen?.animation.colors.secondary || "#0ea5e9";
@@ -64,10 +66,10 @@ const LoadingScreen = () => {
           className="text-center"
         >
           <h2 className="text-3xl font-bold text-white mb-2">
-            {loadingScreen?.title || "Tenneco 3D Viewer"}
+            {getTranslation(loadingScreen?.title || "Tenneco 3D Viewer", loadingScreen?.titleTranslations)}
           </h2>
           <p className="text-slate-400 text-lg">
-            {loadingScreen?.subtitle || "Loading 3D models..."}
+            {getTranslation(loadingScreen?.subtitle || "Loading 3D models...", loadingScreen?.subtitleTranslations)}
           </p>
         </motion.div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
@@ -9,11 +9,19 @@ import { CATEGORY_FALLBACK_IMAGES } from "./config/homepage.config";
 import { VehicleType } from "./_types/content";
 import LoadingScreen from "./_components/LoadingScreen";
 import { getMediaUrl } from "./utils/mediaUrl";
+import LanguageSwitcher from "./_components/LanguageSwitcher";
+import { useLanguage } from "./providers/LanguageProvider";
 
 export default function Home() {
   const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const { homepage, isLoading } = useContent();
+  const { getTranslation, currentLanguage } = useLanguage();
+
+  useEffect(() => {
+    console.log('[Homepage] Current language changed to:', currentLanguage);
+    console.log('[Homepage] getTranslation function:', getTranslation);
+  }, [currentLanguage, getTranslation]);
 
   // Show loading screen while content is loading
   if (isLoading || !homepage) {
@@ -49,7 +57,8 @@ export default function Home() {
         <div className="relative z-10">
           {/* Header */}
           <header className="pt-8 pb-4 px-6">
-            <div className="max-w-7xl mx-auto flex items-center justify-center">
+            <div className="max-w-7xl mx-auto flex items-center justify-between">
+              <div className="flex-1" />
               <Image
                 src={getMediaUrl(homepage.logo.mediaUrl) || homepage.logo.fallbackPath || "/tenneco-logo.png"}
                 alt={homepage.logo.alt || "Tenneco Logo"}
@@ -57,6 +66,9 @@ export default function Home() {
                 height={homepage.logo.height || 50}
                 className="h-12 w-auto brightness-0 invert"
               />
+              <div className="flex-1 flex justify-end">
+                <LanguageSwitcher variant="dropdown" />
+              </div>
             </div>
           </header>
 
@@ -64,15 +76,15 @@ export default function Home() {
           <section className="px-6 pt-16 pb-20">
             <div className="max-w-6xl mx-auto text-center space-y-8">
               <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight">
-                {homepage.hero.title}
+                {getTranslation(homepage.hero.title, homepage.hero.titleTranslations)}
               </h1>
 
               <p className="text-xl md:text-2xl text-blue-100 max-w-4xl mx-auto leading-relaxed">
-                {homepage.hero.subtitle}
+                {getTranslation(homepage.hero.subtitle, homepage.hero.subtitleTranslations)}
               </p>
 
               <p className="text-lg text-white/80 max-w-3xl mx-auto">
-                {homepage.hero.description}
+                {getTranslation(homepage.hero.description, homepage.hero.descriptionTranslations)}
               </p>
             </div>
           </section>
@@ -82,11 +94,13 @@ export default function Home() {
             <div className="max-w-6xl mx-auto">
               <div className="text-center mb-12">
                 <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                  {homepage.section?.sectionTitle}
+                  {getTranslation(homepage.section?.sectionTitle || '', homepage.section?.sectionTitleTranslations)}
                 </h2>
-                <p className="text-lg text-blue-100">
-                  {homepage.section?.sectionSubtitle}
-                </p>
+                {homepage.section?.sectionSubtitle && (
+                  <p className="text-lg text-blue-100">
+                    {getTranslation(homepage.section.sectionSubtitle, homepage.section.sectionSubtitleTranslations)}
+                  </p>
+                )}
               </div>
 
               {/* Vehicle Category Cards */}
@@ -120,10 +134,10 @@ export default function Home() {
                       {/* Title Overlay */}
                       <div className="absolute bottom-0 left-0 right-0 p-6 z-30">
                         <h3 className="text-2xl font-bold text-white mb-1">
-                          {category.title}
+                          {getTranslation(category.title, category.titleTranslations)}
                         </h3>
                         <p className="text-white/70 text-sm">
-                          {category.subtitle}
+                          {getTranslation(category.subtitle, category.subtitleTranslations)}
                         </p>
                       </div>
                     </div>

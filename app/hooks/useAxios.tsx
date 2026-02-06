@@ -77,21 +77,33 @@ export const useAxios = () => {
           mediaId: data.logo?.media?.id || "",
           mediaUrl: data.logo?.media?.url || "",
           alt: data.logo?.alt || "Tenneco Logo",
+          altTranslations: data.logo?.altTranslations || [],
           width: data.logo?.width || 180,
           height: data.logo?.height || 50,
           fallbackPath: "/tenneco-logo.png",
         },
         hero: {
           title: data.hero?.title || FALLBACK_HOMEPAGE_CONTENT.hero.title,
+          titleTranslations: data.hero?.titleTranslations || [],
           subtitle: data.hero?.subtitle || FALLBACK_HOMEPAGE_CONTENT.hero.subtitle,
+          subtitleTranslations: data.hero?.subtitleTranslations || [],
           description: data.hero?.description || FALLBACK_HOMEPAGE_CONTENT.hero.description,
+          descriptionTranslations: data.hero?.descriptionTranslations || [],
         },
+        section: data.sectionTitle ? {
+          sectionTitle: data.sectionTitle,
+          sectionTitleTranslations: data.sectionTitleTranslations || [],
+          sectionSubtitle: data.sectionSubtitle,
+          sectionSubtitleTranslations: data.sectionSubtitleTranslations || [],
+        } : undefined,
         vehicleCategories: (data.vehicleCategories || []).map((cat: {
           id: string;
           vehicleType: string;
           order?: number;
           title: string;
+          titleTranslations?: Array<{ language: string; value: string }>;
           subtitle: string;
+          subtitleTranslations?: Array<{ language: string; value: string }>;
           image?: { id: string; url: string };
           gradient?: { from: string; to: string };
           targetRoute?: string;
@@ -101,7 +113,9 @@ export const useAxios = () => {
           vehicleType: cat.vehicleType as VehicleType,
           order: cat.order || 1,
           title: cat.title,
+          titleTranslations: cat.titleTranslations || [],
           subtitle: cat.subtitle,
+          subtitleTranslations: cat.subtitleTranslations || [],
           imageMediaId: cat.image?.id || "",
           imageUrl: cat.image?.url || "",
           gradient: {
@@ -193,7 +207,9 @@ export const useAxios = () => {
         svgPath: data.svgPath,
         logoMediaId: data.logoMedia?.id,
         title: data.title || FALLBACK_LOADING_SCREEN.title,
+        titleTranslations: data.titleTranslations || [],
         subtitle: data.subtitle,
+        subtitleTranslations: data.subtitleTranslations || [],
         animation: data.animation || FALLBACK_LOADING_SCREEN.animation,
       };
 
@@ -386,7 +402,12 @@ export const useAxios = () => {
         scale: data.scale || FALLBACK_BRAKE_CONFIGS[vehicleType].scale,
         rotation: data.rotation || FALLBACK_BRAKE_CONFIGS[vehicleType].rotation,
         scaleConfig: data.scaleConfig || FALLBACK_BRAKE_CONFIGS[vehicleType].scaleConfig,
-        explosionHotspot: data.explosionHotspot || FALLBACK_BRAKE_CONFIGS[vehicleType].explosionHotspot,
+        explosionHotspot: {
+          position: data.explosionHotspot?.position || FALLBACK_BRAKE_CONFIGS[vehicleType].explosionHotspot.position,
+          color: data.explosionHotspot?.color || FALLBACK_BRAKE_CONFIGS[vehicleType].explosionHotspot.color,
+          label: data.explosionHotspot?.label || FALLBACK_BRAKE_CONFIGS[vehicleType].explosionHotspot.label,
+          labelTranslations: data.explosionHotspot?.labelTranslations || [],
+        },
         media: {
           pdfMediaId: data.media?.pdf?.id || "",
           videoMediaId: data.media?.video?.id || "",

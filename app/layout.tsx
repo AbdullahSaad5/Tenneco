@@ -6,6 +6,7 @@ import "./globals.css";
 import "./polyfills";
 import { ModelPreloaderProvider, PreloadingScreen, usePreload } from "./_components/ModelPreloader";
 import { ContentProvider } from "./providers/ContentProvider";
+import { LanguageProvider } from "./providers/LanguageProvider";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -48,9 +49,11 @@ export default function RootLayout({
       </head>
       <body className={`${urbanist.className} antialiased min-h-screen h-full w-full bg-white`}>
         <ContentProvider>
-          <ModelPreloaderProvider>
-            <AppContent>{children}</AppContent>
-          </ModelPreloaderProvider>
+          <LanguageProvider>
+            <ModelPreloaderProvider>
+              <AppContent>{children}</AppContent>
+            </ModelPreloaderProvider>
+          </LanguageProvider>
         </ContentProvider>
       </body>
     </html>

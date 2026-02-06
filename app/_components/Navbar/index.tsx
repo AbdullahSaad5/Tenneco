@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import LanguageSwitcher from "../LanguageSwitcher";
 
 interface NavbarProps {
   onToggleSidebar?: () => void;
@@ -94,6 +95,9 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen = false,
 
           {/* Right Actions */}
           <div className="flex items-center gap-3">
+            {/* Language Switcher */}
+            <LanguageSwitcher variant="dropdown" />
+
             {onOpenHelp && (
               <button
                 onClick={onOpenHelp}

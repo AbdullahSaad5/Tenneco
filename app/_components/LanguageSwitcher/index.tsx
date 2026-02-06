@@ -39,14 +39,23 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
     (lang) => lang.code === currentLanguage
   );
 
+  // Sort languages: current/default language first, then alphabetically
+  const sortedLanguages = [...availableLanguages].sort((a, b) => {
+    // Current language comes first
+    if (a.code === currentLanguage) return -1;
+    if (b.code === currentLanguage) return 1;
+    // Then sort alphabetically by native name
+    return a.nativeName.localeCompare(b.nativeName);
+  });
+
   // Handle language change
   const handleLanguageChange = (languageCode: string) => {
     setLanguage(languageCode);
     setIsOpen(false);
   };
 
-  // Don't render if no languages available or still loading
-  if (isLoading || availableLanguages.length <= 1) {
+  // Don't render if still loading
+  if (isLoading) {
     return null;
   }
 
@@ -54,7 +63,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   if (variant === "buttons") {
     return (
       <div className={`flex gap-2 ${className}`}>
-        {availableLanguages.map((lang) => (
+        {sortedLanguages.map((lang) => (
           <button
             key={lang.code}
             onClick={() => handleLanguageChange(lang.code)}
@@ -130,7 +139,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
             overflow-hidden z-50
           "
         >
-          {availableLanguages.map((lang) => (
+          {sortedLanguages.map((lang) => (
             <button
               key={lang.code}
               onClick={() => handleLanguageChange(lang.code)}
