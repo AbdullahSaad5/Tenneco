@@ -2,11 +2,12 @@
 
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, useGLTF } from '@react-three/drei';
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import * as THREE from 'three';
 import { VehicleType } from '@/app/_types/content';
 import { VEHICLE_CONFIGS } from '@/app/config/vehicles.config';
 import { getMediaUrl } from '@/app/utils/mediaUrl';
+import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 type CoordinateType = 'camera' | 'lookAt' | 'click';
 
@@ -79,30 +80,61 @@ function CameraInfo({
   return null;
 }
 
-// Vehicle model loader
+// Vehicle model loader - matches VehicleZoomTransition positioning
 function VehicleModel({ vehicleType }: { vehicleType: VehicleType }) {
   const config = VEHICLE_CONFIGS[vehicleType];
   const modelPath = getMediaUrl(config.modelFile.mediaUrl) || config.modelFile.fallbackPath;
+  const groupRef = useRef<THREE.Group>(null);
 
   // Always call useGLTF to satisfy React hooks rules
   const gltf = useGLTF(modelPath || '');
+
+  // Use scale from config - handle Vector3 format (same as VehicleZoomTransition)
+  const baseScale = typeof config.scale === 'number' ? config.scale : config.scale.x;
+  const modelScale = config.zoomConfig.initialScale * baseScale;
+
+  // Clone and calculate offset synchronously (same as VehicleZoomTransition)
+  const { clonedScene, centerOffset } = useMemo(() => {
+    if (!gltf || !gltf.scene) {
+      return { clonedScene: null, centerOffset: new THREE.Vector3(0, 0, 0) };
+    }
+
+    // Use SkeletonUtils.clone for proper animation and hierarchy support
+    const cloned = clone(gltf.scene) as THREE.Group;
+
+    // Calculate center BEFORE scaling (use original size for offset calculation)
+    const box = new THREE.Box3().setFromObject(cloned);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    const minY = box.min.y;
+
+    // Calculate offset and scale it appropriately (same as VehicleZoomTransition)
+    const offset = center.clone().negate().multiplyScalar(modelScale);
+    offset.y = (-minY - 0.5) * modelScale; // Position on ground, scaled
+
+    return { clonedScene: cloned, centerOffset: offset };
+  }, [gltf, modelScale]);
 
   if (!modelPath) {
     console.error('No model path available for vehicle type:', vehicleType);
     return null;
   }
 
-  if (!gltf || !gltf.scene) {
+  if (!clonedScene) {
     return null;
   }
 
   return (
-    <primitive
-      object={gltf.scene.clone()}
-      scale={[config.scale.x, config.scale.y, config.scale.z]}
-      rotation={[config.rotation.x, config.rotation.y, config.rotation.z]}
-      position={[0, 0, 0]}
-    />
+    <group
+      ref={groupRef}
+      position={[centerOffset.x, centerOffset.y, centerOffset.z]}
+      scale={[modelScale, modelScale, modelScale]}
+    >
+      <primitive
+        object={clonedScene}
+        rotation={[config.rotation.x, config.rotation.y, config.rotation.z]}
+      />
+    </group>
   );
 }
 
@@ -135,7 +167,7 @@ export default function CoordinateHelper() {
     <div className="relative h-full w-full">
       {/* 3D Canvas */}
       <Canvas>
-        <PerspectiveCamera makeDefault position={[8, 4, 12]} />
+        <PerspectiveCamera makeDefault position={[8, 4, 12]} fov={50} />
         <OrbitControls enableDamping dampingFactor={0.05} />
 
         {/* Lighting */}
@@ -144,7 +176,7 @@ export default function CoordinateHelper() {
         <directionalLight position={[-10, -10, -5]} intensity={0.5} />
 
         {/* Grid and Axes */}
-        {showGrid && <gridHelper args={[20, 20, '#444444', '#222222']} />}
+        {showGrid && <gridHelper args={[20, 20, '#444444', '#222222']} position={[0, -2, 0]} />}
         {showAxes && <axesHelper args={[5]} />}
 
         {/* Vehicle Model */}
