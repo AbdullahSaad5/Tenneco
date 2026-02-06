@@ -137,8 +137,6 @@ export interface ColorConfig {
   solid?: string
 }
 
-export type ModelType = 'lv' | 'asm' | 'j4444' | 'pad'
-
 export interface BrakeMedia {
   pdfMediaId?: string
   videoMediaId?: string
@@ -174,7 +172,6 @@ export interface FeatureFlags {
 }
 
 export interface DefaultSettings {
-  defaultModelType: ModelType
   fallbackVideoUrl: string
   fallbackPdfPath: string
 }
@@ -257,8 +254,6 @@ export interface VehicleConfiguration {
   modelFile: MediaReference
   scale: Vector3
   rotation: Vector3
-  position: Vector3
-  tirePosition: Vector3
   cameraStart: Vector3
   cameraZoomTarget: Vector3
   zoomConfig: ZoomConfig
@@ -288,8 +283,6 @@ export interface BrakeConfiguration {
   modelFile: MediaReference
   scale: Vector3
   rotation: Vector3
-  position: Vector3
-  centerModel: boolean
   scaleConfig: ScaleConfig
   explosionHotspot: ExplosionHotspot
   media?: BrakeMedia
@@ -317,7 +310,6 @@ export interface HotspotItem {
   labelTranslations?: Translation[]
   position: Vector3
   color: string
-  targetModel?: ModelType
   isEnabled: boolean
   info?: HotspotInfo
 }

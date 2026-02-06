@@ -196,9 +196,7 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
   const zoomConfig = vehicleConfig.zoomConfig;
 
   // Get model paths from preload context (already preloaded by ModelPreloader)
-  const { resolvedUrls, isPreloaded } = usePreload();
-  const vehicleModelPath = resolvedUrls.vehicles[vehicleType] || vehicleConfig.modelFile.fallbackPath || "";
-  const brakeModelPath = resolvedUrls.brakes[vehicleType] || brakeConfig.modelFile.fallbackPath || "";
+  const { isPreloaded } = usePreload();
 
   // Models are already preloaded by ModelPreloader, just mark as ready
   useEffect(() => {

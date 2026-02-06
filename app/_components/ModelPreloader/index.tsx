@@ -54,7 +54,7 @@ function loadGLBModel(url: string, loader: GLTFLoader): Promise<{ url: string; s
   return new Promise((resolve) => {
     loader.load(
       url,
-      (gltf) => {
+      () => {
         // Model loaded successfully!
         console.log(`[ModelPreloader] ✓ Loaded: ${url}`);
         // Also call useGLTF.preload to populate drei's cache

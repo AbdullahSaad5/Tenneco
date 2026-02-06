@@ -17,8 +17,6 @@ export const BRAKE_CONFIG_LIGHT: BrakeConfiguration = {
   },
   scale: { x: 1, y: 1, z: 1 },
   rotation: { x: 0, y: 0, z: 0 },
-  position: { x: 0, y: 0, z: 0 },
-  centerModel: true,
   scaleConfig: {
     transitionScale: 0.2,
     viewerScale: 0.2,
@@ -50,8 +48,6 @@ export const BRAKE_CONFIG_COMMERCIAL: BrakeConfiguration = {
   },
   scale: { x: 1, y: 1, z: 1 },
   rotation: { x: 0, y: 0, z: 0 },
-  position: { x: 0, y: 0, z: 0 },
-  centerModel: true,
   scaleConfig: {
     transitionScale: 0.2,
     viewerScale: 0.2,
@@ -83,8 +79,6 @@ export const BRAKE_CONFIG_RAIL: BrakeConfiguration = {
   },
   scale: { x: 1, y: 1, z: 1 },
   rotation: { x: 0, y: 0, z: 0 },
-  position: { x: 0, y: 0, z: 0 },
-  centerModel: true,
   scaleConfig: {
     transitionScale: 0.2,
     viewerScale: 0.2,

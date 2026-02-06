@@ -23,7 +23,6 @@ export const HOTSPOT_CONFIG_LIGHT: HotspotConfiguration = {
       ],
       position: { x: 1, y: 1.1, z: 0 },
       color: "#012e87",
-      targetModel: "asm",
       isEnabled: true,
       info: {
         title: "Hydraulic Brake Caliper Assembly",
@@ -45,7 +44,6 @@ export const HOTSPOT_CONFIG_LIGHT: HotspotConfiguration = {
       ],
       position: { x: -1, y: 3, z: 1 },
       color: "#012e87",
-      targetModel: "j4444",
       isEnabled: true,
       info: {
         title: "Ventilated Brake Rotor Disc",
@@ -67,7 +65,6 @@ export const HOTSPOT_CONFIG_LIGHT: HotspotConfiguration = {
       ],
       position: { x: 0, y: 0.5, z: 2 },
       color: "#012e87",
-      targetModel: "pad",
       isEnabled: true,
       info: {
         title: "Low-Dust Ceramic Brake Pad",
@@ -88,7 +85,6 @@ export const HOTSPOT_CONFIG_LIGHT: HotspotConfiguration = {
       ],
       position: { x: -1, y: 2, z: -1 },
       color: "#012e87",
-      targetModel: "asm",
       isEnabled: true,
       info: {
         title: "Brake Master Cylinder",
@@ -110,7 +106,6 @@ export const HOTSPOT_CONFIG_LIGHT: HotspotConfiguration = {
       ],
       position: { x: 1.2, y: -1.70, z: 1.5 },
       color: "#012e87",
-      targetModel: "j4444",
       isEnabled: true,
       info: {
         title: "High-Pressure Brake Lines",
@@ -131,7 +126,6 @@ export const HOTSPOT_CONFIG_LIGHT: HotspotConfiguration = {
       ],
       position: { x: 0.5, y: -1, z: -1.5 },
       color: "#012e87",
-      targetModel: "pad",
       isEnabled: true,
       info: {
         title: "Anti-Lock Brake System Sensor",
@@ -153,7 +147,6 @@ export const HOTSPOT_CONFIG_LIGHT: HotspotConfiguration = {
       ],
       position: { x: -1.5, y: -0.1, z: 2 },
       color: "#012e87",
-      targetModel: "asm",
       isEnabled: true,
       info: {
         title: "Electronic Parking Brake System",
@@ -189,7 +182,6 @@ export const HOTSPOT_CONFIG_COMMERCIAL: HotspotConfiguration = {
       ],
       position: { x: 2, y: 1, z: 0 },
       color: "#012e87",
-      targetModel: "asm",
       isEnabled: true,
       info: {
         title: "Commercial Grade Brake Caliper",
@@ -212,7 +204,6 @@ export const HOTSPOT_CONFIG_COMMERCIAL: HotspotConfiguration = {
       ],
       position: { x: -1, y: 2, z: 1 },
       color: "#012e87",
-      targetModel: "j4444",
       isEnabled: true,
       info: {
         title: "Reinforced Commercial Brake Rotor",
@@ -233,7 +224,6 @@ export const HOTSPOT_CONFIG_COMMERCIAL: HotspotConfiguration = {
       ],
       position: { x: 0, y: 0.5, z: 2 },
       color: "#012e87",
-      targetModel: "pad",
       isEnabled: true,
       info: {
         title: "Commercial Semi-Metallic Brake Pad",
@@ -255,7 +245,6 @@ export const HOTSPOT_CONFIG_COMMERCIAL: HotspotConfiguration = {
       ],
       position: { x: -1.5, y: -0.5, z: -1 },
       color: "#012e87",
-      targetModel: "asm",
       isEnabled: true,
       info: {
         title: "Pneumatic Air Brake Chamber",
@@ -291,7 +280,6 @@ export const HOTSPOT_CONFIG_RAIL: HotspotConfiguration = {
       ],
       position: { x: 2, y: 1, z: 0 },
       color: "#012e87",
-      targetModel: "asm",
       isEnabled: true,
       info: {
         title: "Railway Pneumatic Brake Assembly",
@@ -313,7 +301,6 @@ export const HOTSPOT_CONFIG_RAIL: HotspotConfiguration = {
       ],
       position: { x: -1, y: 2, z: 1 },
       color: "#012e87",
-      targetModel: "j4444",
       isEnabled: true,
       info: {
         title: "Rail Brake Disc Assembly",
@@ -335,7 +322,6 @@ export const HOTSPOT_CONFIG_RAIL: HotspotConfiguration = {
       ],
       position: { x: 0, y: 0.5, z: 2 },
       color: "#012e87",
-      targetModel: "pad",
       isEnabled: true,
       info: {
         title: "Railway Composite Brake Block",

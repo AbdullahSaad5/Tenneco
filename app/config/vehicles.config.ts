@@ -17,8 +17,6 @@ export const VEHICLE_CONFIG_LIGHT: VehicleConfiguration = {
   },
   scale: { x: 1, y: 1, z: 1 },
   rotation: { x: 0, y: 0, z: 0 },
-  position: { x: 0, y: 0, z: 0 },
-  tirePosition: { x: -1.5, y: 0.4, z: 1.5 },
   cameraStart: { x: 8, y: 4, z: 12 },
   cameraZoomTarget: { x: 0, y: 0.9, z: 3.5 },
   zoomConfig: {
@@ -43,8 +41,6 @@ export const VEHICLE_CONFIG_COMMERCIAL: VehicleConfiguration = {
   },
   scale: { x: 1, y: 1, z: 1 },
   rotation: { x: 0, y: 0, z: 0 },
-  position: { x: 0, y: 0, z: 0 },
-  tirePosition: { x: -2, y: 0.6, z: 2 },
   cameraStart: { x: 10, y: 5, z: 15 },
   cameraZoomTarget: { x: 0.5, y: 1.1, z: 4 },
   zoomConfig: {
@@ -69,8 +65,6 @@ export const VEHICLE_CONFIG_RAIL: VehicleConfiguration = {
   },
   scale: { x: 1, y: 1, z: 1 },
   rotation: { x: 0, y: 0, z: 0 },
-  position: { x: 0, y: 0, z: 0 },
-  tirePosition: { x: -1.5, y: 0.5, z: 1.5 },
   cameraStart: { x: 12, y: 6, z: 18 },
   cameraZoomTarget: { x: 0, y: 1, z: 4 },
   zoomConfig: {

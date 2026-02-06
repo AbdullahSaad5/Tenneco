@@ -108,7 +108,7 @@ export const useAxios = () => {
             from: cat.gradient?.from || "blue-600",
             to: cat.gradient?.to || "cyan-500",
           },
-          targetRoute: cat.targetRoute || "/viewer?model=lv",
+          targetRoute: cat.targetRoute || "/viewer",
           isEnabled: cat.isEnabled !== false,
         })),
       };
@@ -337,8 +337,6 @@ export const useAxios = () => {
         },
         scale: data.scale || FALLBACK_VEHICLE_CONFIGS[vehicleType].scale,
         rotation: data.rotation || FALLBACK_VEHICLE_CONFIGS[vehicleType].rotation,
-        position: data.position || FALLBACK_VEHICLE_CONFIGS[vehicleType].position,
-        tirePosition: data.tirePosition || FALLBACK_VEHICLE_CONFIGS[vehicleType].tirePosition,
         cameraStart: data.cameraStart || FALLBACK_VEHICLE_CONFIGS[vehicleType].cameraStart,
         cameraZoomTarget: data.cameraZoomTarget || FALLBACK_VEHICLE_CONFIGS[vehicleType].cameraZoomTarget,
         zoomConfig: data.zoomConfig || FALLBACK_VEHICLE_CONFIGS[vehicleType].zoomConfig,
@@ -387,8 +385,6 @@ export const useAxios = () => {
         },
         scale: data.scale || FALLBACK_BRAKE_CONFIGS[vehicleType].scale,
         rotation: data.rotation || FALLBACK_BRAKE_CONFIGS[vehicleType].rotation,
-        position: data.position || FALLBACK_BRAKE_CONFIGS[vehicleType].position,
-        centerModel: data.centerModel !== false,
         scaleConfig: data.scaleConfig || FALLBACK_BRAKE_CONFIGS[vehicleType].scaleConfig,
         explosionHotspot: data.explosionHotspot || FALLBACK_BRAKE_CONFIGS[vehicleType].explosionHotspot,
         media: {
@@ -444,7 +440,6 @@ export const useAxios = () => {
           labelTranslations?: Array<{ language: string; value: string }>;
           position?: { x: number; y: number; z: number };
           color?: string;
-          targetModel?: string;
           isEnabled?: boolean;
           info?: {
             title?: string;
@@ -462,7 +457,6 @@ export const useAxios = () => {
           labelTranslations: hs.labelTranslations,
           position: hs.position || { x: 0, y: 0, z: 0 },
           color: hs.color || "#3b82f6",
-          targetModel: hs.targetModel,
           isEnabled: hs.isEnabled !== false,
           info: hs.info ? {
             title: hs.info.title,

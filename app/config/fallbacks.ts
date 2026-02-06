@@ -81,7 +81,6 @@ export const FALLBACK_APP_SETTINGS: AppSettings = {
     enablePdfModal: true,
   },
   defaults: {
-    defaultModelType: "lv",
     fallbackVideoUrl: "",
     fallbackPdfPath: "./assets/pdfs/Pads.pdf",
   },

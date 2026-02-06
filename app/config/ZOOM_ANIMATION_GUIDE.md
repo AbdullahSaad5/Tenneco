@@ -23,10 +23,6 @@ Each vehicle type (light, commercial, rail) has the following configurable param
 - **Z:** Roll (side tilt)
 - **Example:** `{ "x": 0, "y": 1.57, "z": 0 }` rotates model 90° to the right
 
-#### `position` (object: {x, y, z})
-- Base position offset for the model (usually kept at origin)
-- **Default:** `{ "x": 0, "y": 0, "z": 0 }`
-
 ---
 
 ### Camera Positioning
@@ -69,7 +65,6 @@ Each vehicle type (light, commercial, rail) has the following configurable param
 - Should point to the tire/brake area you want to focus on
 - Camera smoothly transitions from `initialLookAtTarget` to this position
 - **Guidelines:**
-  - Match with `tirePosition` for best results
   - Adjust based on where you want the focus
 - **Example:** `{ "x": -1.5, "y": 0.4, "z": 1.5 }` focuses on front-left tire
 
@@ -78,16 +73,6 @@ Each vehicle type (light, commercial, rail) has the following configurable param
 - **Higher value** = camera moves further/more dramatic zoom
 - **Lower value** = subtler zoom effect
 - **Example:** `1.5` = 150% zoom distance, `0.7` = 70% zoom distance
-
----
-
-### Tire Position Reference
-
-#### `tirePosition` (object: {x, y, z})
-- Position of the tire/brake area on the vehicle
-- Used as reference for where to focus during zoom
-- **Set to match the actual tire location on your 3D model**
-- **Example:** `{ "x": -1.5, "y": 0.4, "z": 1.5 }` = front-left tire position
 
 ---
 
@@ -103,7 +88,6 @@ Each vehicle type (light, commercial, rail) has the following configurable param
 
 ### Problem: Zoom doesn't focus on the right area
 - Update `zoomLookAtTarget` to match your desired focus point
-- Should be close to `tirePosition` values
 
 ### Problem: Zoom is too aggressive/subtle
 - Adjust `zoomIntensity` (0.5 = half distance, 2.0 = double distance)
@@ -128,6 +112,7 @@ Each vehicle type (light, commercial, rail) has the following configurable param
 {
   "light": {
     "name": "Light Vehicles",
+    "modelPath": "./models/vehicles/Light vehicles - Vehicle.glb",
     "scale": 1,
     "rotation": { "x": 0, "y": 0, "z": 0 },
     "cameraStart": { "x": 8, "y": 4, "z": 12 },
@@ -202,7 +187,6 @@ Each brake model has independent scale configuration for two contexts:
     "modelPath": "./models/brakes/Light vehicles - Brake.glb",
     "scale": 1,
     "rotation": { "x": 0, "y": 0, "z": 0 },
-    "centerModel": true,
     "scaleConfig": {
       "transitionScale": 1.0,
       "viewerScale": 1.2
