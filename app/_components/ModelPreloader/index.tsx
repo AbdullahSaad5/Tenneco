@@ -57,7 +57,7 @@ function loadGLBModel(url: string, loader: GLTFLoader): Promise<{ url: string; s
         useGLTF.preload(url);
         resolve({ url, success: true });
       },
-      (progress) => {
+      () => {
         // Progress callback available for future granular progress UI
       },
       () => {
@@ -212,7 +212,7 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
     });
 
     // Wait for ALL models to actually finish loading
-    const results = await Promise.all(loadPromises);
+     await Promise.all(loadPromises);
 
     setProgress(98);
     setStatus("Finalizing...");

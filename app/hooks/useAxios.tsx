@@ -359,7 +359,7 @@ export const useAxios = () => {
       };
 
       return vehicleConfig;
-    } catch {
+    } catch (error) {
       const fallback = FALLBACK_VEHICLE_CONFIGS[vehicleType];
       if (fallback) return fallback;
       throw error;
@@ -424,7 +424,7 @@ export const useAxios = () => {
       };
 
       return brakeConfig;
-    } catch {
+    } catch (error) {
       const fallback = FALLBACK_BRAKE_CONFIGS[vehicleType];
       if (fallback) return fallback;
       throw error;
@@ -502,7 +502,7 @@ export const useAxios = () => {
       };
 
       return hotspotConfig;
-    } catch {
+    } catch (error) {
       const fallback = FALLBACK_HOTSPOT_CONFIGS[vehicleType];
       if (fallback) return fallback;
       throw error;
