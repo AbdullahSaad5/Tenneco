@@ -5,7 +5,6 @@ import {
   HomepageContent,
   AppSettings,
   LoadingScreenContent,
-  VehicleType,
   MediaItem,
   VehicleConfiguration,
   BrakeConfiguration,
@@ -61,6 +60,7 @@ export const useAxios = () => {
       const response = await instance.get("/homepage", {
         signal: controller.signal,
         timeout: 5000,
+        params: { depth: 1 },
       });
 
       // Get the first document (homepage is a singleton)
@@ -98,7 +98,7 @@ export const useAxios = () => {
         } : undefined,
         vehicleCategories: (data.vehicleCategories || []).map((cat: {
           id: string;
-          vehicleType: string;
+          vehicleType: string | { id: string; slug: string; name: string };
           order?: number;
           title: string;
           titleTranslations?: Array<{ language: string; value: string }>;
@@ -110,7 +110,7 @@ export const useAxios = () => {
           isEnabled?: boolean;
         }) => ({
           id: cat.id,
-          vehicleType: cat.vehicleType as VehicleType,
+          vehicleType: typeof cat.vehicleType === 'object' ? cat.vehicleType.slug : cat.vehicleType,
           order: cat.order || 1,
           title: cat.title,
           titleTranslations: cat.titleTranslations || [],
@@ -321,17 +321,18 @@ export const useAxios = () => {
   }, []);
 
   /**
-   * Fetch vehicle configuration from CMS by vehicle type
+   * Fetch vehicle configuration from CMS by vehicle type slug
    */
-  const getVehicleConfiguration = useCallback(async (vehicleType: VehicleType): Promise<VehicleConfiguration> => {
+  const getVehicleConfiguration = useCallback(async (vehicleType: string): Promise<VehicleConfiguration> => {
     const controller = createAbortController(`getVehicleConfiguration-${vehicleType}`);
     try {
       const response = await instance.get("/vehicle-configurations", {
         signal: controller.signal,
         timeout: 5000,
         params: {
+          depth: 1,
           where: {
-            vehicleType: { equals: vehicleType },
+            'vehicleType.slug': { equals: vehicleType },
           },
         },
       });
@@ -342,44 +343,50 @@ export const useAxios = () => {
         throw new Error(`No vehicle configuration found for type: ${vehicleType}`);
       }
 
+      const resolvedSlug = typeof data.vehicleType === 'object' ? data.vehicleType.slug : data.vehicleType;
+      const fallback = FALLBACK_VEHICLE_CONFIGS[vehicleType];
+
       const vehicleConfig: VehicleConfiguration = {
         id: data.id,
-        vehicleType: data.vehicleType,
+        vehicleType: resolvedSlug,
         name: data.name,
         modelFile: {
           mediaId: data.modelFile?.media?.id || "",
           mediaUrl: data.modelFile?.media?.url || "",
-          fallbackPath: data.modelFile?.fallbackPath || FALLBACK_VEHICLE_CONFIGS[vehicleType].modelFile.fallbackPath,
+          fallbackPath: data.modelFile?.fallbackPath || fallback?.modelFile.fallbackPath || "",
         },
-        scale: data.scale || FALLBACK_VEHICLE_CONFIGS[vehicleType].scale,
-        rotation: data.rotation || FALLBACK_VEHICLE_CONFIGS[vehicleType].rotation,
-        cameraStart: data.cameraStart || FALLBACK_VEHICLE_CONFIGS[vehicleType].cameraStart,
-        cameraZoomTarget: data.cameraZoomTarget || FALLBACK_VEHICLE_CONFIGS[vehicleType].cameraZoomTarget,
-        zoomConfig: data.zoomConfig || FALLBACK_VEHICLE_CONFIGS[vehicleType].zoomConfig,
+        scale: data.scale || fallback?.scale || { x: 1, y: 1, z: 1 },
+        rotation: data.rotation || fallback?.rotation || { x: 0, y: 0, z: 0 },
+        cameraStart: data.cameraStart || fallback?.cameraStart || { x: 8, y: 4, z: 12 },
+        cameraZoomTarget: data.cameraZoomTarget || fallback?.cameraZoomTarget || { x: 0, y: 0, z: 2 },
+        zoomConfig: data.zoomConfig || fallback?.zoomConfig || { initialScale: 1, initialLookAtTarget: { x: 0, y: 0, z: 0 }, zoomLookAtTarget: { x: 0, y: 0, z: 0 }, zoomIntensity: 1 },
         isActive: data.isActive !== false,
       };
 
       return vehicleConfig;
     } catch (error) {
       console.warn(`Failed to fetch vehicle configuration for ${vehicleType}, using fallback:`, error);
-      return FALLBACK_VEHICLE_CONFIGS[vehicleType];
+      const fallback = FALLBACK_VEHICLE_CONFIGS[vehicleType];
+      if (fallback) return fallback;
+      throw error;
     } finally {
       delete abortControllersRef.current[`getVehicleConfiguration-${vehicleType}`];
     }
   }, []);
 
   /**
-   * Fetch brake configuration from CMS by vehicle type
+   * Fetch brake configuration from CMS by vehicle type slug
    */
-  const getBrakeConfiguration = useCallback(async (vehicleType: VehicleType): Promise<BrakeConfiguration> => {
+  const getBrakeConfiguration = useCallback(async (vehicleType: string): Promise<BrakeConfiguration> => {
     const controller = createAbortController(`getBrakeConfiguration-${vehicleType}`);
     try {
       const response = await instance.get("/brake-configurations", {
         signal: controller.signal,
         timeout: 5000,
         params: {
+          depth: 1,
           where: {
-            vehicleType: { equals: vehicleType },
+            'vehicleType.slug': { equals: vehicleType },
           },
         },
       });
@@ -390,22 +397,25 @@ export const useAxios = () => {
         throw new Error(`No brake configuration found for type: ${vehicleType}`);
       }
 
+      const resolvedSlug = typeof data.vehicleType === 'object' ? data.vehicleType.slug : data.vehicleType;
+      const fallback = FALLBACK_BRAKE_CONFIGS[vehicleType];
+
       const brakeConfig: BrakeConfiguration = {
         id: data.id,
-        vehicleType: data.vehicleType,
+        vehicleType: resolvedSlug,
         name: data.name,
         modelFile: {
           mediaId: data.modelFile?.media?.id || "",
           mediaUrl: data.modelFile?.media?.url || "",
-          fallbackPath: data.modelFile?.fallbackPath || FALLBACK_BRAKE_CONFIGS[vehicleType].modelFile.fallbackPath,
+          fallbackPath: data.modelFile?.fallbackPath || fallback?.modelFile.fallbackPath || "",
         },
-        scale: data.scale || FALLBACK_BRAKE_CONFIGS[vehicleType].scale,
-        rotation: data.rotation || FALLBACK_BRAKE_CONFIGS[vehicleType].rotation,
-        scaleConfig: data.scaleConfig || FALLBACK_BRAKE_CONFIGS[vehicleType].scaleConfig,
+        scale: data.scale || fallback?.scale || { x: 1, y: 1, z: 1 },
+        rotation: data.rotation || fallback?.rotation || { x: 0, y: 0, z: 0 },
+        scaleConfig: data.scaleConfig || fallback?.scaleConfig || { transitionScale: 0.2, viewerScale: 0.2 },
         explosionHotspot: {
-          position: data.explosionHotspot?.position || FALLBACK_BRAKE_CONFIGS[vehicleType].explosionHotspot.position,
-          color: data.explosionHotspot?.color || FALLBACK_BRAKE_CONFIGS[vehicleType].explosionHotspot.color,
-          label: data.explosionHotspot?.label || FALLBACK_BRAKE_CONFIGS[vehicleType].explosionHotspot.label,
+          position: data.explosionHotspot?.position || fallback?.explosionHotspot.position || { x: 0, y: 0.5, z: 0 },
+          color: data.explosionHotspot?.color || fallback?.explosionHotspot.color || "#012e87",
+          label: data.explosionHotspot?.label || fallback?.explosionHotspot.label || "View Exploded",
           labelTranslations: data.explosionHotspot?.labelTranslations || [],
         },
         media: {
@@ -413,7 +423,7 @@ export const useAxios = () => {
           videoMediaId: data.media?.video?.id || "",
           pdfUrl: data.media?.pdf?.url || "",
           videoUrl: data.media?.video?.url || "",
-          fallbackPdfPath: data.media?.fallbackPdfPath || FALLBACK_BRAKE_CONFIGS[vehicleType].media?.fallbackPdfPath,
+          fallbackPdfPath: data.media?.fallbackPdfPath || fallback?.media?.fallbackPdfPath,
           fallbackVideoUrl: data.media?.fallbackVideoUrl,
         },
         isActive: data.isActive !== false,
@@ -422,24 +432,27 @@ export const useAxios = () => {
       return brakeConfig;
     } catch (error) {
       console.warn(`Failed to fetch brake configuration for ${vehicleType}, using fallback:`, error);
-      return FALLBACK_BRAKE_CONFIGS[vehicleType];
+      const fallback = FALLBACK_BRAKE_CONFIGS[vehicleType];
+      if (fallback) return fallback;
+      throw error;
     } finally {
       delete abortControllersRef.current[`getBrakeConfiguration-${vehicleType}`];
     }
   }, []);
 
   /**
-   * Fetch hotspot configuration from CMS by vehicle type
+   * Fetch hotspot configuration from CMS by vehicle type slug
    */
-  const getHotspotConfiguration = useCallback(async (vehicleType: VehicleType): Promise<HotspotConfiguration> => {
+  const getHotspotConfiguration = useCallback(async (vehicleType: string): Promise<HotspotConfiguration> => {
     const controller = createAbortController(`getHotspotConfiguration-${vehicleType}`);
     try {
       const response = await instance.get("/hotspot-configurations", {
         signal: controller.signal,
         timeout: 5000,
         params: {
+          depth: 1,
           where: {
-            vehicleType: { equals: vehicleType },
+            'vehicleType.slug': { equals: vehicleType },
           },
         },
       });
@@ -450,10 +463,13 @@ export const useAxios = () => {
         throw new Error(`No hotspot configuration found for type: ${vehicleType}`);
       }
 
+      const resolvedSlug = typeof data.vehicleType === 'object' ? data.vehicleType.slug : data.vehicleType;
+      const fallback = FALLBACK_HOTSPOT_CONFIGS[vehicleType];
+
       const hotspotConfig: HotspotConfiguration = {
         id: data.id,
-        vehicleType: data.vehicleType,
-        defaults: data.defaults || FALLBACK_HOTSPOT_CONFIGS[vehicleType].defaults,
+        vehicleType: resolvedSlug,
+        defaults: data.defaults || fallback?.defaults,
         hotspots: (data.hotspots || []).map((hs: {
           id?: string;
           hotspotId: string;
@@ -495,9 +511,60 @@ export const useAxios = () => {
       return hotspotConfig;
     } catch (error) {
       console.warn(`Failed to fetch hotspot configuration for ${vehicleType}, using fallback:`, error);
-      return FALLBACK_HOTSPOT_CONFIGS[vehicleType];
+      const fallback = FALLBACK_HOTSPOT_CONFIGS[vehicleType];
+      if (fallback) return fallback;
+      throw error;
     } finally {
       delete abortControllersRef.current[`getHotspotConfiguration-${vehicleType}`];
+    }
+  }, []);
+
+  /**
+   * Fetch all active vehicle types from CMS
+   */
+  const getVehicleTypes = useCallback(async (): Promise<Array<{
+    id: string;
+    name: string;
+    slug: string;
+    description?: string;
+    order: number;
+    isActive: boolean;
+  }>> => {
+    const controller = createAbortController("getVehicleTypes");
+    try {
+      const response = await instance.get("/vehicle-types", {
+        signal: controller.signal,
+        timeout: 5000,
+        params: {
+          where: {
+            isActive: { equals: true },
+          },
+          sort: 'order',
+        },
+      });
+
+      const data = Array.isArray(response.data?.docs) ? response.data.docs : [];
+
+      return data.map((vt: {
+        id: string;
+        name: string;
+        slug: string;
+        description?: string;
+        order?: number;
+        isActive?: boolean;
+      }) => ({
+        id: vt.id,
+        name: vt.name,
+        slug: vt.slug,
+        description: vt.description,
+        order: vt.order || 1,
+        isActive: vt.isActive !== false,
+      }));
+    } catch (error) {
+      console.warn("Failed to fetch vehicle types:", error);
+      return [];
+    } finally {
+      delete abortControllersRef.current["getVehicleTypes"];
     }
   }, []);
 
@@ -508,6 +575,7 @@ export const useAxios = () => {
     getVehicleConfiguration,
     getBrakeConfiguration,
     getHotspotConfiguration,
+    getVehicleTypes,
     getMediaById,
     getLanguages,
   };

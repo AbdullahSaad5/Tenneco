@@ -3,43 +3,27 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { Car, Truck, Train } from "lucide-react";
+import { Car, Truck, Train, Bike, type LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { VehicleType } from "../../config";
+import { useContent } from "../../providers/ContentProvider";
 
-interface VehicleInfo {
-  id: VehicleType;
-  label: string;
-  description: string;
-  Icon: React.ComponentType<{ className?: string }>;
-}
+// Map known vehicle type slugs to icons; unknown types get Car as default
+const VEHICLE_ICON_MAP: Record<string, LucideIcon> = {
+  light: Car,
+  commercial: Truck,
+  rail: Train,
+  motorcycle: Bike,
+};
+
+const getVehicleIcon = (slug: string): LucideIcon => {
+  return VEHICLE_ICON_MAP[slug] || Car;
+};
 
 interface ModelSelectorProps {
-  activeVehicle: VehicleType;
+  activeVehicle: string;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
 }
-
-const vehicles: VehicleInfo[] = [
-  {
-    id: "light",
-    label: "Light Vehicles",
-    description: "Passenger car brake systems",
-    Icon: Car,
-  },
-  {
-    id: "commercial",
-    label: "Commercial Vehicles",
-    description: "Heavy-duty truck brake systems",
-    Icon: Truck,
-  },
-  {
-    id: "rail",
-    label: "Rail Vehicles",
-    description: "Railway brake systems",
-    Icon: Train,
-  },
-];
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({
   activeVehicle,
@@ -47,8 +31,20 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
   setIsOpen,
 }) => {
   const router = useRouter();
+  const { homepage } = useContent();
 
-  const handleVehicleSelect = (vehicleType: VehicleType) => {
+  // Build vehicle list dynamically from homepage categories
+  const vehicles = (homepage?.vehicleCategories || [])
+    .filter((cat) => cat.isEnabled)
+    .sort((a, b) => a.order - b.order)
+    .map((cat) => ({
+      id: cat.vehicleType,
+      label: cat.title,
+      description: cat.subtitle,
+      Icon: getVehicleIcon(cat.vehicleType),
+    }));
+
+  const handleVehicleSelect = (vehicleType: string) => {
     setIsOpen(false);
     // Navigate to viewer with selected vehicle and animation
     router.push(`/viewer?vehicle=${vehicleType}&animate=true`);

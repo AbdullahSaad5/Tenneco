@@ -2,7 +2,7 @@
 // Brake Configuration - Matches BrakeConfiguration interface from content.ts
 // ============================================================================
 
-import { BrakeConfiguration, VehicleType } from "../_types/content";
+import { BrakeConfiguration } from "../_types/content";
 
 /**
  * Light vehicle brake configuration
@@ -100,7 +100,7 @@ export const BRAKE_CONFIG_RAIL: BrakeConfiguration = {
 /**
  * Brake configurations keyed by vehicle type
  */
-export const BRAKE_CONFIGS: Record<VehicleType, BrakeConfiguration> = {
+export const BRAKE_CONFIGS: Record<string, BrakeConfiguration> = {
   light: BRAKE_CONFIG_LIGHT,
   commercial: BRAKE_CONFIG_COMMERCIAL,
   rail: BRAKE_CONFIG_RAIL,

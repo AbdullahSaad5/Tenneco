@@ -2,7 +2,7 @@
 // Hotspot Configuration - Matches HotspotConfiguration interface from content.ts
 // ============================================================================
 
-import { HotspotConfiguration, VehicleType } from "../_types/content";
+import { HotspotConfiguration } from "../_types/content";
 
 /**
  * Light vehicle hotspot configuration
@@ -340,7 +340,7 @@ export const HOTSPOT_CONFIG_RAIL: HotspotConfiguration = {
 /**
  * Hotspot configurations keyed by vehicle type
  */
-export const HOTSPOT_CONFIGS: Record<VehicleType, HotspotConfiguration> = {
+export const HOTSPOT_CONFIGS: Record<string, HotspotConfiguration> = {
   light: HOTSPOT_CONFIG_LIGHT,
   commercial: HOTSPOT_CONFIG_COMMERCIAL,
   rail: HOTSPOT_CONFIG_RAIL,

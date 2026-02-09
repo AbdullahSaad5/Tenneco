@@ -124,7 +124,7 @@ export interface LoadingScreenContent {
 // Common Types
 // ----------------------------------------------------------------------------
 
-export type VehicleType = 'light' | 'commercial' | 'rail'
+export type VehicleType = string
 
 export interface Vector3 {
   x: number
@@ -331,7 +331,7 @@ export interface HotspotConfiguration {
 // ----------------------------------------------------------------------------
 
 export interface ExtendedContentContextValue extends ContentContextValue {
-  vehicleConfigs: Record<VehicleType, VehicleConfiguration | null>
-  brakeConfigs: Record<VehicleType, BrakeConfiguration | null>
-  hotspotConfigs: Record<VehicleType, HotspotConfiguration | null>
+  vehicleConfigs: Record<string, VehicleConfiguration | null>
+  brakeConfigs: Record<string, BrakeConfiguration | null>
+  hotspotConfigs: Record<string, HotspotConfiguration | null>
 }

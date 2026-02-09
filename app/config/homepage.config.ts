@@ -2,7 +2,7 @@
 // Homepage Configuration - Matches HomepageContent interface from content.ts
 // ============================================================================
 
-import { HomepageContent, VehicleType } from "../_types/content";
+import { HomepageContent } from "../_types/content";
 
 /**
  * Homepage content configuration matching CMS HomepageContent interface
@@ -111,7 +111,7 @@ export const HOMEPAGE_CONFIG: HomepageContent = {
 /**
  * Fallback images for vehicle categories when CMS media is unavailable
  */
-export const CATEGORY_FALLBACK_IMAGES: Record<VehicleType, string> = {
+export const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
   light: "https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=800&q=80",
   commercial: "https://images.unsplash.com/photo-1602721186896-1b21c7405c0b?w=800&q=80",
   rail: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=800&q=80",

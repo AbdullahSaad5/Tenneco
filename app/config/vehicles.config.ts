@@ -2,7 +2,7 @@
 // Vehicle Configuration - Matches VehicleConfiguration interface from content.ts
 // ============================================================================
 
-import { VehicleConfiguration, VehicleType } from "../_types/content";
+import { VehicleConfiguration } from "../_types/content";
 
 /**
  * Light vehicle configuration
@@ -79,7 +79,7 @@ export const VEHICLE_CONFIG_RAIL: VehicleConfiguration = {
 /**
  * Vehicle configurations keyed by vehicle type
  */
-export const VEHICLE_CONFIGS: Record<VehicleType, VehicleConfiguration> = {
+export const VEHICLE_CONFIGS: Record<string, VehicleConfiguration> = {
   light: VEHICLE_CONFIG_LIGHT,
   commercial: VEHICLE_CONFIG_COMMERCIAL,
   rail: VEHICLE_CONFIG_RAIL,

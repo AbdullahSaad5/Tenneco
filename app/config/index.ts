@@ -8,7 +8,7 @@ import viewerConfig from './viewer.json';
 import transitionConfig from './transition.json';
 
 // Types from old config (keeping for backward compatibility during transition)
-export type VehicleType = 'light' | 'commercial' | 'rail';
+export type VehicleType = string;
 
 export interface Vector3Config {
   x: number;

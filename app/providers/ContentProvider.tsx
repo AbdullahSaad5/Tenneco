@@ -5,7 +5,6 @@ import {
   HomepageContent,
   AppSettings,
   LoadingScreenContent,
-  VehicleType,
   VehicleConfiguration,
   BrakeConfiguration,
   HotspotConfiguration,
@@ -40,26 +39,14 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   const [loadingScreen, setLoadingScreen] = useState<LoadingScreenContent | null>(null);
   const [vehicleConfigs, setVehicleConfigs] = useState<
-    Record<VehicleType, VehicleConfiguration | null>
-  >({
-    light: null,
-    commercial: null,
-    rail: null,
-  });
+    Record<string, VehicleConfiguration | null>
+  >({});
   const [brakeConfigs, setBrakeConfigs] = useState<
-    Record<VehicleType, BrakeConfiguration | null>
-  >({
-    light: null,
-    commercial: null,
-    rail: null,
-  });
+    Record<string, BrakeConfiguration | null>
+  >({});
   const [hotspotConfigs, setHotspotConfigs] = useState<
-    Record<VehicleType, HotspotConfiguration | null>
-  >({
-    light: null,
-    commercial: null,
-    rail: null,
-  });
+    Record<string, HotspotConfiguration | null>
+  >({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -98,56 +85,67 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
         return;
       }
 
-      // Use Promise.allSettled to handle partial failures gracefully
-      const results = await Promise.allSettled([
+      // Phase 1: Fetch homepage, app settings, and loading screen
+      const [homepageResult, appSettingsResult, loadingScreenResult] = await Promise.allSettled([
         getHomepageContent(),
         getAppSettings(),
         getLoadingScreenContent(),
-        getVehicleConfiguration("light"),
-        getVehicleConfiguration("commercial"),
-        getVehicleConfiguration("rail"),
-        getBrakeConfiguration("light"),
-        getBrakeConfiguration("commercial"),
-        getBrakeConfiguration("rail"),
-        getHotspotConfiguration("light"),
-        getHotspotConfiguration("commercial"),
-        getHotspotConfiguration("rail"),
       ]);
 
-      // Extract results (all should be fulfilled due to fallback wrapper)
-      const resultsArray = results.map((r) => (r.status === "fulfilled" ? r.value : null));
+      const homepageData = homepageResult.status === "fulfilled" ? homepageResult.value : null;
+      const appSettingsData = appSettingsResult.status === "fulfilled" ? appSettingsResult.value : null;
+      const loadingScreenData = loadingScreenResult.status === "fulfilled" ? loadingScreenResult.value : null;
 
-      const homepageResult = resultsArray[0] as HomepageContent | null;
-      const appSettingsResult = resultsArray[1] as AppSettings | null;
-      const loadingScreenResult = resultsArray[2] as LoadingScreenContent | null;
-      const lightVehicleResult = resultsArray[3] as VehicleConfiguration | null;
-      const commercialVehicleResult = resultsArray[4] as VehicleConfiguration | null;
-      const railVehicleResult = resultsArray[5] as VehicleConfiguration | null;
-      const lightBrakeResult = resultsArray[6] as BrakeConfiguration | null;
-      const commercialBrakeResult = resultsArray[7] as BrakeConfiguration | null;
-      const railBrakeResult = resultsArray[8] as BrakeConfiguration | null;
-      const lightHotspotResult = resultsArray[9] as HotspotConfiguration | null;
-      const commercialHotspotResult = resultsArray[10] as HotspotConfiguration | null;
-      const railHotspotResult = resultsArray[11] as HotspotConfiguration | null;
+      setHomepage(homepageData || FALLBACK_HOMEPAGE_CONTENT);
+      setAppSettings(appSettingsData || FALLBACK_APP_SETTINGS);
+      setLoadingScreen(loadingScreenData || FALLBACK_LOADING_SCREEN);
 
-      setHomepage(homepageResult || FALLBACK_HOMEPAGE_CONTENT);
-      setAppSettings(appSettingsResult || FALLBACK_APP_SETTINGS);
-      setLoadingScreen(loadingScreenResult || FALLBACK_LOADING_SCREEN);
-      setVehicleConfigs({
-        light: lightVehicleResult || FALLBACK_VEHICLE_CONFIGS.light,
-        commercial: commercialVehicleResult || FALLBACK_VEHICLE_CONFIGS.commercial,
-        rail: railVehicleResult || FALLBACK_VEHICLE_CONFIGS.rail,
+      // Phase 2: Discover vehicle type slugs from homepage categories
+      const resolvedHomepage = homepageData || FALLBACK_HOMEPAGE_CONTENT;
+      const vehicleSlugs = [
+        ...new Set(
+          resolvedHomepage.vehicleCategories
+            .filter((cat) => cat.isEnabled)
+            .map((cat) => cat.vehicleType)
+        ),
+      ];
+
+      // Phase 3: Dynamically fetch configs for each discovered vehicle type
+      const vehiclePromises = vehicleSlugs.map((slug) => getVehicleConfiguration(slug));
+      const brakePromises = vehicleSlugs.map((slug) => getBrakeConfiguration(slug));
+      const hotspotPromises = vehicleSlugs.map((slug) => getHotspotConfiguration(slug));
+
+      const [vehicleResults, brakeResults, hotspotResults] = await Promise.all([
+        Promise.allSettled(vehiclePromises),
+        Promise.allSettled(brakePromises),
+        Promise.allSettled(hotspotPromises),
+      ]);
+
+      // Build dynamic config records
+      const newVehicleConfigs: Record<string, VehicleConfiguration | null> = {};
+      const newBrakeConfigs: Record<string, BrakeConfiguration | null> = {};
+      const newHotspotConfigs: Record<string, HotspotConfiguration | null> = {};
+
+      vehicleSlugs.forEach((slug, i) => {
+        newVehicleConfigs[slug] =
+          vehicleResults[i].status === "fulfilled"
+            ? vehicleResults[i].value
+            : FALLBACK_VEHICLE_CONFIGS[slug] || null;
+
+        newBrakeConfigs[slug] =
+          brakeResults[i].status === "fulfilled"
+            ? brakeResults[i].value
+            : FALLBACK_BRAKE_CONFIGS[slug] || null;
+
+        newHotspotConfigs[slug] =
+          hotspotResults[i].status === "fulfilled"
+            ? hotspotResults[i].value
+            : FALLBACK_HOTSPOT_CONFIGS[slug] || null;
       });
-      setBrakeConfigs({
-        light: lightBrakeResult || FALLBACK_BRAKE_CONFIGS.light,
-        commercial: commercialBrakeResult || FALLBACK_BRAKE_CONFIGS.commercial,
-        rail: railBrakeResult || FALLBACK_BRAKE_CONFIGS.rail,
-      });
-      setHotspotConfigs({
-        light: lightHotspotResult || FALLBACK_HOTSPOT_CONFIGS.light,
-        commercial: commercialHotspotResult || FALLBACK_HOTSPOT_CONFIGS.commercial,
-        rail: railHotspotResult || FALLBACK_HOTSPOT_CONFIGS.rail,
-      });
+
+      setVehicleConfigs(newVehicleConfigs);
+      setBrakeConfigs(newBrakeConfigs);
+      setHotspotConfigs(newHotspotConfigs);
     } catch (err) {
       console.error("Error fetching content:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch content");
@@ -207,4 +205,3 @@ export const useContent = (): ExtendedContentContextValue => {
   }
   return context;
 };
-

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { useContent } from "./providers/ContentProvider";
 import { CATEGORY_FALLBACK_IMAGES } from "./config/homepage.config";
-import { VehicleType } from "./_types/content";
+import type { VehicleType } from "./_types/content";
 import LoadingScreen from "./_components/LoadingScreen";
 import { getMediaUrl } from "./utils/mediaUrl";
 import LanguageSwitcher from "./_components/LanguageSwitcher";
@@ -33,13 +33,13 @@ export default function Home() {
     .filter(cat => cat.isEnabled)
     .sort((a, b) => a.order - b.order);
 
-  const handleCardClick = (vehicleType: VehicleType) => {
+  const handleCardClick = (vehicleType: string) => {
     // Navigate directly to viewer with animation flag
     router.push(`/viewer?vehicle=${vehicleType}&animate=true`);
   };
 
   // Get category image - use API image if available, otherwise use fallback
-  const getCategoryImage = (vehicleType: VehicleType, apiImageUrl?: string): string => {
+  const getCategoryImage = (vehicleType: string, apiImageUrl?: string): string => {
     const fullUrl = getMediaUrl(apiImageUrl);
     return fullUrl || CATEGORY_FALLBACK_IMAGES[vehicleType] || "";
   };
@@ -104,7 +104,12 @@ export default function Home() {
               </div>
 
               {/* Vehicle Category Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className={`grid grid-cols-1 gap-6 ${
+                categories.length === 1 ? 'md:grid-cols-1 max-w-md mx-auto' :
+                categories.length === 2 ? 'md:grid-cols-2 max-w-4xl mx-auto' :
+                categories.length === 4 ? 'md:grid-cols-2 lg:grid-cols-4' :
+                'md:grid-cols-2 lg:grid-cols-3'
+              }`}>
                 {categories.map((category) => (
                   <button
                     key={category.id}
