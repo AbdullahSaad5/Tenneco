@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { useContent } from "./providers/ContentProvider";
 import { CATEGORY_FALLBACK_IMAGES } from "./config/homepage.config";
-import type { VehicleType } from "./_types/content";
 import LoadingScreen from "./_components/LoadingScreen";
 import { getMediaUrl } from "./utils/mediaUrl";
 import LanguageSwitcher from "./_components/LanguageSwitcher";

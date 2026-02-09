@@ -102,13 +102,13 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
 
       // Phase 2: Discover vehicle type slugs from homepage categories
       const resolvedHomepage = homepageData || FALLBACK_HOMEPAGE_CONTENT;
-      const vehicleSlugs = [
-        ...new Set(
+      const vehicleSlugs = Array.from(
+        new Set(
           resolvedHomepage.vehicleCategories
             .filter((cat) => cat.isEnabled)
             .map((cat) => cat.vehicleType)
-        ),
-      ];
+        )
+      );
 
       // Phase 3: Dynamically fetch configs for each discovered vehicle type
       const vehiclePromises = vehicleSlugs.map((slug) => getVehicleConfiguration(slug));
