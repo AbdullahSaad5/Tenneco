@@ -74,7 +74,6 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
 
     try {
       if (!isCmsEnabled) {
-        console.log("CMS disabled - using fallback content");
         setHomepage(FALLBACK_HOMEPAGE_CONTENT);
         setAppSettings(FALLBACK_APP_SETTINGS);
         setLoadingScreen(FALLBACK_LOADING_SCREEN);
@@ -147,7 +146,6 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
       setBrakeConfigs(newBrakeConfigs);
       setHotspotConfigs(newHotspotConfigs);
     } catch (err) {
-      console.error("Error fetching content:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch content");
 
       // Use fallbacks on error

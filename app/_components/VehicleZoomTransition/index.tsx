@@ -182,11 +182,6 @@ const BrakeTransitionModel = ({ vehicleType, opacity }: BrakeModelProps) => {
   const { resolvedUrls } = usePreload();
   const modelPath = resolvedUrls.brakes[vehicleType] || config.modelFile.fallbackPath || "";
 
-  // Debug: Log entire config on mount
-  useEffect(() => {
-    console.log('[BrakeTransitionModel] Full config:', config);
-  }, [config]);
-
   const { scene } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
 
@@ -225,14 +220,6 @@ const BrakeTransitionModel = ({ vehicleType, opacity }: BrakeModelProps) => {
       }
     });
   }, [clonedScene, opacity]);
-
-  // Debug logging
-  console.log('[BrakeTransitionModel]', {
-    vehicleType,
-    transitionScale: config.scaleConfig.transitionScale,
-    baseScale: config.scale,
-    finalScale: brakeScale
-  });
 
   return (
     <group

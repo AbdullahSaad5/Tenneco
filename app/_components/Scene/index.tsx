@@ -184,7 +184,6 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
   // Prevent animation from restarting - if isAnimating becomes false while animating, complete immediately
   useEffect(() => {
     if (!isAnimating && phase !== "complete" && !completedRef.current) {
-      console.log('[Scene] isAnimating became false, completing animation immediately');
       setPhase("complete");
       setBrakeOpacity(1);
       setVehicleOpacity(0);

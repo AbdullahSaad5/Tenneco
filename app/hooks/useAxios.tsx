@@ -128,8 +128,7 @@ export const useAxios = () => {
       };
 
       return homepageContent;
-    } catch (error) {
-      console.warn("Failed to fetch homepage content, using fallback:", error);
+    } catch {
       return FALLBACK_HOMEPAGE_CONTENT;
     } finally {
       delete abortControllersRef.current["getHomepageContent"];
@@ -176,8 +175,7 @@ export const useAxios = () => {
       };
 
       return appSettings;
-    } catch (error) {
-      console.warn("Failed to fetch app settings, using fallback:", error);
+    } catch {
       return FALLBACK_APP_SETTINGS;
     } finally {
       delete abortControllersRef.current["getAppSettings"];
@@ -214,8 +212,7 @@ export const useAxios = () => {
       };
 
       return loadingScreen;
-    } catch (error) {
-      console.warn("Failed to fetch loading screen content, using fallback:", error);
+    } catch {
       return FALLBACK_LOADING_SCREEN;
     } finally {
       delete abortControllersRef.current["getLoadingScreenContent"];
@@ -255,8 +252,7 @@ export const useAxios = () => {
       };
 
       return mediaItem;
-    } catch (error) {
-      console.warn(`Failed to fetch media item ${id}:`, error);
+    } catch {
       return null;
     } finally {
       delete abortControllersRef.current[`getMediaById-${id}`];
@@ -301,8 +297,7 @@ export const useAxios = () => {
         isEnabled: lang.isEnabled !== false,
         order: lang.order || 1,
       }));
-    } catch (error) {
-      console.warn("Failed to fetch languages, using default:", error);
+    } catch {
       // Return default English language as fallback
       return [
         {
@@ -364,8 +359,7 @@ export const useAxios = () => {
       };
 
       return vehicleConfig;
-    } catch (error) {
-      console.warn(`Failed to fetch vehicle configuration for ${vehicleType}, using fallback:`, error);
+    } catch {
       const fallback = FALLBACK_VEHICLE_CONFIGS[vehicleType];
       if (fallback) return fallback;
       throw error;
@@ -430,8 +424,7 @@ export const useAxios = () => {
       };
 
       return brakeConfig;
-    } catch (error) {
-      console.warn(`Failed to fetch brake configuration for ${vehicleType}, using fallback:`, error);
+    } catch {
       const fallback = FALLBACK_BRAKE_CONFIGS[vehicleType];
       if (fallback) return fallback;
       throw error;
@@ -509,8 +502,7 @@ export const useAxios = () => {
       };
 
       return hotspotConfig;
-    } catch (error) {
-      console.warn(`Failed to fetch hotspot configuration for ${vehicleType}, using fallback:`, error);
+    } catch {
       const fallback = FALLBACK_HOTSPOT_CONFIGS[vehicleType];
       if (fallback) return fallback;
       throw error;
@@ -560,8 +552,7 @@ export const useAxios = () => {
         order: vt.order || 1,
         isActive: vt.isActive !== false,
       }));
-    } catch (error) {
-      console.warn("Failed to fetch vehicle types:", error);
+    } catch {
       return [];
     } finally {
       delete abortControllersRef.current["getVehicleTypes"];

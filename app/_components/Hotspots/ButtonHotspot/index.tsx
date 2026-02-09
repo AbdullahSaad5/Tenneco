@@ -25,11 +25,7 @@ const Hotspot = ({ position, groupRef, occlude = false, onClick }: HotspotProps)
     >
       <button
         onClick={() => {
-          if (onClick) {
-            onClick();
-            return;
-          }
-          console.log("Hotspot clicked!");
+          if (onClick) onClick();
         }}
         className="p-3 bg-secondary text-white rounded-lg
                    hover:bg-secondaryHover hover:opacity-75 transition-all duration-200

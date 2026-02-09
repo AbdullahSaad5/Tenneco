@@ -366,7 +366,6 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
   // Handle explosion hotspot click
   const handleExplosionHotspotClick = () => {
     if (actionRef.current && !isAnimationPlaying) {
-      console.log('[BrakeModel] Explosion hotspot clicked, starting animation');
       setIsAnimationPlaying(true);
       setShowHotspots(false);
       setExplosionHotspotClicked(true); // Mark as clicked to hide it
@@ -412,13 +411,6 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
 
   // Initialize AnimationMixer and setup animation
   useEffect(() => {
-    console.log('[BrakeModel] Checking animations:', {
-      hasAnimations: !!animations,
-      animationCount: animations?.length || 0,
-      hasClonedScene: !!clonedScene,
-      allAnimations: animations?.map(a => ({ name: a.name, duration: a.duration }))
-    });
-
     if (animations && animations.length > 0 && clonedScene) {
       const mixer = new AnimationMixer(clonedScene);
       mixerRef.current = mixer;
@@ -433,17 +425,9 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
 
       actionRef.current = action;
 
-      console.log('[BrakeModel] Animation loaded:', {
-        name: clip.name,
-        duration: clip.duration,
-        tracksCount: clip.tracks.length,
-        tracks: clip.tracks.map(t => ({ name: t.name, type: t.constructor.name }))
-      });
-
       // Listen for animation completion
       const onFinished = (e: { action: AnimationAction }) => {
         if (e.action === action) {
-          console.log('[BrakeModel] Animation completed');
           setIsAnimationPlaying(false);
           setShowHotspots(true);
         }
@@ -461,24 +445,12 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
   // Listen for playExplosion event
   useEffect(() => {
     const handlePlayExplosion = () => {
-      console.log('[BrakeModel] playExplosion event received', {
-        hasAction: !!actionRef.current,
-        isPlaying: isAnimationPlaying,
-        hasMixer: !!mixerRef.current
-      });
-
       if (actionRef.current && !isAnimationPlaying) {
-        console.log('[BrakeModel] Starting explosion animation');
         setIsAnimationPlaying(true);
         setShowHotspots(false);
         setExplosionHotspotClicked(true); // Mark as clicked to hide it
         actionRef.current.reset();
         actionRef.current.play();
-        console.log('[BrakeModel] Animation play() called, time:', actionRef.current.time);
-      } else if (!actionRef.current) {
-        console.warn('[BrakeModel] No animation action available - model may not have animations');
-      } else if (isAnimationPlaying) {
-        console.warn('[BrakeModel] Animation already playing');
       }
     };
 
@@ -487,30 +459,10 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
   }, [isAnimationPlaying]);
 
   // Update animation mixer
-  const frameCountRef = useRef(0);
   useFrame((state, delta) => {
     if (mixerRef.current && isAnimationPlaying) {
       mixerRef.current.update(delta);
-
-      // Log every 30 frames (roughly once per second at 60fps)
-      frameCountRef.current++;
-      if (frameCountRef.current % 30 === 0 && actionRef.current) {
-        console.log('[BrakeModel] Animation playing:', {
-          time: actionRef.current.time.toFixed(2),
-          duration: actionRef.current.getClip().duration.toFixed(2),
-          isRunning: actionRef.current.isRunning()
-        });
-      }
     }
-  });
-
-  // Debug logging
-  console.log('[BrakeModel Viewer]', {
-    vehicleType,
-    viewerScale: brakeConfig.scaleConfig.viewerScale,
-    baseScale: baseScale,
-    finalScale: brakeScale,
-    hasAnimations: animations && animations.length > 0
   });
 
   return (

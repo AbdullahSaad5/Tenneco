@@ -54,21 +54,13 @@ function loadGLBModel(url: string, loader: GLTFLoader): Promise<{ url: string; s
     loader.load(
       url,
       () => {
-        // Model loaded successfully!
-        console.log(`[ModelPreloader] Loaded: ${url}`);
-        // Also call useGLTF.preload to populate drei's cache
         useGLTF.preload(url);
         resolve({ url, success: true });
       },
       (progress) => {
-        // Progress callback - we could use this for more granular progress
-        if (progress.total > 0) {
-          const percent = Math.round((progress.loaded / progress.total) * 100);
-          console.log(`[ModelPreloader] Loading ${url}: ${percent}%`);
-        }
+        // Progress callback available for future granular progress UI
       },
-      (error) => {
-        console.error(`[ModelPreloader] Failed to load: ${url}`, error);
+      () => {
         resolve({ url, success: false });
       }
     );
@@ -86,7 +78,6 @@ async function fetchVehicleTypeSlugs(): Promise<string[]> {
     const docs = Array.isArray(response.data?.docs) ? response.data.docs : [];
     return docs.map((vt: { slug: string }) => vt.slug);
   } catch {
-    console.warn("[ModelPreloader] Failed to fetch vehicle types, using fallback slugs");
     return Object.keys(VEHICLE_CONFIGS);
   }
 }
@@ -108,7 +99,6 @@ async function fetchConfigsFromAPI(vehicleTypes: string[]): Promise<{
       const data = Array.isArray(response.data?.docs) ? response.data.docs[0] : response.data;
       return { vehicleType, modelUrl: data?.modelFile?.media?.url || null };
     } catch {
-      console.warn(`[ModelPreloader] Failed to fetch vehicle config for ${vehicleType}`);
       return { vehicleType, modelUrl: null };
     }
   });
@@ -123,7 +113,6 @@ async function fetchConfigsFromAPI(vehicleTypes: string[]): Promise<{
       const data = Array.isArray(response.data?.docs) ? response.data.docs[0] : response.data;
       return { vehicleType, modelUrl: data?.modelFile?.media?.url || null };
     } catch {
-      console.warn(`[ModelPreloader] Failed to fetch brake config for ${vehicleType}`);
       return { vehicleType, modelUrl: null };
     }
   });
@@ -155,7 +144,6 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
     setProgress(3);
 
     const vehicleTypes = await fetchVehicleTypeSlugs();
-    console.log("[ModelPreloader] Vehicle types:", vehicleTypes);
 
     // Step 2: Fetch configurations from API
     setStatus("Fetching configurations...");
@@ -164,9 +152,7 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
     let apiConfigs;
     try {
       apiConfigs = await fetchConfigsFromAPI(vehicleTypes);
-      console.log("[ModelPreloader] API configs received");
     } catch {
-      console.warn("[ModelPreloader] API fetch failed, using fallbacks");
       apiConfigs = {
         vehicleConfigs: vehicleTypes.map(vt => ({ vehicleType: vt, modelUrl: null })),
         brakeConfigs: vehicleTypes.map(vt => ({ vehicleType: vt, modelUrl: null })),
@@ -190,7 +176,6 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
     });
 
     setResolvedUrls(urls);
-    console.log("[ModelPreloader] Resolved URLs:", urls);
 
     // Step 4: Build list of all URLs to preload
     const allUrls = [
@@ -199,7 +184,6 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
     ].filter(Boolean);
 
     const totalModels = allUrls.length;
-    console.log(`[ModelPreloader] Starting to load ${totalModels} models...`);
 
     // Step 5: Create loader and load models with real progress tracking
     const loader = createGLTFLoader();
@@ -230,9 +214,6 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
     // Wait for ALL models to actually finish loading
     const results = await Promise.all(loadPromises);
 
-    const successCount = results.filter(r => r.success).length;
-    console.log(`[ModelPreloader] Loading complete: ${successCount}/${totalModels} models loaded successfully`);
-
     setProgress(98);
     setStatus("Finalizing...");
 
@@ -242,7 +223,6 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
     setProgress(100);
     setIsPreloaded(true);
     setStatus("Complete!");
-    console.log("[ModelPreloader] All models ready!");
   }, []);
 
   useEffect(() => {
