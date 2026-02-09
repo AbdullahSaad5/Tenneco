@@ -119,53 +119,34 @@ export const LanguageProvider = ({
 
   // Update language and persist to localStorage
   const setLanguage = useCallback((languageCode: string) => {
-    console.log('[setLanguage] Changing language to:', languageCode);
     const languageExists = availableLanguages.some(
       (lang) => lang.code === languageCode
     );
 
     if (languageExists) {
       setCurrentLanguage(languageCode);
-      console.log('[setLanguage] Language changed to:', languageCode);
       if (typeof window !== "undefined") {
         localStorage.setItem("tenneco-language", languageCode);
       }
-    } else {
-      console.warn(`Language "${languageCode}" is not available`);
     }
   }, [availableLanguages]);
 
   // Get translated text based on current language
   const getTranslation = useCallback(
     (defaultText: string, translations?: Translation[]): string => {
-      console.log('[getTranslation]', {
-        currentLanguage,
-        defaultText: defaultText.substring(0, 50),
-        translationsCount: translations?.length || 0,
-        translations: translations,
-      });
-
-      // If no translations provided or empty, return default
       if (!translations || translations.length === 0) {
-        console.log('[getTranslation] No translations, returning default');
         return defaultText;
       }
 
-      // If current language is the default language, return default text
       const defaultLang = availableLanguages.find((lang) => lang.isDefault);
       if (defaultLang && currentLanguage === defaultLang.code) {
-        console.log('[getTranslation] Current is default lang, returning default');
         return defaultText;
       }
 
-      // Find translation for current language
       const translation = translations.find(
         (t) => t.language === currentLanguage
       );
 
-      console.log('[getTranslation] Found translation:', translation);
-
-      // Return translated text or fall back to default
       return translation?.value || defaultText;
     },
     [currentLanguage, availableLanguages]
