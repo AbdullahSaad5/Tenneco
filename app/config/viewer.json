@@ -30,8 +30,9 @@
     "floatIntensity": 0.5,
     "floatingRange": [0, 0.2]
   },
+
   "postProcessing": {
-    "bloom": { "luminanceThreshold": 0.9, "luminanceSmoothing": 0.9, "intensity": 0.5 },
+    "bloom": { "luminanceThreshold": 1.0, "luminanceSmoothing": 0.9, "intensity": 0.2 },
     "vignette": { "offset": 0.5, "darkness": 0.2 }
   },
   "controls": {
