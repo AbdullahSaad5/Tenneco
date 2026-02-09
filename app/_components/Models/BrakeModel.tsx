@@ -310,16 +310,40 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
     // Use SkeletonUtils.clone for proper animation support
     const cloned = clone(scene) as THREE.Group;
 
-    // Store original material properties
+    // Clone materials and normalize overly bright ones to prevent blown-out appearance
     cloned.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
         if (mesh.material) {
-          const material = mesh.material as THREE.Material;
-          originalMaterialProps.current.set(material, {
-            transparent: material.transparent,
-            opacity: material.opacity,
-          });
+          // Clone material so we don't affect other instances
+          if (Array.isArray(mesh.material)) {
+            mesh.material = mesh.material.map(m => m.clone());
+          } else {
+            mesh.material = mesh.material.clone();
+          }
+
+          const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          for (const material of materials) {
+            // Store original props for opacity animation
+            originalMaterialProps.current.set(material, {
+              transparent: material.transparent,
+              opacity: material.opacity,
+            });
+
+            // Tone down overly bright/reflective materials
+            if ((material as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+              const stdMat = material as THREE.MeshStandardMaterial;
+              const luminance = stdMat.color.r * 0.299 + stdMat.color.g * 0.587 + stdMat.color.b * 0.114;
+              if (luminance > 0.8) {
+                // Aggressively darken bright/white parts
+                stdMat.color.multiplyScalar(0.55);
+                // Make them matte so they don't reflect environment
+                stdMat.roughness = Math.max(stdMat.roughness, 0.9);
+                stdMat.metalness = Math.min(stdMat.metalness, 0.1);
+              }
+              stdMat.needsUpdate = true;
+            }
+          }
         }
       }
     });
