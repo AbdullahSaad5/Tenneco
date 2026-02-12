@@ -412,6 +412,12 @@ export const useAxios = () => {
           label: data.explosionHotspot?.label || fallback?.explosionHotspot.label || "View Exploded",
           labelTranslations: data.explosionHotspot?.labelTranslations || [],
         },
+        collapseHotspot: {
+          position: data.collapseHotspot?.position || fallback?.collapseHotspot?.position || { x: 0, y: 0.8, z: 0 },
+          color: data.collapseHotspot?.color || fallback?.collapseHotspot?.color || "#ef4444",
+          label: data.collapseHotspot?.label || fallback?.collapseHotspot?.label || "Collapse View",
+          labelTranslations: data.collapseHotspot?.labelTranslations || [],
+        },
         media: {
           pdfMediaId: data.media?.pdf?.id || "",
           videoMediaId: data.media?.video?.id || "",

@@ -276,6 +276,13 @@ export interface ExplosionHotspot {
   labelTranslations?: Translation[]
 }
 
+export interface CollapseHotspot {
+  position: Vector3
+  color: string
+  label: string
+  labelTranslations?: Translation[]
+}
+
 export interface BrakeConfiguration {
   id: string
   vehicleType: VehicleType
@@ -285,6 +292,7 @@ export interface BrakeConfiguration {
   rotation: Vector3
   scaleConfig: ScaleConfig
   explosionHotspot: ExplosionHotspot
+  collapseHotspot: CollapseHotspot
   media?: BrakeMedia
   isActive: boolean
 }

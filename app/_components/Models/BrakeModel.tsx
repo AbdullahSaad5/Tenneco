@@ -14,15 +14,16 @@ interface HotspotProps {
   occludeRef?: React.RefObject<THREE.Group>;
 }
 
-interface ExplosionHotspotProps {
+interface ActionHotspotProps {
   position: Vector3;
   color: string;
   label: string;
   onClick?: () => void;
   occludeRef?: React.RefObject<THREE.Group>;
+  iconType?: 'explosion' | 'collapse';
 }
 
-const ExplosionHotspot = ({ position, color, label, onClick, occludeRef }: ExplosionHotspotProps) => {
+const ActionHotspot = ({ position, color, label, onClick, occludeRef, iconType = 'explosion' }: ActionHotspotProps) => {
   const [hovered, setHovered] = useState(false);
   const ring1Ref = useRef<THREE.Mesh>(null);
   const ring2Ref = useRef<THREE.Mesh>(null);
@@ -111,12 +112,28 @@ const ExplosionHotspot = ({ position, color, label, onClick, occludeRef }: Explo
         >
           <circle cx="12" cy="12" r="11" fill={color} opacity={hovered ? "1" : "0.95"} />
           <circle cx="12" cy="12" r="10" fill="white" />
-          {/* Lightning bolt icon */}
-          <path
-            d="M13 3L4 14h7v7l9-11h-7V3z"
-            fill={color}
-            opacity={hovered ? "1" : "0.9"}
-          />
+          {iconType === 'explosion' ? (
+            /* Lightning bolt icon */
+            <path
+              d="M13 3L4 14h7v7l9-11h-7V3z"
+              fill={color}
+              opacity={hovered ? "1" : "0.9"}
+            />
+          ) : (
+            /* Compress arrows icon */
+            <>
+              <path
+                d="M8 12l-4-4v3H1v2h3v3l4-4z"
+                fill={color}
+                opacity={hovered ? "1" : "0.9"}
+              />
+              <path
+                d="M16 12l4-4v3h3v2h-3v3l-4-4z"
+                fill={color}
+                opacity={hovered ? "1" : "0.9"}
+              />
+            </>
+          )}
         </svg>
       </Html>
 
@@ -139,7 +156,14 @@ const ExplosionHotspot = ({ position, color, label, onClick, occludeRef }: Explo
           >
             <div className="flex items-center gap-4">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M13 3L4 14h7v7l9-11h-7V3z" fill={color} />
+                {iconType === 'explosion' ? (
+                  <path d="M13 3L4 14h7v7l9-11h-7V3z" fill={color} />
+                ) : (
+                  <>
+                    <path d="M8 12l-4-4v3H1v2h3v3l4-4z" fill={color} />
+                    <path d="M16 12l4-4v3h3v2h-3v3l-4-4z" fill={color} />
+                  </>
+                )}
               </svg>
               <span>{label}</span>
             </div>
@@ -298,6 +322,8 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
   const [showHotspots, setShowHotspots] = useState(false);
   // Control explosion hotspot visibility - hide after clicking
   const [explosionHotspotClicked, setExplosionHotspotClicked] = useState(false);
+  // Track whether model is currently exploded
+  const [isExploded, setIsExploded] = useState(false);
 
   // Use scale from config - handle both Vector3 and number formats
   const baseScale = typeof brakeConfig.scale === 'number'
@@ -369,8 +395,24 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
       setIsAnimationPlaying(true);
       setShowHotspots(false);
       setExplosionHotspotClicked(true); // Mark as clicked to hide it
+      setIsExploded(true); // Mark model as exploded
       actionRef.current.reset();
       actionRef.current.play();
+    }
+  };
+
+  // Handle collapse hotspot click
+  const handleCollapseHotspotClick = () => {
+    if (actionRef.current && !isAnimationPlaying) {
+      setIsAnimationPlaying(true);
+      setShowHotspots(false);
+
+      // Play animation in reverse
+      const action = actionRef.current;
+      action.paused = false;
+      action.time = action.getClip().duration; // Start from end
+      action.timeScale = -1; // Play backwards
+      action.play();
     }
   };
 
@@ -429,7 +471,18 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
       const onFinished = (e: { action: AnimationAction }) => {
         if (e.action === action) {
           setIsAnimationPlaying(false);
-          setShowHotspots(true);
+
+          // Check if animation was playing in reverse (collapse)
+          if (action.timeScale < 0) {
+            // Collapse completed
+            setIsExploded(false);
+            setExplosionHotspotClicked(false); // Re-enable explosion button
+            setShowHotspots(false); // Keep hotspots hidden
+            action.timeScale = 1; // Reset for next explosion
+          } else {
+            // Explosion completed
+            setShowHotspots(true); // Show dynamic hotspots
+          }
         }
       };
 
@@ -449,6 +502,7 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
         setIsAnimationPlaying(true);
         setShowHotspots(false);
         setExplosionHotspotClicked(true); // Mark as clicked to hide it
+        setIsExploded(true); // Mark model as exploded
         actionRef.current.reset();
         actionRef.current.play();
       }
@@ -478,19 +532,32 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
         />
       </group>
 
-      {/* Explosion Hotspot - only show after fade-in completes and before animation is played */}
-      {showExplosionHotspotProp && !explosionHotspotClicked && brakeConfig.explosionHotspot && animations && animations.length > 0 && (
-        <ExplosionHotspot
+      {/* Explosion Button - show when NOT exploded and NOT animating */}
+      {showExplosionHotspotProp && !isExploded && !isAnimationPlaying && brakeConfig.explosionHotspot && animations && animations.length > 0 && (
+        <ActionHotspot
           position={brakeConfig.explosionHotspot.position}
           color={brakeConfig.explosionHotspot.color}
           label={getTranslation(brakeConfig.explosionHotspot.label, brakeConfig.explosionHotspot.labelTranslations)}
+          iconType="explosion"
           occludeRef={modelRef}
           onClick={handleExplosionHotspotClick}
         />
       )}
 
-      {/* Dynamic Hotspots from config - only show after animation completes */}
-      {showHotspots && activeHotspots.map((hotspotItem) => (
+      {/* Collapse Button - show when IS exploded and NOT animating */}
+      {showExplosionHotspotProp && isExploded && !isAnimationPlaying && brakeConfig.collapseHotspot && animations && animations.length > 0 && (
+        <ActionHotspot
+          position={brakeConfig.collapseHotspot.position}
+          color={brakeConfig.collapseHotspot.color}
+          label={getTranslation(brakeConfig.collapseHotspot.label, brakeConfig.collapseHotspot.labelTranslations)}
+          iconType="collapse"
+          occludeRef={modelRef}
+          onClick={handleCollapseHotspotClick}
+        />
+      )}
+
+      {/* Dynamic Hotspots from config - only show when exploded */}
+      {showHotspots && isExploded && activeHotspots.map((hotspotItem) => (
         <Hotspot
           key={hotspotItem.hotspotId}
           config={hotspotItem}

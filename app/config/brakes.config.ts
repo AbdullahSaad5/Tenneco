@@ -29,6 +29,14 @@ export const BRAKE_CONFIG_LIGHT: BrakeConfiguration = {
       { language: "it", value: "Vista Esplosa" },
     ],
   },
+  collapseHotspot: {
+    position: { x: 0, y: 0.8, z: 0 },
+    color: "#ef4444",
+    label: "Collapse View",
+    labelTranslations: [
+      { language: "it", value: "Vista Compressa" },
+    ],
+  },
   media: {
     fallbackPdfPath: "./assets/pdfs/Pads.pdf",
   },
@@ -60,6 +68,14 @@ export const BRAKE_CONFIG_COMMERCIAL: BrakeConfiguration = {
       { language: "it", value: "Vista Esplosa" },
     ],
   },
+  collapseHotspot: {
+    position: { x: 0, y: 1, z: 0 },
+    color: "#ef4444",
+    label: "Collapse View",
+    labelTranslations: [
+      { language: "it", value: "Vista Compressa" },
+    ],
+  },
   media: {
     fallbackPdfPath: "./assets/pdfs/Pads.pdf",
   },
@@ -89,6 +105,14 @@ export const BRAKE_CONFIG_RAIL: BrakeConfiguration = {
     label: "View Exploded",
     labelTranslations: [
       { language: "it", value: "Vista Esplosa" },
+    ],
+  },
+  collapseHotspot: {
+    position: { x: 0, y: 1.2, z: 0 },
+    color: "#ef4444",
+    label: "Collapse View",
+    labelTranslations: [
+      { language: "it", value: "Vista Compressa" },
     ],
   },
   media: {
