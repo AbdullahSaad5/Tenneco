@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   transpilePackages: ["three"],
   webpack: (config) => {
     config.resolve.alias.canvas = false;
