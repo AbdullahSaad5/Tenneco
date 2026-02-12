@@ -139,20 +139,20 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot, brakeMedia }) => {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 100, scale: 0.9 }}
             transition={{ duration: 0.3, type: "spring" }}
-            className="fixed bottom-24 right-6 z-20 w-80 bg-white/95 backdrop-blur-sm rounded-lg border border-white/20 overflow-hidden shadow-2xl"
+            className="fixed bottom-24 right-6 z-20 w-96 bg-white/95 backdrop-blur-sm rounded-lg border border-white/20 overflow-hidden shadow-2xl"
           >
             {/* Header */}
-            <div className="p-4 flex items-center gap-3 border-b border-slate-200">
+            <div className="p-5 flex items-center gap-3 border-b border-slate-200">
               <div
                 className="w-3 h-3 rounded-full shadow-lg"
                 style={{ backgroundColor: details.color }}
               />
-              <h3 className="text-slate-800 font-bold text-lg">{details.name}</h3>
+              <h3 className="text-slate-800 font-bold text-xl">{details.name}</h3>
             </div>
 
             {/* Content */}
-            <div className="p-4">
-              <p className="text-sm text-slate-600 leading-relaxed">{details.description}</p>
+            <div className="p-5">
+              <p className="text-base text-slate-600 leading-relaxed">{details.description}</p>
             </div>
           </motion.div>
         )}
