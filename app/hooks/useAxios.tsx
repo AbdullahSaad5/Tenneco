@@ -165,6 +165,7 @@ export const useAxios = () => {
           },
           favicon: data.branding?.favicon ? {
             mediaId: data.branding.favicon.media?.id || "",
+            mediaUrl: data.branding.favicon.media?.url || "",
             fallbackPath: "/favicon.ico",
           } : undefined,
           colorPalette: data.branding?.colorPalette || FALLBACK_APP_SETTINGS.branding.colorPalette,

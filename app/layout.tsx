@@ -7,6 +7,7 @@ import "./polyfills";
 import { ModelPreloaderProvider, PreloadingScreen, usePreload } from "./_components/ModelPreloader";
 import { ContentProvider } from "./providers/ContentProvider";
 import { LanguageProvider } from "./providers/LanguageProvider";
+import { FaviconUpdater } from "./_components/FaviconUpdater";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -32,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <title>Tenneco 3D Model Viewer</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="description" content="Tenneco 3D Model Viewer - Interactive 3D visualization platform" />
@@ -46,9 +48,14 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Tenneco 3D Viewer" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="application-name" content="Tenneco 3D Viewer" />
       </head>
       <body className={`${urbanist.className} antialiased min-h-screen h-full w-full bg-white`}>
         <ContentProvider>
+          <FaviconUpdater />
           <LanguageProvider>
             <ModelPreloaderProvider>
               <AppContent>{children}</AppContent>

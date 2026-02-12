@@ -64,6 +64,10 @@ export const FALLBACK_APP_SETTINGS: AppSettings = {
       height: 50,
       fallbackPath: "/tenneco-logo.png",
     },
+    favicon: {
+      mediaId: "",
+      fallbackPath: "/favicon.ico",
+    },
     colorPalette: {
       primary: "#012e87",
       secondary: "#0ea5e9",
