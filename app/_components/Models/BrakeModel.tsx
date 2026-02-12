@@ -321,7 +321,7 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
   // Show hotspots immediately if no animations, otherwise wait for animation to complete
   const [showHotspots, setShowHotspots] = useState(false);
   // Control explosion hotspot visibility - hide after clicking
-  const [explosionHotspotClicked, setExplosionHotspotClicked] = useState(false);
+  const [, setExplosionHotspotClicked] = useState(false);
   // Track whether model is currently exploded
   const [isExploded, setIsExploded] = useState(false);
 
