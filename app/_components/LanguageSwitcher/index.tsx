@@ -61,6 +61,11 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
     return null;
   }
 
+  // Don't render if only one language is available
+  if (availableLanguages.length <= 1) {
+    return null;
+  }
+
   // Button variant - horizontal list of language buttons
   if (variant === "buttons") {
     return (
