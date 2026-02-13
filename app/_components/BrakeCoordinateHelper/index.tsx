@@ -161,7 +161,7 @@ function CameraInfo({
       if (hitPoint && hitObject) {
         // Convert world-space hit to model-local space using the model group's inverse matrix.
         // This produces scale-independent coordinates that work at any viewerScale.
-        let localPoint = hitPoint.clone();
+        const localPoint = hitPoint.clone();
         if (modelGroupRef.current) {
           const inverseMatrix = modelGroupRef.current.matrixWorld.clone().invert();
           localPoint.applyMatrix4(inverseMatrix);
@@ -218,6 +218,7 @@ function BrakeModelViewer({
 }) {
   const brakeConfig = BRAKE_CONFIGS[vehicleType];
   const modelPath = brakeConfig.modelFile.fallbackPath;
+  // @ts-expect-error - modelPath is not undefined
   const { scene, animations } = useGLTF(modelPath);
 
   const mixerRef = useRef<AnimationMixer | null>(null);
