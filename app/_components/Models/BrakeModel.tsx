@@ -86,7 +86,7 @@ const ActionHotspot = ({ position, color, label, onClick, occludeRef, iconType =
           document.body.style.cursor = "auto";
         }}
       >
-        <sphereGeometry args={[0.1, 32, 32]} />
+        <sphereGeometry args={[1.5, 16, 16]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
@@ -139,7 +139,7 @@ const ActionHotspot = ({ position, color, label, onClick, occludeRef, iconType =
 
       {hovered && (
         <Html
-          position={[0, 0.9, 0]}
+          position={[0, 2.5, 0]}
           center
           distanceFactor={distanceFactor}
           zIndexRange={[11, 0]}
@@ -234,7 +234,7 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
           document.body.style.cursor = "auto";
         }}
       >
-        <sphereGeometry args={[0.1, 32, 32]} />
+        <sphereGeometry args={[1.5, 16, 16]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
@@ -265,7 +265,7 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
 
       {hovered && (
         <Html
-          position={[0, 0.8, 0]}
+          position={[0, 2, 0]}
           center
           distanceFactor={distanceFactor}
           zIndexRange={[11, 0]}
@@ -310,6 +310,7 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
   const { scene, animations } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
   const modelRef = useRef<THREE.Group>(null);
+  const meshGroupRef = useRef<THREE.Group>(null);
   const mixerRef = useRef<AnimationMixer | null>(null);
   const actionRef = useRef<AnimationAction | null>(null);
 
@@ -374,17 +375,16 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
       }
     });
 
-    // Calculate center BEFORE scaling (use original size for offset calculation)
+    // Calculate bounding-box center so we can shift the primitive to origin.
+    // The offset is NOT pre-multiplied by brakeScale because it will be applied
+    // INSIDE the scaled group (on the primitive wrapper), not on the group itself.
     const box = new THREE.Box3().setFromObject(cloned);
     const center = new THREE.Vector3();
     box.getCenter(center);
-
-    // Calculate offset to center the model at origin (0, 0, 0)
-    // Scale the offset by brakeScale so it works with the scaled model
-    const offset = center.clone().negate().multiplyScalar(brakeScale);
+    const offset = center.clone().negate();
 
     return { clonedScene: cloned, centerOffset: offset };
-  }, [scene, brakeScale]);
+  }, [scene]);
 
   // Filter enabled hotspots
   const activeHotspots = vehicleHotspots.filter(hs => hs.isEnabled);
@@ -523,48 +523,55 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
     <group ref={groupRef}>
       <group
         ref={modelRef}
-        position={[centerOffset.x, centerOffset.y, centerOffset.z]}
         scale={[brakeScale, brakeScale, brakeScale]}
       >
-        <primitive
-          object={clonedScene}
-          rotation={[brakeConfig.rotation.x, brakeConfig.rotation.y, brakeConfig.rotation.z]}
-        />
+        {/* Centering wrapper: shifts the model so its bounding-box center sits at origin.
+            Applied only to the primitive so hotspot positions are NOT affected.
+            meshGroupRef is used for occlusion so hotspots hide behind the model meshes. */}
+        <group ref={meshGroupRef} position={[centerOffset.x, centerOffset.y, centerOffset.z]}>
+          <primitive
+            object={clonedScene}
+            rotation={[brakeConfig.rotation.x, brakeConfig.rotation.y, brakeConfig.rotation.z]}
+          />
+        </group>
+
+        {/* All hotspots rendered INSIDE the scaled group so their positions are
+            in model-local space and automatically adjust when scale changes */}
+
+        {/* Explosion Button - show when NOT exploded and NOT animating */}
+        {showExplosionHotspotProp && !isExploded && !isAnimationPlaying && brakeConfig.explosionHotspot && animations && animations.length > 0 && (
+          <ActionHotspot
+            position={brakeConfig.explosionHotspot.position}
+            color={brakeConfig.explosionHotspot.color}
+            label={getTranslation(brakeConfig.explosionHotspot.label, brakeConfig.explosionHotspot.labelTranslations)}
+            iconType="explosion"
+            occludeRef={meshGroupRef}
+            onClick={handleExplosionHotspotClick}
+          />
+        )}
+
+        {/* Collapse Button - show when IS exploded and NOT animating */}
+        {showExplosionHotspotProp && isExploded && !isAnimationPlaying && brakeConfig.collapseHotspot && animations && animations.length > 0 && (
+          <ActionHotspot
+            position={brakeConfig.collapseHotspot.position}
+            color={brakeConfig.collapseHotspot.color}
+            label={getTranslation(brakeConfig.collapseHotspot.label, brakeConfig.collapseHotspot.labelTranslations)}
+            iconType="collapse"
+            occludeRef={meshGroupRef}
+            onClick={handleCollapseHotspotClick}
+          />
+        )}
+
+        {/* Dynamic Hotspots from config - only show when exploded */}
+        {showHotspots && isExploded && activeHotspots.map((hotspotItem) => (
+          <Hotspot
+            key={hotspotItem.hotspotId}
+            config={hotspotItem}
+            occludeRef={meshGroupRef}
+            onClick={() => onHotspotClick?.(hotspotItem)}
+          />
+        ))}
       </group>
-
-      {/* Explosion Button - show when NOT exploded and NOT animating */}
-      {showExplosionHotspotProp && !isExploded && !isAnimationPlaying && brakeConfig.explosionHotspot && animations && animations.length > 0 && (
-        <ActionHotspot
-          position={brakeConfig.explosionHotspot.position}
-          color={brakeConfig.explosionHotspot.color}
-          label={getTranslation(brakeConfig.explosionHotspot.label, brakeConfig.explosionHotspot.labelTranslations)}
-          iconType="explosion"
-          occludeRef={modelRef}
-          onClick={handleExplosionHotspotClick}
-        />
-      )}
-
-      {/* Collapse Button - show when IS exploded and NOT animating */}
-      {showExplosionHotspotProp && isExploded && !isAnimationPlaying && brakeConfig.collapseHotspot && animations && animations.length > 0 && (
-        <ActionHotspot
-          position={brakeConfig.collapseHotspot.position}
-          color={brakeConfig.collapseHotspot.color}
-          label={getTranslation(brakeConfig.collapseHotspot.label, brakeConfig.collapseHotspot.labelTranslations)}
-          iconType="collapse"
-          occludeRef={modelRef}
-          onClick={handleCollapseHotspotClick}
-        />
-      )}
-
-      {/* Dynamic Hotspots from config - only show when exploded */}
-      {showHotspots && isExploded && activeHotspots.map((hotspotItem) => (
-        <Hotspot
-          key={hotspotItem.hotspotId}
-          config={hotspotItem}
-          occludeRef={modelRef}
-          onClick={() => onHotspotClick?.(hotspotItem)}
-        />
-      ))}
     </group>
   );
 };

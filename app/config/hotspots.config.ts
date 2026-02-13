@@ -1,6 +1,10 @@
 // ============================================================================
 // Hotspot Configuration - Matches HotspotConfiguration interface from content.ts
 // ============================================================================
+// NOTE: All hotspot position values are in MODEL-LOCAL SPACE.
+// They automatically scale with viewerScale changes.
+// Use the Brake Coordinate Helper (/brake-coordinate-helper) to capture positions.
+// ============================================================================
 
 import { HotspotConfiguration } from "../_types/content";
 
@@ -21,7 +25,7 @@ export const HOTSPOT_CONFIG_LIGHT: HotspotConfiguration = {
       labelTranslations: [
         { language: "it", value: "Assemblaggio Pinza Freno" },
       ],
-      position: { x: 1, y: 1.1, z: 0 },
+      position: { x: 5, y: 5.5, z: 0 },
       color: "#012e87",
       isEnabled: true,
       info: {
@@ -42,7 +46,7 @@ export const HOTSPOT_CONFIG_LIGHT: HotspotConfiguration = {
       labelTranslations: [
         { language: "it", value: "Disco Rotore Freno" },
       ],
-      position: { x: -1, y: 3, z: 1 },
+      position: { x: -5, y: 15, z: 5 },
       color: "#012e87",
       isEnabled: true,
       info: {
@@ -63,7 +67,7 @@ export const HOTSPOT_CONFIG_LIGHT: HotspotConfiguration = {
       labelTranslations: [
         { language: "it", value: "Pastiglia Freno in Ceramica" },
       ],
-      position: { x: 0, y: 0.5, z: 2 },
+      position: { x: 0, y: 2.5, z: 10 },
       color: "#012e87",
       isEnabled: true,
       info: {
@@ -83,7 +87,7 @@ export const HOTSPOT_CONFIG_LIGHT: HotspotConfiguration = {
       labelTranslations: [
         { language: "it", value: "Cilindro Principale" },
       ],
-      position: { x: -1, y: 2, z: -1 },
+      position: { x: -5, y: 10, z: -5 },
       color: "#012e87",
       isEnabled: true,
       info: {
@@ -104,7 +108,7 @@ export const HOTSPOT_CONFIG_LIGHT: HotspotConfiguration = {
       labelTranslations: [
         { language: "it", value: "Tubazioni Freno" },
       ],
-      position: { x: 1.2, y: -1.70, z: 1.5 },
+      position: { x: 6, y: -8.5, z: 7.5 },
       color: "#012e87",
       isEnabled: true,
       info: {
@@ -124,7 +128,7 @@ export const HOTSPOT_CONFIG_LIGHT: HotspotConfiguration = {
       labelTranslations: [
         { language: "it", value: "Sensore ABS" },
       ],
-      position: { x: 0.5, y: -1, z: -1.5 },
+      position: { x: 2.5, y: -5, z: -7.5 },
       color: "#012e87",
       isEnabled: true,
       info: {
@@ -145,7 +149,7 @@ export const HOTSPOT_CONFIG_LIGHT: HotspotConfiguration = {
       labelTranslations: [
         { language: "it", value: "Freno di Stazionamento" },
       ],
-      position: { x: -1.5, y: -0.1, z: 2 },
+      position: { x: -7.5, y: -0.5, z: 10 },
       color: "#012e87",
       isEnabled: true,
       info: {
@@ -180,7 +184,7 @@ export const HOTSPOT_CONFIG_COMMERCIAL: HotspotConfiguration = {
       labelTranslations: [
         { language: "it", value: "Pinza per Impieghi Gravosi" },
       ],
-      position: { x: 2, y: 1, z: 0 },
+      position: { x: 10, y: 5, z: 0 },
       color: "#012e87",
       isEnabled: true,
       info: {
@@ -202,7 +206,7 @@ export const HOTSPOT_CONFIG_COMMERCIAL: HotspotConfiguration = {
       labelTranslations: [
         { language: "it", value: "Rotore per Impieghi Gravosi" },
       ],
-      position: { x: -1, y: 2, z: 1 },
+      position: { x: -5, y: 10, z: 5 },
       color: "#012e87",
       isEnabled: true,
       info: {
@@ -222,7 +226,7 @@ export const HOTSPOT_CONFIG_COMMERCIAL: HotspotConfiguration = {
       labelTranslations: [
         { language: "it", value: "Pastiglia Semi-Metallica" },
       ],
-      position: { x: 0, y: 0.5, z: 2 },
+      position: { x: 0, y: 2.5, z: 10 },
       color: "#012e87",
       isEnabled: true,
       info: {
@@ -243,7 +247,7 @@ export const HOTSPOT_CONFIG_COMMERCIAL: HotspotConfiguration = {
       labelTranslations: [
         { language: "it", value: "Camera del Freno ad Aria" },
       ],
-      position: { x: -1.5, y: -0.5, z: -1 },
+      position: { x: -7.5, y: -2.5, z: -5 },
       color: "#012e87",
       isEnabled: true,
       info: {
@@ -278,7 +282,7 @@ export const HOTSPOT_CONFIG_RAIL: HotspotConfiguration = {
       labelTranslations: [
         { language: "it", value: "Unità Freno Pneumatica" },
       ],
-      position: { x: 2, y: 1, z: 0 },
+      position: { x: 10, y: 5, z: 0 },
       color: "#012e87",
       isEnabled: true,
       info: {
@@ -299,7 +303,7 @@ export const HOTSPOT_CONFIG_RAIL: HotspotConfiguration = {
       labelTranslations: [
         { language: "it", value: "Disco Freno e Morsetto" },
       ],
-      position: { x: -1, y: 2, z: 1 },
+      position: { x: -5, y: 10, z: 5 },
       color: "#012e87",
       isEnabled: true,
       info: {
@@ -320,7 +324,7 @@ export const HOTSPOT_CONFIG_RAIL: HotspotConfiguration = {
       labelTranslations: [
         { language: "it", value: "Ceppo Freno Composito" },
       ],
-      position: { x: 0, y: 0.5, z: 2 },
+      position: { x: 0, y: 2.5, z: 10 },
       color: "#012e87",
       isEnabled: true,
       info: {

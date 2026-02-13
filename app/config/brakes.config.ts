@@ -1,6 +1,10 @@
 // ============================================================================
 // Brake Configuration - Matches BrakeConfiguration interface from content.ts
 // ============================================================================
+// NOTE: All position values (explosionHotspot, collapseHotspot) are in
+// MODEL-LOCAL SPACE. They automatically scale with viewerScale changes.
+// Use the Brake Coordinate Helper (/brake-coordinate-helper) to capture positions.
+// ============================================================================
 
 import { BrakeConfiguration } from "../_types/content";
 
@@ -22,7 +26,7 @@ export const BRAKE_CONFIG_LIGHT: BrakeConfiguration = {
     viewerScale: 0.2,
   },
   explosionHotspot: {
-    position: { x: 0, y: 0.5, z: 0 },
+    position: { x: 0, y: 2.5, z: 0 },
     color: "#012e87",
     label: "View Exploded",
     labelTranslations: [
@@ -30,7 +34,7 @@ export const BRAKE_CONFIG_LIGHT: BrakeConfiguration = {
     ],
   },
   collapseHotspot: {
-    position: { x: 0, y: 0.8, z: 0 },
+    position: { x: 0, y: 4, z: 0 },
     color: "#ef4444",
     label: "Collapse View",
     labelTranslations: [
@@ -61,7 +65,7 @@ export const BRAKE_CONFIG_COMMERCIAL: BrakeConfiguration = {
     viewerScale: 0.2,
   },
   explosionHotspot: {
-    position: { x: 0, y: 0.75, z: 0 },
+    position: { x: 0, y: 3.75, z: 0 },
     color: "#012e87",
     label: "View Exploded",
     labelTranslations: [
@@ -69,7 +73,7 @@ export const BRAKE_CONFIG_COMMERCIAL: BrakeConfiguration = {
     ],
   },
   collapseHotspot: {
-    position: { x: 0, y: 1, z: 0 },
+    position: { x: 0, y: 5, z: 0 },
     color: "#ef4444",
     label: "Collapse View",
     labelTranslations: [
@@ -100,7 +104,7 @@ export const BRAKE_CONFIG_RAIL: BrakeConfiguration = {
     viewerScale: 0.2,
   },
   explosionHotspot: {
-    position: { x: 0, y: 1, z: 0 },
+    position: { x: 0, y: 5, z: 0 },
     color: "#012e87",
     label: "View Exploded",
     labelTranslations: [
@@ -108,7 +112,7 @@ export const BRAKE_CONFIG_RAIL: BrakeConfiguration = {
     ],
   },
   collapseHotspot: {
-    position: { x: 0, y: 1.2, z: 0 },
+    position: { x: 0, y: 6, z: 0 },
     color: "#ef4444",
     label: "Collapse View",
     labelTranslations: [

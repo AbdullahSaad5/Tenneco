@@ -2,7 +2,7 @@
 
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, useGLTF } from '@react-three/drei';
-import { useState, useEffect, useRef, Suspense, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, Suspense, useMemo, useCallback, MutableRefObject } from 'react';
 import * as THREE from 'three';
 import { AnimationMixer, AnimationAction } from 'three';
 import { VehicleType } from '@/app/_types/content';
@@ -91,10 +91,12 @@ function CameraInfo({
   onCoordinateCapture,
   onCameraUpdate,
   isExploded,
+  modelGroupRef,
 }: {
   onCoordinateCapture: (coord: StoredCoordinate) => void;
   onCameraUpdate: (pos: { x: number; y: number; z: number }) => void;
   isExploded: boolean;
+  modelGroupRef: MutableRefObject<THREE.Group | null>;
 }) {
   const { camera, gl, scene } = useThree();
   const raycaster = useRef(new THREE.Raycaster());
@@ -157,6 +159,14 @@ function CameraInfo({
       }
 
       if (hitPoint && hitObject) {
+        // Convert world-space hit to model-local space using the model group's inverse matrix.
+        // This produces scale-independent coordinates that work at any viewerScale.
+        let localPoint = hitPoint.clone();
+        if (modelGroupRef.current) {
+          const inverseMatrix = modelGroupRef.current.matrixWorld.clone().invert();
+          localPoint.applyMatrix4(inverseMatrix);
+        }
+
         // Build a descriptive name: mesh name + parent group name
         const objName = hitObject.name || 'Unnamed';
         const parentName = hitObject.parent?.name;
@@ -168,9 +178,9 @@ function CameraInfo({
         const coord: StoredCoordinate = {
           type: 'click',
           position: {
-            x: parseFloat(hitPoint.x.toFixed(2)),
-            y: parseFloat(hitPoint.y.toFixed(2)),
-            z: parseFloat(hitPoint.z.toFixed(2)),
+            x: parseFloat(localPoint.x.toFixed(2)),
+            y: parseFloat(localPoint.y.toFixed(2)),
+            z: parseFloat(localPoint.z.toFixed(2)),
           },
           label: 'Click Point',
           meshName,
@@ -183,7 +193,7 @@ function CameraInfo({
 
     gl.domElement.addEventListener('click', handleClick);
     return () => gl.domElement.removeEventListener('click', handleClick);
-  }, [camera, gl, scene, onCoordinateCapture, isExploded]);
+  }, [camera, gl, scene, onCoordinateCapture, isExploded, modelGroupRef]);
 
   return null;
 }
@@ -194,6 +204,7 @@ function BrakeModelViewer({
   isExploded,
   isAnimationPlaying,
   onAnimationStateChange,
+  modelGroupRef,
 }: {
   vehicleType: VehicleType;
   isExploded: boolean;
@@ -203,6 +214,7 @@ function BrakeModelViewer({
     isAnimationPlaying: boolean;
     hasAnimations: boolean;
   }) => void;
+  modelGroupRef: MutableRefObject<THREE.Group | null>;
 }) {
   const brakeConfig = BRAKE_CONFIGS[vehicleType];
   const modelPath = brakeConfig.modelFile.fallbackPath;
@@ -229,7 +241,6 @@ function BrakeModelViewer({
 
         // For SkinnedMesh: expand bounding sphere so raycaster's initial check
         // always passes. The per-triangle test applies bone transforms for accuracy.
-        // Without this, exploded parts (moved by bones) fail the bind-pose bounding sphere check.
         if ((mesh as THREE.SkinnedMesh).isSkinnedMesh) {
           mesh.geometry = mesh.geometry.clone();
           mesh.geometry.boundingSphere = new THREE.Sphere(
@@ -271,10 +282,10 @@ function BrakeModelViewer({
     const box = new THREE.Box3().setFromObject(cloned);
     const center = new THREE.Vector3();
     box.getCenter(center);
-    const offset = center.clone().negate().multiplyScalar(brakeScale);
+    const offset = center.clone().negate();
 
     return { clonedScene: cloned, centerOffset: offset };
-  }, [scene, brakeScale]);
+  }, [scene]);
 
   // Initialize AnimationMixer
   useEffect(() => {
@@ -297,7 +308,6 @@ function BrakeModelViewer({
       const onFinished = (e: { action: AnimationAction }) => {
         if (e.action === action) {
           if (action.timeScale < 0) {
-            // Collapse completed
             onAnimationStateChange({
               isExploded: false,
               isAnimationPlaying: false,
@@ -305,7 +315,6 @@ function BrakeModelViewer({
             });
             action.timeScale = 1;
           } else {
-            // Explosion completed
             onAnimationStateChange({
               isExploded: true,
               isAnimationPlaying: false,
@@ -336,12 +345,10 @@ function BrakeModelViewer({
 
     const action = actionRef.current;
     if (isExploded) {
-      // Play forward (explode)
       action.reset();
       action.timeScale = 1;
       action.play();
     } else {
-      // Play reverse (collapse)
       action.paused = false;
       action.time = action.getClip().duration;
       action.timeScale = -1;
@@ -358,17 +365,19 @@ function BrakeModelViewer({
 
   return (
     <group
-      position={[centerOffset.x, centerOffset.y, centerOffset.z]}
+      ref={modelGroupRef}
       scale={[brakeScale, brakeScale, brakeScale]}
     >
-      <primitive
-        object={clonedScene}
-        rotation={[
-          brakeConfig.rotation.x,
-          brakeConfig.rotation.y,
-          brakeConfig.rotation.z,
-        ]}
-      />
+      <group position={[centerOffset.x, centerOffset.y, centerOffset.z]}>
+        <primitive
+          object={clonedScene}
+          rotation={[
+            brakeConfig.rotation.x,
+            brakeConfig.rotation.y,
+            brakeConfig.rotation.z,
+          ]}
+        />
+      </group>
     </group>
   );
 }
@@ -383,6 +392,9 @@ export default function BrakeCoordinateHelper() {
   const [isExploded, setIsExploded] = useState(false);
   const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
   const [hasAnimations, setHasAnimations] = useState(false);
+
+  // Shared ref to the model group — used by CameraInfo to compute inverse transform
+  const modelGroupRef = useRef<THREE.Group>(null);
 
   // Reset animation state when vehicle type changes
   useEffect(() => {
@@ -467,6 +479,7 @@ export default function BrakeCoordinateHelper() {
             isExploded={isExploded}
             isAnimationPlaying={isAnimationPlaying}
             onAnimationStateChange={handleAnimationStateChange}
+            modelGroupRef={modelGroupRef}
           />
         </Suspense>
 
@@ -475,12 +488,19 @@ export default function BrakeCoordinateHelper() {
           onCoordinateCapture={handleCoordinateCapture}
           onCameraUpdate={handleCameraUpdate}
           isExploded={isExploded}
+          modelGroupRef={modelGroupRef}
         />
       </Canvas>
 
       {/* UI Overlay - Left Panel */}
       <div className="absolute top-4 left-4 bg-slate-800/90 backdrop-blur-sm p-4 rounded-lg text-white w-80 max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">Brake Coordinate Helper</h2>
+
+        {/* Scale-independent info */}
+        <div className="mb-4 p-2 bg-green-900/40 border border-green-700/50 rounded text-xs text-green-300">
+          Coordinates are in <strong>model-local space</strong> — they
+          automatically adjust when the model scale changes in the admin panel.
+        </div>
 
         {/* Vehicle Type Selector */}
         <div className="mb-4">
@@ -603,7 +623,7 @@ export default function BrakeCoordinateHelper() {
         {/* Captured Coordinates */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
-            <p className="text-sm font-medium">Captured Coordinates:</p>
+            <p className="text-sm font-medium">Captured Coordinates <span className="text-green-400 text-xs">(model-local)</span>:</p>
             {coordinates.length > 0 && (
               <button
                 onClick={clearCoordinates}
@@ -663,6 +683,10 @@ export default function BrakeCoordinateHelper() {
         <div className="text-xs text-gray-400 p-3 bg-slate-700/50 rounded">
           <p className="font-medium mb-1">Tips for Admin Panel:</p>
           <ul className="space-y-1">
+            <li>
+              Coordinates are <strong className="text-green-400">scale-independent</strong> — they
+              work at any <code className="text-blue-300">viewerScale</code>
+            </li>
             <li>
               Click on collapsed model for{' '}
               <code className="text-blue-300">explosionHotspot.position</code>
