@@ -291,6 +291,54 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
   );
 };
 
+/**
+ * Finds the skeleton bone index closest to a hotspot position.
+ * Uses bone world positions (which reflect the current animation state)
+ * to determine which layer/part the hotspot belongs to.
+ */
+function findClosestBoneIndex(
+  hotspotPosition: Vector3,
+  sceneRoot: THREE.Group,
+  modelGroup: THREE.Group
+): number {
+  // Convert hotspot position from modelGroup's local space to world space
+  const hotspotWorldPos = new THREE.Vector3(
+    hotspotPosition.x,
+    hotspotPosition.y,
+    hotspotPosition.z
+  );
+  modelGroup.localToWorld(hotspotWorldPos);
+
+  // Ensure all world matrices are up-to-date (bone transforms, etc.)
+  sceneRoot.updateMatrixWorld(true);
+
+  // Find the first skeleton in the scene
+  let foundSkeleton: THREE.Skeleton | null = null;
+  sceneRoot.traverse((child) => {
+    if ((child as THREE.SkinnedMesh).isSkinnedMesh && !foundSkeleton) {
+      foundSkeleton = (child as THREE.SkinnedMesh).skeleton;
+    }
+  });
+
+  if (!foundSkeleton) return -1;
+  const skeleton: THREE.Skeleton = foundSkeleton;
+
+  let closestBoneIndex = -1;
+  let closestDist = Infinity;
+  const boneWorldPos = new THREE.Vector3();
+
+  skeleton.bones.forEach((bone: THREE.Bone, index: number) => {
+    bone.getWorldPosition(boneWorldPos);
+    const dist = boneWorldPos.distanceTo(hotspotWorldPos);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closestBoneIndex = index;
+    }
+  });
+
+  return closestBoneIndex;
+}
+
 interface BrakeModelProps {
   vehicleType: VehicleType;
   brakeConfig: BrakeConfiguration;
@@ -316,6 +364,8 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
 
   // Store original material properties
   const originalMaterialProps = useRef<Map<THREE.Material, { transparent: boolean; opacity: number }>>(new Map());
+  // Store shader uniform references for bone-based isolation
+  const shaderUniformsRef = useRef<Map<THREE.Material, { uIsolatedBoneIndex: { value: number } }>>(new Map());
 
   // Animation state
   const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
@@ -325,6 +375,10 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
   const [, setExplosionHotspotClicked] = useState(false);
   // Track whether model is currently exploded
   const [isExploded, setIsExploded] = useState(false);
+
+  // Bone-based isolation state
+  const [isolatedBoneIndex, setIsolatedBoneIndex] = useState<number | null>(null);
+  const [activeIsolationHotspotId, setActiveIsolationHotspotId] = useState<string | null>(null);
 
   // Use scale from config - handle both Vector3 and number formats
   const baseScale = typeof brakeConfig.scale === 'number'
@@ -370,6 +424,48 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
               }
               stdMat.needsUpdate = true;
             }
+
+            // Inject bone-based isolation into the shader via onBeforeCompile.
+            // This lets us dim vertices per-bone rather than per-mesh.
+            const matRef = material;
+            matRef.onBeforeCompile = (shader) => {
+              shader.uniforms.uIsolatedBoneIndex = { value: -1 };
+              shaderUniformsRef.current.set(matRef, shader.uniforms as unknown as { uIsolatedBoneIndex: { value: number } });
+
+              // Vertex shader: compute bone influence score and pass as varying
+              shader.vertexShader = shader.vertexShader.replace(
+                '#include <common>',
+                `#include <common>
+                varying float vBoneInfluence;
+                uniform int uIsolatedBoneIndex;`
+              );
+              shader.vertexShader = shader.vertexShader.replace(
+                '#include <skinning_vertex>',
+                `#include <skinning_vertex>
+                vBoneInfluence = 0.0;
+                if (uIsolatedBoneIndex >= 0) {
+                  if (int(skinIndex.x) == uIsolatedBoneIndex) vBoneInfluence += skinWeight.x;
+                  if (int(skinIndex.y) == uIsolatedBoneIndex) vBoneInfluence += skinWeight.y;
+                  if (int(skinIndex.z) == uIsolatedBoneIndex) vBoneInfluence += skinWeight.z;
+                  if (int(skinIndex.w) == uIsolatedBoneIndex) vBoneInfluence += skinWeight.w;
+                }`
+              );
+
+              // Fragment shader: dim vertices not influenced by the isolated bone
+              shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <common>',
+                `#include <common>
+                varying float vBoneInfluence;
+                uniform int uIsolatedBoneIndex;`
+              );
+              shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <dithering_fragment>',
+                `#include <dithering_fragment>
+                if (uIsolatedBoneIndex >= 0 && vBoneInfluence < 0.3) {
+                  gl_FragColor.a *= 0.15;
+                }`
+              );
+            };
           }
         }
       }
@@ -416,33 +512,86 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
     }
   };
 
-  // Apply opacity to all materials
+  // Handle hotspot click with bone-based isolation toggle
+  const handleHotspotClickWithIsolation = (hotspot: HotspotItem) => {
+    if (activeIsolationHotspotId === hotspot.hotspotId) {
+      // Toggle OFF - clicking the same hotspot clears isolation
+      setIsolatedBoneIndex(null);
+      setActiveIsolationHotspotId(null);
+    } else {
+      // Find closest bone and isolate its layer
+      if (modelRef.current) {
+        const boneIndex = findClosestBoneIndex(
+          hotspot.position,
+          clonedScene,
+          modelRef.current
+        );
+        if (boneIndex >= 0) {
+          setIsolatedBoneIndex(boneIndex);
+          setActiveIsolationHotspotId(hotspot.hotspotId);
+        } else {
+          setIsolatedBoneIndex(null);
+          setActiveIsolationHotspotId(null);
+        }
+      }
+    }
+
+    // Still call original handler for modal/info panel
+    if (onHotspotClick) {
+      onHotspotClick(hotspot);
+    }
+  };
+
+  // Clear isolation when animation starts (explode/collapse)
   useEffect(() => {
+    if (isAnimationPlaying) {
+      setIsolatedBoneIndex(null);
+      setActiveIsolationHotspotId(null);
+    }
+  }, [isAnimationPlaying]);
+
+  // Update shader uniforms and material transparency when isolation changes
+  useEffect(() => {
+    const boneIdx = isolatedBoneIndex ?? -1;
+
+    // Update all shader uniforms with the new bone index
+    shaderUniformsRef.current.forEach((uniforms) => {
+      uniforms.uIsolatedBoneIndex.value = boneIdx;
+    });
+
+    // When isolation is active, all materials must be transparent so the
+    // shader's per-vertex alpha (gl_FragColor.a) actually takes effect.
     clonedScene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
         if (mesh.material) {
-          const material = mesh.material as THREE.Material;
-          const originalProps = originalMaterialProps.current.get(material);
+          const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          for (const material of materials) {
+            const originalProps = originalMaterialProps.current.get(material);
+            if (!originalProps) continue;
 
-          if (originalProps) {
-            if (opacity < 1) {
-              // Make transparent and apply fade opacity
+            if (boneIdx >= 0) {
+              // Isolation active: enable transparency so shader alpha works
+              material.transparent = true;
+              material.depthWrite = true;
+              material.needsUpdate = true;
+            } else if (opacity < 1) {
               material.transparent = true;
               material.opacity = opacity * originalProps.opacity;
-              material.depthWrite = opacity > 0.5; // Prevent z-fighting when very transparent
+              material.depthWrite = opacity > 0.5;
+              material.needsUpdate = true;
             } else {
-              // Restore original transparency state
+              // Restore original state
               material.transparent = originalProps.transparent;
               material.opacity = originalProps.opacity;
               material.depthWrite = true;
+              material.needsUpdate = true;
             }
-            material.needsUpdate = true;
           }
         }
       }
     });
-  }, [clonedScene, opacity]);
+  }, [clonedScene, opacity, isolatedBoneIndex]);
 
   // Show hotspots immediately if no animations
   useEffect(() => {
@@ -568,7 +717,7 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
             key={hotspotItem.hotspotId}
             config={hotspotItem}
             occludeRef={meshGroupRef}
-            onClick={() => onHotspotClick?.(hotspotItem)}
+            onClick={() => handleHotspotClickWithIsolation(hotspotItem)}
           />
         ))}
       </group>
