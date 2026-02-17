@@ -365,7 +365,10 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
   // Store original material properties
   const originalMaterialProps = useRef<Map<THREE.Material, { transparent: boolean; opacity: number }>>(new Map());
   // Store shader uniform references for bone-based isolation
-  const shaderUniformsRef = useRef<Map<THREE.Material, { uIsolatedBoneIndex: { value: number } }>>(new Map());
+  const shaderUniformsRef = useRef<Map<THREE.Material, { uIsolatedBoneIndex: { value: number }; uHighlightColor: { value: THREE.Color } }>>(new Map());
+  // Desired bone index ref - read by onBeforeCompile so recompiles get the correct value
+  const desiredBoneIndexRef = useRef(-1);
+  const highlightColorRef = useRef(new THREE.Color(0x3b82f6));
 
   // Animation state
   const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
@@ -426,11 +429,13 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
             }
 
             // Inject bone-based isolation into the shader via onBeforeCompile.
-            // This lets us dim vertices per-bone rather than per-mesh.
+            // Uses color dimming (not alpha) to avoid needing transparent mode / recompiles.
             const matRef = material;
             matRef.onBeforeCompile = (shader) => {
-              shader.uniforms.uIsolatedBoneIndex = { value: -1 };
-              shaderUniformsRef.current.set(matRef, shader.uniforms as unknown as { uIsolatedBoneIndex: { value: number } });
+              // Read from refs so recompiles always get the current value
+              shader.uniforms.uIsolatedBoneIndex = { value: desiredBoneIndexRef.current };
+              shader.uniforms.uHighlightColor = { value: highlightColorRef.current };
+              shaderUniformsRef.current.set(matRef, shader.uniforms as unknown as { uIsolatedBoneIndex: { value: number }; uHighlightColor: { value: THREE.Color } });
 
               // Vertex shader: compute bone influence score and pass as varying
               shader.vertexShader = shader.vertexShader.replace(
@@ -451,18 +456,26 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
                 }`
               );
 
-              // Fragment shader: dim vertices not influenced by the isolated bone
+              // Fragment shader: color-based isolation (no alpha / transparency needed)
               shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <common>',
                 `#include <common>
                 varying float vBoneInfluence;
-                uniform int uIsolatedBoneIndex;`
+                uniform int uIsolatedBoneIndex;
+                uniform vec3 uHighlightColor;`
               );
               shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <dithering_fragment>',
                 `#include <dithering_fragment>
-                if (uIsolatedBoneIndex >= 0 && vBoneInfluence < 0.3) {
-                  gl_FragColor.a *= 0.15;
+                if (uIsolatedBoneIndex >= 0) {
+                  if (vBoneInfluence < 0.3) {
+                    // Non-selected: desaturate and darken
+                    float gray = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
+                    gl_FragColor.rgb = vec3(gray) * 0.3;
+                  } else {
+                    // Selected: subtle highlight tint
+                    gl_FragColor.rgb = gl_FragColor.rgb * 1.15 + uHighlightColor * 0.12;
+                  }
                 }`
               );
             };
@@ -527,6 +540,8 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
           modelRef.current
         );
         if (boneIndex >= 0) {
+          // Set highlight color from the hotspot's color
+          highlightColorRef.current.set(hotspot.color);
           setIsolatedBoneIndex(boneIndex);
           setActiveIsolationHotspotId(hotspot.hotspotId);
         } else {
@@ -550,17 +565,20 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
     }
   }, [isAnimationPlaying]);
 
-  // Update shader uniforms and material transparency when isolation changes
+  // Update shader uniforms when isolation changes (no recompile needed — color-based dimming)
   useEffect(() => {
     const boneIdx = isolatedBoneIndex ?? -1;
+    desiredBoneIndexRef.current = boneIdx;
 
-    // Update all shader uniforms with the new bone index
+    // Update all compiled shader uniforms with the new bone index + highlight color
     shaderUniformsRef.current.forEach((uniforms) => {
       uniforms.uIsolatedBoneIndex.value = boneIdx;
+      uniforms.uHighlightColor.value = highlightColorRef.current;
     });
+  }, [isolatedBoneIndex]);
 
-    // When isolation is active, all materials must be transparent so the
-    // shader's per-vertex alpha (gl_FragColor.a) actually takes effect.
+  // Handle opacity changes for animation fade-in (separate from isolation)
+  useEffect(() => {
     clonedScene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
@@ -570,12 +588,7 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
             const originalProps = originalMaterialProps.current.get(material);
             if (!originalProps) continue;
 
-            if (boneIdx >= 0) {
-              // Isolation active: enable transparency so shader alpha works
-              material.transparent = true;
-              material.depthWrite = true;
-              material.needsUpdate = true;
-            } else if (opacity < 1) {
+            if (opacity < 1) {
               material.transparent = true;
               material.opacity = opacity * originalProps.opacity;
               material.depthWrite = opacity > 0.5;
@@ -591,7 +604,7 @@ const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, o
         }
       }
     });
-  }, [clonedScene, opacity, isolatedBoneIndex]);
+  }, [clonedScene, opacity]);
 
   // Show hotspots immediately if no animations
   useEffect(() => {
