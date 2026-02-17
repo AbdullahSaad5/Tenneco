@@ -39,7 +39,7 @@ const VehicleModel = (props: VehicleModelProps) => {
   return <VehicleModelInner {...props} modelPath={modelPath} />;
 };
 
-const VehicleModelInner = ({ vehicleType, vehicleConfig, opacity, blueTransitionProgress = 0, modelPath }: VehicleModelProps & { modelPath: string }) => {
+const VehicleModelInner = ({ vehicleConfig, opacity, blueTransitionProgress = 0, modelPath }: VehicleModelProps & { modelPath: string }) => {
   const { scene } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
 

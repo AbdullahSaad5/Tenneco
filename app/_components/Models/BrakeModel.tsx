@@ -359,7 +359,7 @@ const BrakeModel = (props: BrakeModelProps) => {
   return <BrakeModelInner {...props} modelPath={modelPath} />;
 };
 
-const BrakeModelInner = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, opacity = 1, showExplosionHotspot: showExplosionHotspotProp = true, modelPath }: BrakeModelProps & { modelPath: string }) => {
+const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, opacity = 1, showExplosionHotspot: showExplosionHotspotProp = true, modelPath }: BrakeModelProps & { modelPath: string }) => {
   const { getTranslation } = useLanguage();
   const vehicleHotspots = hotspotConfig?.hotspots || [];
 
@@ -370,12 +370,14 @@ const BrakeModelInner = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotCli
   const mixerRef = useRef<AnimationMixer | null>(null);
   const actionRef = useRef<AnimationAction | null>(null);
 
-  // Store original material properties
-  const originalMaterialProps = useRef<Map<THREE.Material, { transparent: boolean; opacity: number }>>(new Map());
-  // Store shader uniform references for bone-based isolation
-  const shaderUniformsRef = useRef<Map<THREE.Material, { uIsolatedBoneIndex: { value: number }; uHighlightColor: { value: THREE.Color } }>>(new Map());
-  // Desired bone index ref - read by onBeforeCompile so recompiles get the correct value
-  const desiredBoneIndexRef = useRef(-1);
+  // Store original material properties (including emissive for restoration)
+  const originalMaterialProps = useRef<Map<THREE.Material, {
+    transparent: boolean;
+    opacity: number;
+    emissive: THREE.Color;
+    emissiveIntensity: number;
+  }>>(new Map());
+  // Highlight color from clicked hotspot
   const highlightColorRef = useRef(new THREE.Color(0x3b82f6));
 
   // Animation state
@@ -416,77 +418,38 @@ const BrakeModelInner = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotCli
 
           const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
           for (const material of materials) {
-            // Store original props for opacity animation
+            const stdMat = material as THREE.MeshStandardMaterial;
+            // Store original props for opacity animation + isolation restoration
             originalMaterialProps.current.set(material, {
               transparent: material.transparent,
               opacity: material.opacity,
+              emissive: stdMat.isMeshStandardMaterial ? stdMat.emissive.clone() : new THREE.Color(0),
+              emissiveIntensity: stdMat.isMeshStandardMaterial ? stdMat.emissiveIntensity : 0,
             });
 
             // Tone down overly bright/reflective materials
-            if ((material as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+            if (stdMat.isMeshStandardMaterial) {
               const stdMat = material as THREE.MeshStandardMaterial;
               const luminance = stdMat.color.r * 0.299 + stdMat.color.g * 0.587 + stdMat.color.b * 0.114;
               if (luminance > 0.8) {
-                // Aggressively darken bright/white parts
                 stdMat.color.multiplyScalar(0.55);
-                // Make them matte so they don't reflect environment
                 stdMat.roughness = Math.max(stdMat.roughness, 0.9);
                 stdMat.metalness = Math.min(stdMat.metalness, 0.1);
               }
+              // Enable vertex colors for bone-based isolation highlighting
+              stdMat.vertexColors = true;
               stdMat.needsUpdate = true;
             }
+          }
 
-            // Inject bone-based isolation into the shader via onBeforeCompile.
-            // Uses color dimming (not alpha) to avoid needing transparent mode / recompiles.
-            const matRef = material;
-            matRef.onBeforeCompile = (shader) => {
-              // Read from refs so recompiles always get the current value
-              shader.uniforms.uIsolatedBoneIndex = { value: desiredBoneIndexRef.current };
-              shader.uniforms.uHighlightColor = { value: highlightColorRef.current };
-              shaderUniformsRef.current.set(matRef, shader.uniforms as unknown as { uIsolatedBoneIndex: { value: number }; uHighlightColor: { value: THREE.Color } });
-
-              // Vertex shader: compute bone influence score and pass as varying
-              shader.vertexShader = shader.vertexShader.replace(
-                '#include <common>',
-                `#include <common>
-                varying float vBoneInfluence;
-                uniform int uIsolatedBoneIndex;`
-              );
-              shader.vertexShader = shader.vertexShader.replace(
-                '#include <skinning_vertex>',
-                `#include <skinning_vertex>
-                vBoneInfluence = 0.0;
-                if (uIsolatedBoneIndex >= 0) {
-                  if (int(skinIndex.x) == uIsolatedBoneIndex) vBoneInfluence += skinWeight.x;
-                  if (int(skinIndex.y) == uIsolatedBoneIndex) vBoneInfluence += skinWeight.y;
-                  if (int(skinIndex.z) == uIsolatedBoneIndex) vBoneInfluence += skinWeight.z;
-                  if (int(skinIndex.w) == uIsolatedBoneIndex) vBoneInfluence += skinWeight.w;
-                }`
-              );
-
-              // Fragment shader: color-based isolation (no alpha / transparency needed)
-              shader.fragmentShader = shader.fragmentShader.replace(
-                '#include <common>',
-                `#include <common>
-                varying float vBoneInfluence;
-                uniform int uIsolatedBoneIndex;
-                uniform vec3 uHighlightColor;`
-              );
-              shader.fragmentShader = shader.fragmentShader.replace(
-                '#include <dithering_fragment>',
-                `#include <dithering_fragment>
-                if (uIsolatedBoneIndex >= 0) {
-                  if (vBoneInfluence < 0.3) {
-                    // Non-selected: desaturate and darken
-                    float gray = dot(gl_FragColor.rgb, vec3(0.299, 0.587, 0.114));
-                    gl_FragColor.rgb = vec3(gray) * 0.3;
-                  } else {
-                    // Selected: subtle highlight tint
-                    gl_FragColor.rgb = gl_FragColor.rgb * 1.15 + uHighlightColor * 0.12;
-                  }
-                }`
-              );
-            };
+          // Clone geometry so we can add vertex colors without affecting cached GLTF
+          mesh.geometry = mesh.geometry.clone();
+          const posAttr = mesh.geometry.getAttribute('position');
+          if (posAttr) {
+            const count = posAttr.count;
+            // Initialize all vertex colors to white (no tint)
+            const colors = new Float32Array(count * 3).fill(1);
+            mesh.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
           }
         }
       }
@@ -548,7 +511,6 @@ const BrakeModelInner = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotCli
           modelRef.current
         );
         if (boneIndex >= 0) {
-          // Set highlight color from the hotspot's color
           highlightColorRef.current.set(hotspot.color);
           setIsolatedBoneIndex(boneIndex);
           setActiveIsolationHotspotId(hotspot.hotspotId);
@@ -573,17 +535,92 @@ const BrakeModelInner = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotCli
     }
   }, [isAnimationPlaying]);
 
-  // Update shader uniforms when isolation changes (no recompile needed — color-based dimming)
+  // Update vertex colors + material transparency/emissive when isolation changes
   useEffect(() => {
     const boneIdx = isolatedBoneIndex ?? -1;
-    desiredBoneIndexRef.current = boneIdx;
 
-    // Update all compiled shader uniforms with the new bone index + highlight color
-    shaderUniformsRef.current.forEach((uniforms) => {
-      uniforms.uIsolatedBoneIndex.value = boneIdx;
-      uniforms.uHighlightColor.value = highlightColorRef.current;
+    clonedScene.traverse((child) => {
+      if (!(child as THREE.Mesh).isMesh) return;
+      const mesh = child as THREE.Mesh;
+      const geometry = mesh.geometry;
+      const colorAttr = geometry.getAttribute('color') as THREE.BufferAttribute | undefined;
+      const skinIndexAttr = geometry.getAttribute('skinIndex') as THREE.BufferAttribute | undefined;
+      const skinWeightAttr = geometry.getAttribute('skinWeight') as THREE.BufferAttribute | undefined;
+      if (!colorAttr || !skinIndexAttr || !skinWeightAttr) return;
+
+      const count = colorAttr.count;
+      let matchCount = 0;
+
+      if (boneIdx < 0) {
+        // No isolation — reset all vertex colors to white
+        for (let i = 0; i < count; i++) {
+          colorAttr.setXYZ(i, 1, 1, 1);
+        }
+      } else {
+        // Isolation active — set vertex colors and count matched vertices
+        for (let i = 0; i < count; i++) {
+          let influence = 0;
+          if (Math.round(skinIndexAttr.getX(i)) === boneIdx) influence += skinWeightAttr.getX(i);
+          if (Math.round(skinIndexAttr.getY(i)) === boneIdx) influence += skinWeightAttr.getY(i);
+          if (Math.round(skinIndexAttr.getZ(i)) === boneIdx) influence += skinWeightAttr.getZ(i);
+          if (Math.round(skinIndexAttr.getW(i)) === boneIdx) influence += skinWeightAttr.getW(i);
+
+          if (influence > 0.3) {
+            matchCount++;
+            colorAttr.setXYZ(i, 1, 1, 1);
+          } else {
+            colorAttr.setXYZ(i, 0.2, 0.2, 0.2);
+          }
+        }
+      }
+      colorAttr.needsUpdate = true;
+
+      // Update material: transparent for non-selected meshes, emissive glow for selected
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      const isSelected = matchCount > count * 0.1;
+
+      for (const material of materials) {
+        const original = originalMaterialProps.current.get(material);
+        if (!original) continue;
+        const stdMat = material as THREE.MeshStandardMaterial;
+
+        if (boneIdx < 0) {
+          // Restore original state
+          material.transparent = original.transparent;
+          material.opacity = original.opacity;
+          material.depthWrite = true;
+          if (stdMat.isMeshStandardMaterial) {
+            stdMat.emissive.copy(original.emissive);
+            stdMat.emissiveIntensity = original.emissiveIntensity;
+          }
+          material.needsUpdate = true;
+        } else if (isSelected) {
+          // Selected mesh: full opacity + colored emissive glow
+          material.transparent = false;
+          material.opacity = 1;
+          material.depthWrite = true;
+          if (stdMat.isMeshStandardMaterial) {
+            stdMat.emissive.copy(highlightColorRef.current);
+            stdMat.emissiveIntensity = 0.4;
+          }
+          material.needsUpdate = true;
+        } else {
+          // Non-selected mesh: semi-transparent + no glow
+          material.transparent = true;
+          material.opacity = 0.15;
+          material.depthWrite = false;
+          if (stdMat.isMeshStandardMaterial) {
+            stdMat.emissive.set(0x000000);
+            stdMat.emissiveIntensity = 0;
+          }
+          material.needsUpdate = true;
+        }
+      }
     });
-  }, [isolatedBoneIndex]);
+  }, [isolatedBoneIndex, clonedScene]);
+
+
+
 
   // Handle opacity changes for animation fade-in (separate from isolation)
   useEffect(() => {
