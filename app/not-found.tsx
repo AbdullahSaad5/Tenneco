@@ -26,6 +26,7 @@ export default function NotFound() {
                 src="/tenneco-logo.png"
                 alt="Tenneco Logo"
                 fill
+                sizes="160px"
                 className="object-contain"
                 priority
               />

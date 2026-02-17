@@ -184,7 +184,7 @@ Each brake model has independent scale configuration for two contexts:
 {
   "light": {
     "name": "Light Vehicle Brake",
-    "modelPath": "./models/brakes/Light vehicles - Brake.glb",
+    "modelPath": "./models/brakes/Light vehicles - Brake New.glb",
     "scale": 1,
     "rotation": { "x": 0, "y": 0, "z": 0 },
     "scaleConfig": {

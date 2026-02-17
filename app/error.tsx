@@ -28,6 +28,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
                 src="/tenneco-logo.png"
                 alt="Tenneco Logo"
                 fill
+                sizes="160px"
                 className="object-contain"
                 priority
               />
