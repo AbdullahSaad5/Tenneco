@@ -17,7 +17,7 @@ export const BRAKE_CONFIG_LIGHT: BrakeConfiguration = {
   name: "Light Vehicle Brake",
   modelFile: {
     mediaId: "",
-    fallbackPath: "./models/brakes/Light vehicles - Brake.glb",
+    fallbackPath: "./models/brakes/Light vehicles - Brake New.glb",
   },
   scale: { x: 1, y: 1, z: 1 },
   rotation: { x: 0, y: 0, z: 0 },
@@ -56,7 +56,7 @@ export const BRAKE_CONFIG_COMMERCIAL: BrakeConfiguration = {
   name: "Commercial Vehicle Brake",
   modelFile: {
     mediaId: "",
-    fallbackPath: "./models/brakes/Commercial vehicles - Brake.glb",
+    fallbackPath: "./models/brakes/Commercial vehicles - Brake New.glb",
   },
   scale: { x: 1, y: 1, z: 1 },
   rotation: { x: 0, y: 0, z: 0 },
@@ -95,7 +95,7 @@ export const BRAKE_CONFIG_RAIL: BrakeConfiguration = {
   name: "Rail Brake",
   modelFile: {
     mediaId: "",
-    fallbackPath: "./models/brakes/Rails - Brake.glb",
+    fallbackPath: "./models/brakes/Rails - Brake New.glb",
   },
   scale: { x: 1, y: 1, z: 1 },
   rotation: { x: 0, y: 0, z: 0 },

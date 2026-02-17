@@ -249,6 +249,7 @@ export function PreloadingScreen() {
             src="/tenneco-logo.png"
             alt="Tenneco"
             fill
+            sizes="192px"
             className="object-contain brightness-0 invert"
             priority
           />

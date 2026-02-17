@@ -29,10 +29,17 @@ interface VehicleModelProps {
   blueTransitionProgress?: number;
 }
 
-const VehicleModel = ({ vehicleType, vehicleConfig, opacity, blueTransitionProgress = 0 }: VehicleModelProps) => {
-  // Use preloaded URL to avoid double-loading
+const VehicleModel = (props: VehicleModelProps) => {
   const { resolvedUrls } = usePreload();
-  const modelPath = resolvedUrls.vehicles[vehicleType] || vehicleConfig.modelFile.fallbackPath || "";
+  const modelPath = resolvedUrls.vehicles[props.vehicleType] || props.vehicleConfig.modelFile.fallbackPath || "";
+
+  // Guard: don't attempt to load if we have no valid model path
+  if (!modelPath) return null;
+
+  return <VehicleModelInner {...props} modelPath={modelPath} />;
+};
+
+const VehicleModelInner = ({ vehicleType, vehicleConfig, opacity, blueTransitionProgress = 0, modelPath }: VehicleModelProps & { modelPath: string }) => {
   const { scene } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
 

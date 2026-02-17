@@ -84,6 +84,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                         src="/tenneco-logo.png"
                         alt="Tenneco Logo"
                         fill
+                        sizes="112px"
                         className="object-contain"
                         priority
                       />

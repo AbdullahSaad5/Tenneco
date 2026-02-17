@@ -348,11 +348,19 @@ interface BrakeModelProps {
   showExplosionHotspot?: boolean;
 }
 
-const BrakeModel = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, opacity = 1, showExplosionHotspot: showExplosionHotspotProp = true }: BrakeModelProps) => {
+const BrakeModel = (props: BrakeModelProps) => {
   // Use preloaded URL to avoid double-loading
   const { resolvedUrls } = usePreload();
+  const modelPath = resolvedUrls.brakes[props.vehicleType] || props.brakeConfig.modelFile.fallbackPath || "";
+
+  // Guard: don't attempt to load if we have no valid model path
+  if (!modelPath) return null;
+
+  return <BrakeModelInner {...props} modelPath={modelPath} />;
+};
+
+const BrakeModelInner = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, opacity = 1, showExplosionHotspot: showExplosionHotspotProp = true, modelPath }: BrakeModelProps & { modelPath: string }) => {
   const { getTranslation } = useLanguage();
-  const modelPath = resolvedUrls.brakes[vehicleType] || brakeConfig.modelFile.fallbackPath || "";
   const vehicleHotspots = hotspotConfig?.hotspots || [];
 
   const { scene, animations } = useGLTF(modelPath);
