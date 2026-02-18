@@ -89,8 +89,3 @@ export interface ViewerConfig {
 export const transition = transitionConfig as TransitionConfig;
 export const viewer = viewerConfig as ViewerConfig;
 
-// Re-export CMS-structured configs for convenience
-export { HOMEPAGE_CONFIG, CATEGORY_FALLBACK_IMAGES } from './homepage.config';
-export { VEHICLE_CONFIGS } from './vehicles.config';
-export { BRAKE_CONFIGS } from './brakes.config';
-export { HOTSPOT_CONFIGS } from './hotspots.config';

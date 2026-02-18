@@ -96,19 +96,7 @@ export const LanguageProvider = ({
       } catch (err) {
         console.error("Failed to fetch languages:", err);
         setError("Failed to load languages");
-        // Use default language as fallback
-        setAvailableLanguages([
-          {
-            id: "default-en",
-            code: "en",
-            name: "English",
-            nativeName: "English",
-            isDefault: true,
-            isEnabled: true,
-            order: 1,
-          },
-        ]);
-        setCurrentLanguage("en");
+        setAvailableLanguages([]);
       } finally {
         setIsLoading(false);
       }

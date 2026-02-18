@@ -10,14 +10,6 @@ import {
   BrakeConfiguration,
   HotspotConfiguration,
 } from "../_types/content";
-import {
-  FALLBACK_HOMEPAGE_CONTENT,
-  FALLBACK_APP_SETTINGS,
-  FALLBACK_LOADING_SCREEN,
-  FALLBACK_VEHICLE_CONFIGS,
-  FALLBACK_BRAKE_CONFIGS,
-  FALLBACK_HOTSPOT_CONFIGS,
-} from "../config/fallbacks";
 
 const instance: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -83,11 +75,11 @@ export const useAxios = () => {
           fallbackPath: "/tenneco-logo.png",
         },
         hero: {
-          title: data.hero?.title || FALLBACK_HOMEPAGE_CONTENT.hero.title,
+          title: data.hero?.title || "",
           titleTranslations: data.hero?.titleTranslations || [],
-          subtitle: data.hero?.subtitle || FALLBACK_HOMEPAGE_CONTENT.hero.subtitle,
+          subtitle: data.hero?.subtitle || "",
           subtitleTranslations: data.hero?.subtitleTranslations || [],
-          description: data.hero?.description || FALLBACK_HOMEPAGE_CONTENT.hero.description,
+          description: data.hero?.description || "",
           descriptionTranslations: data.hero?.descriptionTranslations || [],
         },
         section: data.sectionTitle ? {
@@ -128,8 +120,8 @@ export const useAxios = () => {
       };
 
       return homepageContent;
-    } catch {
-      return FALLBACK_HOMEPAGE_CONTENT;
+    } catch (error) {
+      throw error;
     } finally {
       delete abortControllersRef.current["getHomepageContent"];
     }
@@ -168,16 +160,29 @@ export const useAxios = () => {
             mediaUrl: data.branding.favicon.media?.url || "",
             fallbackPath: "/favicon.ico",
           } : undefined,
-          colorPalette: data.branding?.colorPalette || FALLBACK_APP_SETTINGS.branding.colorPalette,
+          colorPalette: data.branding?.colorPalette || {
+            primary: "#012e87",
+            secondary: "#0ea5e9",
+            accent: "#012e87",
+            background: "#0f172a",
+            text: "#ffffff",
+          },
         },
-        features: data.features || FALLBACK_APP_SETTINGS.features,
-        defaults: data.defaults || FALLBACK_APP_SETTINGS.defaults,
+        features: data.features || {
+          enableHomepage: true,
+          enableAnimations: true,
+          enableModelInfo: true,
+          enableHotspots: true,
+          enableVideoModal: true,
+          enablePdfModal: true,
+        },
+        defaults: data.defaults || {},
         environment: data.environment,
       };
 
       return appSettings;
-    } catch {
-      return FALLBACK_APP_SETTINGS;
+    } catch (error) {
+      throw error;
     } finally {
       delete abortControllersRef.current["getAppSettings"];
     }
@@ -205,16 +210,19 @@ export const useAxios = () => {
         logoType: data.logoType || "svg",
         svgPath: data.svgPath,
         logoMediaId: data.logoMedia?.id,
-        title: data.title || FALLBACK_LOADING_SCREEN.title,
+        title: data.title || "",
         titleTranslations: data.titleTranslations || [],
         subtitle: data.subtitle,
         subtitleTranslations: data.subtitleTranslations || [],
-        animation: data.animation || FALLBACK_LOADING_SCREEN.animation,
+        animation: data.animation || {
+          colors: { primary: "#012e87", secondary: "#0ea5e9" },
+          duration: 2000,
+        },
       };
 
       return loadingScreen;
-    } catch {
-      return FALLBACK_LOADING_SCREEN;
+    } catch (error) {
+      throw error;
     } finally {
       delete abortControllersRef.current["getLoadingScreenContent"];
     }
@@ -298,19 +306,8 @@ export const useAxios = () => {
         isEnabled: lang.isEnabled !== false,
         order: lang.order || 1,
       }));
-    } catch {
-      // Return default English language as fallback
-      return [
-        {
-          id: "fallback-en",
-          code: "en",
-          name: "English",
-          nativeName: "English",
-          isDefault: true,
-          isEnabled: true,
-          order: 1,
-        },
-      ];
+    } catch (error) {
+      throw error;
     } finally {
       delete abortControllersRef.current["getLanguages"];
     }
@@ -340,7 +337,6 @@ export const useAxios = () => {
       }
 
       const resolvedSlug = typeof data.vehicleType === 'object' ? data.vehicleType.slug : data.vehicleType;
-      const fallback = FALLBACK_VEHICLE_CONFIGS[vehicleType];
 
       const vehicleConfig: VehicleConfiguration = {
         id: data.id,
@@ -349,20 +345,18 @@ export const useAxios = () => {
         modelFile: {
           mediaId: data.modelFile?.media?.id || "",
           mediaUrl: data.modelFile?.media?.url || "",
-          fallbackPath: data.modelFile?.fallbackPath || fallback?.modelFile.fallbackPath || "",
+          fallbackPath: data.modelFile?.fallbackPath || "",
         },
-        scale: data.scale || fallback?.scale || { x: 1, y: 1, z: 1 },
-        rotation: data.rotation || fallback?.rotation || { x: 0, y: 0, z: 0 },
-        cameraStart: data.cameraStart || fallback?.cameraStart || { x: 8, y: 4, z: 12 },
-        cameraZoomTarget: data.cameraZoomTarget || fallback?.cameraZoomTarget || { x: 0, y: 0, z: 2 },
-        zoomConfig: data.zoomConfig || fallback?.zoomConfig || { initialScale: 1, initialLookAtTarget: { x: 0, y: 0, z: 0 }, zoomLookAtTarget: { x: 0, y: 0, z: 0 }, zoomIntensity: 1 },
+        scale: data.scale || { x: 1, y: 1, z: 1 },
+        rotation: data.rotation || { x: 0, y: 0, z: 0 },
+        cameraStart: data.cameraStart || { x: 8, y: 4, z: 12 },
+        cameraZoomTarget: data.cameraZoomTarget || { x: 0, y: 0, z: 2 },
+        zoomConfig: data.zoomConfig || { initialScale: 1, initialLookAtTarget: { x: 0, y: 0, z: 0 }, zoomLookAtTarget: { x: 0, y: 0, z: 0 }, zoomIntensity: 1 },
         isActive: data.isActive !== false,
       };
 
       return vehicleConfig;
     } catch (error) {
-      const fallback = FALLBACK_VEHICLE_CONFIGS[vehicleType];
-      if (fallback) return fallback;
       throw error;
     } finally {
       delete abortControllersRef.current[`getVehicleConfiguration-${vehicleType}`];
@@ -393,7 +387,6 @@ export const useAxios = () => {
       }
 
       const resolvedSlug = typeof data.vehicleType === 'object' ? data.vehicleType.slug : data.vehicleType;
-      const fallback = FALLBACK_BRAKE_CONFIGS[vehicleType];
 
       const brakeConfig: BrakeConfiguration = {
         id: data.id,
@@ -402,21 +395,21 @@ export const useAxios = () => {
         modelFile: {
           mediaId: data.modelFile?.media?.id || "",
           mediaUrl: data.modelFile?.media?.url || "",
-          fallbackPath: data.modelFile?.fallbackPath || fallback?.modelFile.fallbackPath || "",
+          fallbackPath: data.modelFile?.fallbackPath || "",
         },
-        scale: data.scale || fallback?.scale || { x: 1, y: 1, z: 1 },
-        rotation: data.rotation || fallback?.rotation || { x: 0, y: 0, z: 0 },
-        scaleConfig: data.scaleConfig || fallback?.scaleConfig || { transitionScale: 0.2, viewerScale: 0.2 },
+        scale: data.scale || { x: 1, y: 1, z: 1 },
+        rotation: data.rotation || { x: 0, y: 0, z: 0 },
+        scaleConfig: data.scaleConfig || { transitionScale: 0.2, viewerScale: 0.2 },
         explosionHotspot: {
-          position: data.explosionHotspot?.position || fallback?.explosionHotspot.position || { x: 0, y: 0.5, z: 0 },
-          color: data.explosionHotspot?.color || fallback?.explosionHotspot.color || "#012e87",
-          label: data.explosionHotspot?.label || fallback?.explosionHotspot.label || "View Exploded",
+          position: data.explosionHotspot?.position || { x: 0, y: 0.5, z: 0 },
+          color: data.explosionHotspot?.color || "#012e87",
+          label: data.explosionHotspot?.label || "View Exploded",
           labelTranslations: data.explosionHotspot?.labelTranslations || [],
         },
         collapseHotspot: {
-          position: data.collapseHotspot?.position || fallback?.collapseHotspot?.position || { x: 0, y: 0.8, z: 0 },
-          color: data.collapseHotspot?.color || fallback?.collapseHotspot?.color || "#ef4444",
-          label: data.collapseHotspot?.label || fallback?.collapseHotspot?.label || "Collapse View",
+          position: data.collapseHotspot?.position || { x: 0, y: 0.8, z: 0 },
+          color: data.collapseHotspot?.color || "#ef4444",
+          label: data.collapseHotspot?.label || "Collapse View",
           labelTranslations: data.collapseHotspot?.labelTranslations || [],
         },
         media: {
@@ -424,7 +417,7 @@ export const useAxios = () => {
           videoMediaId: data.media?.video?.id || "",
           pdfUrl: data.media?.pdf?.url || "",
           videoUrl: data.media?.video?.url || "",
-          fallbackPdfPath: data.media?.fallbackPdfPath || fallback?.media?.fallbackPdfPath,
+          fallbackPdfPath: data.media?.fallbackPdfPath,
           fallbackVideoUrl: data.media?.fallbackVideoUrl,
         },
         isActive: data.isActive !== false,
@@ -432,8 +425,6 @@ export const useAxios = () => {
 
       return brakeConfig;
     } catch (error) {
-      const fallback = FALLBACK_BRAKE_CONFIGS[vehicleType];
-      if (fallback) return fallback;
       throw error;
     } finally {
       delete abortControllersRef.current[`getBrakeConfiguration-${vehicleType}`];
@@ -464,12 +455,11 @@ export const useAxios = () => {
       }
 
       const resolvedSlug = typeof data.vehicleType === 'object' ? data.vehicleType.slug : data.vehicleType;
-      const fallback = FALLBACK_HOTSPOT_CONFIGS[vehicleType];
 
       const hotspotConfig: HotspotConfiguration = {
         id: data.id,
         vehicleType: resolvedSlug,
-        defaults: data.defaults || fallback?.defaults,
+        defaults: data.defaults,
         hotspots: (data.hotspots || []).map((hs: {
           id?: string;
           hotspotId: string;
@@ -510,8 +500,6 @@ export const useAxios = () => {
 
       return hotspotConfig;
     } catch (error) {
-      const fallback = FALLBACK_HOTSPOT_CONFIGS[vehicleType];
-      if (fallback) return fallback;
       throw error;
     } finally {
       delete abortControllersRef.current[`getHotspotConfiguration-${vehicleType}`];

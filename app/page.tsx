@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { useContent } from "./providers/ContentProvider";
-import { CATEGORY_FALLBACK_IMAGES } from "./config/homepage.config";
 import LoadingScreen from "./_components/LoadingScreen";
 import { getMediaUrl } from "./utils/mediaUrl";
 import LanguageSwitcher from "./_components/LanguageSwitcher";
@@ -35,7 +34,7 @@ export default function Home() {
   // Get category image - use API image if available, otherwise use fallback
   const getCategoryImage = (vehicleType: string, apiImageUrl?: string): string => {
     const fullUrl = getMediaUrl(apiImageUrl);
-    return fullUrl || CATEGORY_FALLBACK_IMAGES[vehicleType] || "";
+    return fullUrl || "";
   };
 
   return (

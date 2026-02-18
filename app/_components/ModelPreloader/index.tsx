@@ -7,7 +7,6 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { useGLTF } from "@react-three/drei";
-import { VEHICLE_CONFIGS, BRAKE_CONFIGS } from "../../config";
 import { getMediaUrl } from "../../utils/mediaUrl";
 
 // Enable Three.js cache globally
@@ -78,7 +77,7 @@ async function fetchVehicleTypeSlugs(): Promise<string[]> {
     const docs = Array.isArray(response.data?.docs) ? response.data.docs : [];
     return docs.map((vt: { slug: string }) => vt.slug);
   } catch {
-    return Object.keys(VEHICLE_CONFIGS);
+    return [];
   }
 }
 
@@ -171,8 +170,8 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
       const vehicleApi = apiConfigs.vehicleConfigs.find(c => c.vehicleType === vt);
       const brakeApi = apiConfigs.brakeConfigs.find(c => c.vehicleType === vt);
 
-      urls.vehicles[vt] = getMediaUrl(vehicleApi?.modelUrl ?? undefined) || VEHICLE_CONFIGS[vt]?.modelFile?.fallbackPath || "";
-      urls.brakes[vt] = getMediaUrl(brakeApi?.modelUrl ?? undefined) || BRAKE_CONFIGS[vt]?.modelFile?.fallbackPath || "";
+      urls.vehicles[vt] = getMediaUrl(vehicleApi?.modelUrl ?? undefined) || "";
+      urls.brakes[vt] = getMediaUrl(brakeApi?.modelUrl ?? undefined) || "";
     });
 
     setResolvedUrls(urls);

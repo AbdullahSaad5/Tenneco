@@ -5,9 +5,9 @@ import { useGLTF, Environment, PerspectiveCamera, ContactShadows } from "@react-
 import { Suspense, useRef, useState, useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { motion } from "framer-motion";
-import { VEHICLE_CONFIGS } from "../../config/vehicles.config";
-import { BRAKE_CONFIGS } from "../../config/brakes.config";
 import { transition, viewer, VehicleType } from "../../config";
+import { VehicleConfiguration, BrakeConfiguration } from "../../_types/content";
+import { useContent } from "../../providers/ContentProvider";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import { usePreload } from "../ModelPreloader";
@@ -19,12 +19,12 @@ interface VehicleZoomTransitionProps {
 
 interface VehicleModelProps {
   vehicleType: VehicleType;
+  config: VehicleConfiguration;
   opacity: number;
   blueTransitionProgress?: number; // 0 = normal, 1 = fully blue
 }
 
-const VehicleModel = ({ vehicleType, opacity, blueTransitionProgress = 0 }: VehicleModelProps) => {
-  const config = VEHICLE_CONFIGS[vehicleType];
+const VehicleModel = ({ vehicleType, config, opacity, blueTransitionProgress = 0 }: VehicleModelProps) => {
   // Use preloaded URL to avoid double-loading
   const { resolvedUrls } = usePreload();
   const modelPath = resolvedUrls.vehicles[vehicleType] || config.modelFile.fallbackPath || "";
@@ -173,11 +173,11 @@ const VehicleModel = ({ vehicleType, opacity, blueTransitionProgress = 0 }: Vehi
 
 interface BrakeModelProps {
   vehicleType: VehicleType;
+  config: BrakeConfiguration;
   opacity: number;
 }
 
-const BrakeTransitionModel = ({ vehicleType, opacity }: BrakeModelProps) => {
-  const config = BRAKE_CONFIGS[vehicleType];
+const BrakeTransitionModel = ({ vehicleType, config, opacity }: BrakeModelProps) => {
   // Use preloaded URL to avoid double-loading
   const { resolvedUrls } = usePreload();
   const modelPath = resolvedUrls.brakes[vehicleType] || config.modelFile.fallbackPath || "";
@@ -237,10 +237,12 @@ const BrakeTransitionModel = ({ vehicleType, opacity }: BrakeModelProps) => {
 
 interface TransitionSceneProps {
   vehicleType: VehicleType;
+  vehicleConfig: VehicleConfiguration;
+  brakeConfig: BrakeConfiguration;
   onZoomComplete: () => void;
 }
 
-const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) => {
+const TransitionScene = ({ vehicleType, vehicleConfig, brakeConfig, onZoomComplete }: TransitionSceneProps) => {
   const { camera } = useThree();
   const [phase, setPhase] = useState<"showing" | "blueTransition" | "zooming" | "transitioning" | "brake">("showing");
   const [vehicleOpacity, setVehicleOpacity] = useState(1); // Start at full opacity
@@ -249,7 +251,6 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
   const completedRef = useRef(false);
 
   const startTime = useRef(Date.now());
-  const vehicleConfig = VEHICLE_CONFIGS[vehicleType];
   const zoomConfig = vehicleConfig.zoomConfig;
 
   // Timing from config
@@ -435,12 +436,12 @@ const TransitionScene = ({ vehicleType, onZoomComplete }: TransitionSceneProps) 
 
       {/* Vehicle Model */}
       {vehicleOpacity > 0 && (
-        <VehicleModel vehicleType={vehicleType} opacity={vehicleOpacity} blueTransitionProgress={blueTransitionProgress} />
+        <VehicleModel vehicleType={vehicleType} config={vehicleConfig} opacity={vehicleOpacity} blueTransitionProgress={blueTransitionProgress} />
       )}
 
       {/* Brake Model */}
       {brakeOpacity > 0 && (
-        <BrakeTransitionModel vehicleType={vehicleType} opacity={brakeOpacity} />
+        <BrakeTransitionModel vehicleType={vehicleType} config={brakeConfig} opacity={brakeOpacity} />
       )}
 
       {/* Ground Shadow - Same as viewer */}
@@ -476,13 +477,19 @@ const VehicleZoomTransition: React.FC<VehicleZoomTransitionProps> = ({
   onComplete,
 }) => {
   const [isComplete, setIsComplete] = useState(false);
-  const vehicleConfig = VEHICLE_CONFIGS[vehicleType];
+  const { vehicleConfigs, brakeConfigs } = useContent();
+  const vehicleConfig = vehicleConfigs[vehicleType];
+  const brakeConfig = brakeConfigs[vehicleType];
 
   const handleZoomComplete = () => {
     setIsComplete(true);
     // Call immediately for seamless transition
     onComplete();
   };
+
+  if (!vehicleConfig || !brakeConfig) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-white overflow-hidden">
@@ -502,6 +509,8 @@ const VehicleZoomTransition: React.FC<VehicleZoomTransitionProps> = ({
           <Suspense fallback={null}>
             <TransitionScene
               vehicleType={vehicleType}
+              vehicleConfig={vehicleConfig}
+              brakeConfig={brakeConfig}
               onZoomComplete={handleZoomComplete}
             />
           </Suspense>

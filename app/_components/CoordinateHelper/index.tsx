@@ -5,7 +5,7 @@ import { OrbitControls, PerspectiveCamera, useGLTF } from '@react-three/drei';
 import { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import * as THREE from 'three';
 import { VehicleType } from '@/app/_types/content';
-import { VEHICLE_CONFIGS } from '@/app/config/vehicles.config';
+import { useContent } from '@/app/providers/ContentProvider';
 import { getMediaUrl } from '@/app/utils/mediaUrl';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
@@ -82,16 +82,17 @@ function CameraInfo({
 
 // Vehicle model loader - matches VehicleZoomTransition positioning
 function VehicleModel({ vehicleType }: { vehicleType: VehicleType }) {
-  const config = VEHICLE_CONFIGS[vehicleType];
-  const modelPath = getMediaUrl(config.modelFile.mediaUrl) || config.modelFile.fallbackPath;
+  const { vehicleConfigs } = useContent();
+  const config = vehicleConfigs[vehicleType];
+  const modelPath = config ? (getMediaUrl(config.modelFile.mediaUrl) || config.modelFile.fallbackPath) : '';
   const groupRef = useRef<THREE.Group>(null);
 
   // Always call useGLTF to satisfy React hooks rules
   const gltf = useGLTF(modelPath || '');
 
   // Use scale from config - handle Vector3 format (same as VehicleZoomTransition)
-  const baseScale = typeof config.scale === 'number' ? config.scale : config.scale.x;
-  const modelScale = config.zoomConfig.initialScale * baseScale;
+  const baseScale = config ? (typeof config.scale === 'number' ? config.scale : config.scale.x) : 1;
+  const modelScale = config ? config.zoomConfig.initialScale * baseScale : 1;
 
   // Clone and calculate offset synchronously (same as VehicleZoomTransition)
   const { clonedScene, centerOffset } = useMemo(() => {
@@ -132,7 +133,7 @@ function VehicleModel({ vehicleType }: { vehicleType: VehicleType }) {
     >
       <primitive
         object={clonedScene}
-        rotation={[config.rotation.x, config.rotation.y, config.rotation.z]}
+        rotation={config ? [config.rotation.x, config.rotation.y, config.rotation.z] : [0, 0, 0]}
       />
     </group>
   );

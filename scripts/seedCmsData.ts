@@ -17,11 +17,6 @@
 
 import * as readline from "readline";
 import axios from "axios";
-import {
-  FALLBACK_HOMEPAGE_CONTENT,
-  FALLBACK_APP_SETTINGS,
-  FALLBACK_LOADING_SCREEN,
-} from "../app/config/fallbacks";
 
 // Configuration
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
@@ -86,23 +81,42 @@ async function createHomepage(mediaIds: MediaIds) {
   const homepageData = {
     logo: {
       media: mediaIds.logo,
-      alt: FALLBACK_HOMEPAGE_CONTENT.logo.alt,
-      width: FALLBACK_HOMEPAGE_CONTENT.logo.width,
-      height: FALLBACK_HOMEPAGE_CONTENT.logo.height,
+      alt: "Tenneco Logo",
+      width: 180,
+      height: 50,
     },
-    hero: FALLBACK_HOMEPAGE_CONTENT.hero,
+    hero: {
+      title: "The Future of Braking Technology",
+      subtitle: "Experience Innovation",
+      description: "Explore Tenneco's advanced brake systems in immersive 3D",
+    },
     vehicleCategories: [
       {
-        ...FALLBACK_HOMEPAGE_CONTENT.vehicleCategories[0],
+        vehicleType: "light",
+        title: "Light Vehicles",
+        subtitle: "Passenger Cars & SUVs",
         image: mediaIds.lightVehicleImage,
+        gradient: { from: "blue-600", to: "cyan-500" },
+        isEnabled: true,
+        order: 1,
       },
       {
-        ...FALLBACK_HOMEPAGE_CONTENT.vehicleCategories[1],
+        vehicleType: "commercial",
+        title: "Commercial Vehicles",
+        subtitle: "Trucks & Heavy Duty",
         image: mediaIds.commercialVehicleImage,
+        gradient: { from: "blue-700", to: "indigo-600" },
+        isEnabled: true,
+        order: 2,
       },
       {
-        ...FALLBACK_HOMEPAGE_CONTENT.vehicleCategories[2],
+        vehicleType: "rail",
+        title: "Rail",
+        subtitle: "Trains & Transit",
         image: mediaIds.railVehicleImage,
+        gradient: { from: "slate-700", to: "blue-800" },
+        isEnabled: true,
+        order: 3,
       },
     ],
   };
@@ -124,11 +138,27 @@ async function createAppSettings(mediaIds: MediaIds) {
         width: 180,
         height: 50,
       },
-      colorPalette: FALLBACK_APP_SETTINGS.branding.colorPalette,
+      colorPalette: {
+        primary: "#012e87",
+        secondary: "#0ea5e9",
+        accent: "#012e87",
+        background: "#0f172a",
+        text: "#ffffff",
+      },
     },
-    features: FALLBACK_APP_SETTINGS.features,
-    defaults: FALLBACK_APP_SETTINGS.defaults,
-    environment: FALLBACK_APP_SETTINGS.environment,
+    features: {
+      enableHomepage: true,
+      enableAnimations: true,
+      enableModelInfo: true,
+      enableHotspots: true,
+      enableVideoModal: true,
+      enablePdfModal: true,
+    },
+    defaults: {},
+    environment: {
+      version: "1.0.0",
+      lastUpdated: new Date().toISOString(),
+    },
   };
 
   const result = await apiRequest("POST", "/app-settings", settingsData);
@@ -141,11 +171,14 @@ async function createLoadingScreen() {
   console.log("\nCreating Loading Screen...");
 
   const loadingData = {
-    logoType: FALLBACK_LOADING_SCREEN.logoType,
-    svgPath: FALLBACK_LOADING_SCREEN.svgPath,
-    title: FALLBACK_LOADING_SCREEN.title,
-    subtitle: FALLBACK_LOADING_SCREEN.subtitle,
-    animation: FALLBACK_LOADING_SCREEN.animation,
+    logoType: "svg",
+    svgPath: "M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z",
+    title: "Tenneco 3D Viewer",
+    subtitle: "Loading 3D models...",
+    animation: {
+      colors: { primary: "#012e87", secondary: "#0ea5e9" },
+      duration: 2000,
+    },
   };
 
   const result = await apiRequest("POST", "/loading-screens", loadingData);

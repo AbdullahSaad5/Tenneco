@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, Suspense, useMemo, useCallback, MutableRef
 import * as THREE from 'three';
 import { AnimationMixer, AnimationAction } from 'three';
 import { VehicleType } from '@/app/_types/content';
-import { BRAKE_CONFIGS } from '@/app/config/brakes.config';
+import { useContent } from '@/app/providers/ContentProvider';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 type CoordinateType = 'click' | 'camera';
@@ -216,8 +216,9 @@ function BrakeModelViewer({
   }) => void;
   modelGroupRef: MutableRefObject<THREE.Group | null>;
 }) {
-  const brakeConfig = BRAKE_CONFIGS[vehicleType];
-  const modelPath = brakeConfig.modelFile.fallbackPath;
+  const { brakeConfigs } = useContent();
+  const brakeConfig = brakeConfigs[vehicleType];
+  const modelPath = brakeConfig?.modelFile?.fallbackPath;
   // @ts-expect-error - modelPath is not undefined
   const { scene, animations } = useGLTF(modelPath);
 
@@ -225,11 +226,10 @@ function BrakeModelViewer({
   const actionRef = useRef<AnimationAction | null>(null);
 
   // Use scale from config
-  const baseScale =
-    typeof brakeConfig.scale === 'number'
-      ? brakeConfig.scale
-      : brakeConfig.scale.x;
-  const brakeScale = brakeConfig.scaleConfig.viewerScale * baseScale;
+  const baseScale = brakeConfig
+    ? (typeof brakeConfig.scale === 'number' ? brakeConfig.scale : brakeConfig.scale.x)
+    : 1;
+  const brakeScale = brakeConfig ? brakeConfig.scaleConfig.viewerScale * baseScale : 0.2;
 
   // Clone and center
   const { clonedScene, centerOffset } = useMemo(() => {
