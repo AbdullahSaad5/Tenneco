@@ -124,6 +124,14 @@ async function fetchConfigsFromAPI(vehicleTypes: string[]): Promise<{
   return { vehicleConfigs: vehicleResults, brakeConfigs: brakeResults };
 }
 
+// Detect mobile devices — touch support + small screen
+function isMobileDevice(): boolean {
+  if (typeof window === "undefined") return false;
+  const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  const isSmallScreen = window.innerWidth <= 768;
+  return hasTouch && isSmallScreen;
+}
+
 export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
   const [isPreloaded, setIsPreloaded] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -137,6 +145,8 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
   const preloadAllModels = useCallback(async () => {
     if (hasStarted.current) return;
     hasStarted.current = true;
+
+    const mobile = isMobileDevice();
 
     // Step 1: Discover vehicle types dynamically
     setStatus("Discovering vehicle types...");
@@ -176,7 +186,17 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
 
     setResolvedUrls(urls);
 
-    // Step 4: Build list of all URLs to preload
+    // On mobile: skip heavy GLB preloading to avoid OOM crashes.
+    // Models will load on-demand when the user opens a specific vehicle.
+    if (mobile) {
+      console.log("[ModelPreloader] Mobile detected — skipping GLB preloading, models will load on-demand");
+      setProgress(100);
+      setIsPreloaded(true);
+      setStatus("Complete!");
+      return;
+    }
+
+    // Desktop: preload all models into cache for instant transitions
     const allUrls = [
       ...Object.values(urls.vehicles),
       ...Object.values(urls.brakes),
@@ -184,7 +204,6 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
 
     const totalModels = allUrls.length;
 
-    // Step 5: Create loader and load models with real progress tracking
     const loader = createGLTFLoader();
     let loadedCount = 0;
 
@@ -202,7 +221,6 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
       const result = await loadGLBModel(url, loader);
 
       loadedCount++;
-      // Progress: 15% for config, 85% for models
       const modelProgress = 15 + Math.round((loadedCount / totalModels) * 80);
       setProgress(modelProgress);
       setStatus(`Loaded ${loadedCount}/${totalModels} models...`);
@@ -210,13 +228,11 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
       return result;
     });
 
-    // Wait for ALL models to actually finish loading
-     await Promise.all(loadPromises);
+    await Promise.all(loadPromises);
 
     setProgress(98);
     setStatus("Finalizing...");
 
-    // Small delay to ensure everything is settled
     await new Promise(resolve => setTimeout(resolve, 200));
 
     setProgress(100);
