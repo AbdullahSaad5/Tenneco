@@ -221,8 +221,8 @@ export const useAxios = () => {
       };
 
       return loadingScreen;
-    } catch (error) {
-      throw error;
+    } catch {
+      return null as unknown as LoadingScreenContent;
     } finally {
       delete abortControllersRef.current["getLoadingScreenContent"];
     }

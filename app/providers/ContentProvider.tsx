@@ -97,11 +97,10 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
         loadingScreenReason: loadingScreenResult.status === "rejected" ? loadingScreenResult.reason : undefined,
       });
 
-      // Check for any real failures in Phase 1 (ignore aborted requests)
+      // Check for any real failures in Phase 1 (ignore aborted requests; loading screen is non-critical)
       const phase1Failures = [
         { result: homepageResult, name: "homepage content" },
         { result: appSettingsResult, name: "app settings" },
-        { result: loadingScreenResult, name: "loading screen" },
       ].filter(
         ({ result }) => result.status === "rejected" && !isAbortError((result as PromiseRejectedResult).reason)
       );
@@ -113,8 +112,8 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
         return;
       }
 
-      // If all were aborted, just return silently
-      if ([homepageResult, appSettingsResult, loadingScreenResult].every(r => r.status === "rejected")) {
+      // If critical requests were aborted, just return silently
+      if ([homepageResult, appSettingsResult].every(r => r.status === "rejected")) {
         console.log("[ContentProvider] All Phase 1 requests aborted, returning silently.");
         setIsLoading(false);
         return;
@@ -130,8 +129,8 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
         hasLoadingScreen: !!loadingScreenData,
       });
 
-      if (!homepageData || !appSettingsData || !loadingScreenData) {
-        console.warn("[ContentProvider] One or more Phase 1 results are null (partial abort?), returning silently.");
+      if (!homepageData || !appSettingsData) {
+        console.warn("[ContentProvider] Homepage or appSettings null (partial abort?), returning silently.");
         setIsLoading(false);
         return;
       }
