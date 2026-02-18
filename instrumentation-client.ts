@@ -49,6 +49,9 @@ Sentry.init({
 
     // Browser profiling for performance diagnostics
     Sentry.browserProfilingIntegration(),
+
+    // Capture canvas/WebGL (Three.js 3D models) in session replays
+    Sentry.replayCanvasIntegration(),
   ],
 
   // Capture 100% of traces in development, 20% in production
