@@ -155,13 +155,13 @@ function ViewerContent() {
       {/* Vehicle type label during animation */}
       {showAnimation && (
         <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
+          className="absolute bottom-6 md:bottom-8 inset-x-0 z-20 flex justify-center px-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: animationComplete ? 0 : 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.5 }}
         >
-          <div className="bg-gradient-to-r from-blue-600/90 to-cyan-500/90 backdrop-blur-md px-8 py-4 rounded-full border border-white/20">
-            <p className="text-white font-bold text-xl tracking-wide text-center">
+          <div className="bg-gradient-to-r from-blue-600/90 to-cyan-500/90 backdrop-blur-md px-6 py-3 md:px-8 md:py-4 rounded-full border border-white/20">
+            <p className="text-white font-bold text-base md:text-xl tracking-wide text-center whitespace-nowrap">
               {vehicleConfig.name}
             </p>
           </div>
