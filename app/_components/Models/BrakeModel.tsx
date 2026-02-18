@@ -32,6 +32,8 @@ const ActionHotspot = ({ position, color, label, onClick, occludeRef, iconType =
   const groupRef = useRef<THREE.Group>(null);
   const { camera } = useThree();
   const [distanceFactor, setDistanceFactor] = useState(8);
+  const distanceFactorRef = useRef(8);
+  const worldPosRef = useRef(new THREE.Vector3());
 
   const pos: [number, number, number] = [position.x, position.y, position.z];
 
@@ -59,12 +61,15 @@ const ActionHotspot = ({ position, color, label, onClick, occludeRef, iconType =
     }
 
     if (groupRef.current) {
-      const worldPosition = new THREE.Vector3();
-      groupRef.current.getWorldPosition(worldPosition);
-      const distance = camera.position.distanceTo(worldPosition);
+      groupRef.current.getWorldPosition(worldPosRef.current);
+      const distance = camera.position.distanceTo(worldPosRef.current);
       const baseDistance = 20;
       const newDistanceFactor = (distance / baseDistance) * 8;
-      setDistanceFactor(newDistanceFactor);
+      // Only trigger re-render when change is significant
+      if (Math.abs(newDistanceFactor - distanceFactorRef.current) > 0.5) {
+        distanceFactorRef.current = newDistanceFactor;
+        setDistanceFactor(newDistanceFactor);
+      }
     }
   });
 
@@ -182,6 +187,8 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const { camera } = useThree();
   const [distanceFactor, setDistanceFactor] = useState(8);
+  const distanceFactorRef = useRef(8);
+  const worldPosRef = useRef(new THREE.Vector3());
   const { getTranslation } = useLanguage();
 
   const position: [number, number, number] = [config.position.x, config.position.y, config.position.z];
@@ -207,12 +214,15 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
     }
 
     if (groupRef.current) {
-      const worldPosition = new THREE.Vector3();
-      groupRef.current.getWorldPosition(worldPosition);
-      const distance = camera.position.distanceTo(worldPosition);
+      groupRef.current.getWorldPosition(worldPosRef.current);
+      const distance = camera.position.distanceTo(worldPosRef.current);
       const baseDistance = 20;
       const newDistanceFactor = (distance / baseDistance) * 8;
-      setDistanceFactor(newDistanceFactor);
+      // Only trigger re-render when change is significant
+      if (Math.abs(newDistanceFactor - distanceFactorRef.current) > 0.5) {
+        distanceFactorRef.current = newDistanceFactor;
+        setDistanceFactor(newDistanceFactor);
+      }
     }
   });
 
@@ -291,6 +301,59 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
   );
 };
 
+/**
+ * Finds the skeleton bone index closest to a hotspot position.
+ * Uses bone world positions (which reflect the current animation state)
+ * to determine which layer/part the hotspot belongs to.
+ */
+const MAX_BONE_SNAP_DISTANCE = 10;
+
+function findClosestBoneIndex(
+  hotspotPosition: Vector3,
+  sceneRoot: THREE.Group,
+  modelGroup: THREE.Group
+): number {
+  // Convert hotspot position from modelGroup's local space to world space
+  const hotspotWorldPos = new THREE.Vector3(
+    hotspotPosition.x,
+    hotspotPosition.y,
+    hotspotPosition.z
+  );
+  modelGroup.localToWorld(hotspotWorldPos);
+
+  // Ensure all world matrices are up-to-date (bone transforms, etc.)
+  sceneRoot.updateMatrixWorld(true);
+
+  // Find the first skeleton in the scene
+  let foundSkeleton: THREE.Skeleton | null = null;
+  sceneRoot.traverse((child) => {
+    if ((child as THREE.SkinnedMesh).isSkinnedMesh && !foundSkeleton) {
+      foundSkeleton = (child as THREE.SkinnedMesh).skeleton;
+    }
+  });
+
+  if (!foundSkeleton) return -1;
+  const skeleton: THREE.Skeleton = foundSkeleton;
+
+  let closestBoneIndex = -1;
+  let closestDist = Infinity;
+  const boneWorldPos = new THREE.Vector3();
+
+  skeleton.bones.forEach((bone: THREE.Bone, index: number) => {
+    bone.getWorldPosition(boneWorldPos);
+    const dist = boneWorldPos.distanceTo(hotspotWorldPos);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closestBoneIndex = index;
+    }
+  });
+
+  // Reject if closest bone is too far (likely a misclassification)
+  if (closestDist > MAX_BONE_SNAP_DISTANCE) return -1;
+
+  return closestBoneIndex;
+}
+
 interface BrakeModelProps {
   vehicleType: VehicleType;
   brakeConfig: BrakeConfiguration;
@@ -311,7 +374,7 @@ const BrakeModel = (props: BrakeModelProps) => {
   return <BrakeModelInner {...props} modelPath={modelPath} />;
 };
 
-const BrakeModelInner = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotClick, opacity = 1, showExplosionHotspot: showExplosionHotspotProp = true, modelPath }: BrakeModelProps & { modelPath: string }) => {
+const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, opacity = 1, showExplosionHotspot: showExplosionHotspotProp = true, modelPath }: BrakeModelProps & { modelPath: string }) => {
   const { getTranslation } = useLanguage();
   const vehicleHotspots = hotspotConfig?.hotspots || [];
 
@@ -322,8 +385,15 @@ const BrakeModelInner = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotCli
   const mixerRef = useRef<AnimationMixer | null>(null);
   const actionRef = useRef<AnimationAction | null>(null);
 
-  // Store original material properties
-  const originalMaterialProps = useRef<Map<THREE.Material, { transparent: boolean; opacity: number }>>(new Map());
+  // Store original material properties (including emissive for restoration)
+  const originalMaterialProps = useRef<Map<THREE.Material, {
+    transparent: boolean;
+    opacity: number;
+    emissive: THREE.Color;
+    emissiveIntensity: number;
+  }>>(new Map());
+  // Highlight color from clicked hotspot
+  const highlightColorRef = useRef(new THREE.Color(0x3b82f6));
 
   // Animation state
   const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
@@ -333,6 +403,10 @@ const BrakeModelInner = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotCli
   const [, setExplosionHotspotClicked] = useState(false);
   // Track whether model is currently exploded
   const [isExploded, setIsExploded] = useState(false);
+
+  // Bone-based isolation state
+  const [isolatedBoneIndex, setIsolatedBoneIndex] = useState<number | null>(null);
+  const [activeIsolationHotspotId, setActiveIsolationHotspotId] = useState<string | null>(null);
 
   // Use scale from config - handle both Vector3 and number formats
   const baseScale = typeof brakeConfig.scale === 'number'
@@ -344,6 +418,9 @@ const BrakeModelInner = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotCli
   const { clonedScene, centerOffset } = useMemo(() => {
     // Use SkeletonUtils.clone for proper animation support
     const cloned = clone(scene) as THREE.Group;
+
+    // Clear previous entries (safe for StrictMode double-invocation)
+    originalMaterialProps.current.clear();
 
     // Clone materials and normalize overly bright ones to prevent blown-out appearance
     cloned.traverse((child) => {
@@ -359,25 +436,38 @@ const BrakeModelInner = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotCli
 
           const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
           for (const material of materials) {
-            // Store original props for opacity animation
+            const stdMat = material as THREE.MeshStandardMaterial;
+            // Store original props for opacity animation + isolation restoration
             originalMaterialProps.current.set(material, {
               transparent: material.transparent,
               opacity: material.opacity,
+              emissive: stdMat.isMeshStandardMaterial ? stdMat.emissive.clone() : new THREE.Color(0),
+              emissiveIntensity: stdMat.isMeshStandardMaterial ? stdMat.emissiveIntensity : 0,
             });
 
             // Tone down overly bright/reflective materials
-            if ((material as THREE.MeshStandardMaterial).isMeshStandardMaterial) {
+            if (stdMat.isMeshStandardMaterial) {
               const stdMat = material as THREE.MeshStandardMaterial;
               const luminance = stdMat.color.r * 0.299 + stdMat.color.g * 0.587 + stdMat.color.b * 0.114;
               if (luminance > 0.8) {
-                // Aggressively darken bright/white parts
                 stdMat.color.multiplyScalar(0.55);
-                // Make them matte so they don't reflect environment
                 stdMat.roughness = Math.max(stdMat.roughness, 0.9);
                 stdMat.metalness = Math.min(stdMat.metalness, 0.1);
               }
+              // Enable vertex colors for bone-based isolation highlighting
+              stdMat.vertexColors = true;
               stdMat.needsUpdate = true;
             }
+          }
+
+          // Clone geometry so we can add vertex colors without affecting cached GLTF
+          mesh.geometry = mesh.geometry.clone();
+          const posAttr = mesh.geometry.getAttribute('position');
+          if (posAttr) {
+            const count = posAttr.count;
+            // Initialize all vertex colors to white (no tint)
+            const colors = new Float32Array(count * 3).fill(1);
+            mesh.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
           }
         }
       }
@@ -424,33 +514,136 @@ const BrakeModelInner = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotCli
     }
   };
 
-  // Apply opacity to all materials
-  useEffect(() => {
-    clonedScene.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh;
-        if (mesh.material) {
-          const material = mesh.material as THREE.Material;
-          const originalProps = originalMaterialProps.current.get(material);
-
-          if (originalProps) {
-            if (opacity < 1) {
-              // Make transparent and apply fade opacity
-              material.transparent = true;
-              material.opacity = opacity * originalProps.opacity;
-              material.depthWrite = opacity > 0.5; // Prevent z-fighting when very transparent
-            } else {
-              // Restore original transparency state
-              material.transparent = originalProps.transparent;
-              material.opacity = originalProps.opacity;
-              material.depthWrite = true;
-            }
-            material.needsUpdate = true;
-          }
+  // Handle hotspot click with bone-based isolation toggle
+  const handleHotspotClickWithIsolation = (hotspot: HotspotItem) => {
+    if (activeIsolationHotspotId === hotspot.hotspotId) {
+      // Toggle OFF - clicking the same hotspot clears isolation
+      setIsolatedBoneIndex(null);
+      setActiveIsolationHotspotId(null);
+    } else {
+      // Find closest bone and isolate its layer
+      if (modelRef.current) {
+        const boneIndex = findClosestBoneIndex(
+          hotspot.position,
+          clonedScene,
+          modelRef.current
+        );
+        if (boneIndex >= 0) {
+          highlightColorRef.current.set(hotspot.color);
+          setIsolatedBoneIndex(boneIndex);
+          setActiveIsolationHotspotId(hotspot.hotspotId);
+        } else {
+          setIsolatedBoneIndex(null);
+          setActiveIsolationHotspotId(null);
         }
       }
+    }
+
+    // Still call original handler for modal/info panel
+    if (onHotspotClick) {
+      onHotspotClick(hotspot);
+    }
+  };
+
+  // Clear isolation when animation starts (explode/collapse)
+  useEffect(() => {
+    if (isAnimationPlaying) {
+      setIsolatedBoneIndex(null);
+      setActiveIsolationHotspotId(null);
+    }
+  }, [isAnimationPlaying]);
+
+  // Unified effect: handles both isolation highlighting AND opacity transitions.
+  // Merged to prevent race conditions where separate effects overwrite each other's material state.
+  useEffect(() => {
+    const boneIdx = isolatedBoneIndex ?? -1;
+    const isIsolationActive = boneIdx >= 0;
+
+    clonedScene.traverse((child) => {
+      if (!(child as THREE.Mesh).isMesh) return;
+      const mesh = child as THREE.Mesh;
+      const geometry = mesh.geometry;
+      const colorAttr = geometry.getAttribute('color') as THREE.BufferAttribute | undefined;
+      const skinIndexAttr = geometry.getAttribute('skinIndex') as THREE.BufferAttribute | undefined;
+      const skinWeightAttr = geometry.getAttribute('skinWeight') as THREE.BufferAttribute | undefined;
+
+      // --- Vertex color pass (only for skinned meshes with color attribute) ---
+      let matchCount = 0;
+      let vertexCount = 0;
+
+      if (colorAttr && skinIndexAttr && skinWeightAttr) {
+        vertexCount = colorAttr.count;
+
+        if (!isIsolationActive) {
+          for (let i = 0; i < vertexCount; i++) {
+            colorAttr.setXYZ(i, 1, 1, 1);
+          }
+        } else {
+          for (let i = 0; i < vertexCount; i++) {
+            let influence = 0;
+            if (Math.round(skinIndexAttr.getX(i)) === boneIdx) influence += skinWeightAttr.getX(i);
+            if (Math.round(skinIndexAttr.getY(i)) === boneIdx) influence += skinWeightAttr.getY(i);
+            if (Math.round(skinIndexAttr.getZ(i)) === boneIdx) influence += skinWeightAttr.getZ(i);
+            if (Math.round(skinIndexAttr.getW(i)) === boneIdx) influence += skinWeightAttr.getW(i);
+
+            if (influence > 0.3) {
+              matchCount++;
+              colorAttr.setXYZ(i, 1, 1, 1);
+            } else {
+              colorAttr.setXYZ(i, 0.2, 0.2, 0.2);
+            }
+          }
+        }
+        colorAttr.needsUpdate = true;
+      }
+
+      // --- Material pass: unified isolation + opacity ---
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      const isSelected = isIsolationActive && vertexCount > 0 && matchCount > vertexCount * 0.1;
+
+      for (const material of materials) {
+        const original = originalMaterialProps.current.get(material);
+        if (!original) continue;
+        const stdMat = material as THREE.MeshStandardMaterial;
+
+        if (!isIsolationActive) {
+          // No isolation — apply overall opacity only
+          if (opacity < 1) {
+            material.transparent = true;
+            material.opacity = opacity * original.opacity;
+            material.depthWrite = opacity > 0.5;
+          } else {
+            material.transparent = original.transparent;
+            material.opacity = original.opacity;
+            material.depthWrite = true;
+          }
+          if (stdMat.isMeshStandardMaterial) {
+            stdMat.emissive.copy(original.emissive);
+            stdMat.emissiveIntensity = original.emissiveIntensity;
+          }
+        } else if (isSelected) {
+          // Selected mesh: full visibility + emissive glow, modulated by overall opacity
+          material.transparent = opacity < 1;
+          material.opacity = opacity;
+          material.depthWrite = true;
+          if (stdMat.isMeshStandardMaterial) {
+            stdMat.emissive.copy(highlightColorRef.current);
+            stdMat.emissiveIntensity = 0.4;
+          }
+        } else {
+          // Non-selected mesh: dimmed + transparent, modulated by overall opacity
+          material.transparent = true;
+          material.opacity = 0.15 * opacity;
+          material.depthWrite = false;
+          if (stdMat.isMeshStandardMaterial) {
+            stdMat.emissive.set(0x000000);
+            stdMat.emissiveIntensity = 0;
+          }
+        }
+        material.needsUpdate = true;
+      }
     });
-  }, [clonedScene, opacity]);
+  }, [isolatedBoneIndex, opacity, clonedScene]);
 
   // Show hotspots immediately if no animations
   useEffect(() => {
@@ -576,7 +769,7 @@ const BrakeModelInner = ({ vehicleType, brakeConfig, hotspotConfig, onHotspotCli
             key={hotspotItem.hotspotId}
             config={hotspotItem}
             occludeRef={meshGroupRef}
-            onClick={() => onHotspotClick?.(hotspotItem)}
+            onClick={() => handleHotspotClickWithIsolation(hotspotItem)}
           />
         ))}
       </group>
