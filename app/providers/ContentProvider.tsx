@@ -143,28 +143,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
         Promise.allSettled(hotspotPromises),
       ]);
 
-      // Check for any real failures in Phase 3 (ignore aborted requests)
-      const anyVehicleFailed = vehicleResults.some(
-        (r) => r.status === "rejected" && !isAbortError((r as PromiseRejectedResult).reason)
-      );
-      const anyBrakeFailed = brakeResults.some(
-        (r) => r.status === "rejected" && !isAbortError((r as PromiseRejectedResult).reason)
-      );
-      const anyHotspotFailed = hotspotResults.some(
-        (r) => r.status === "rejected" && !isAbortError((r as PromiseRejectedResult).reason)
-      );
-
-      if (anyVehicleFailed || anyBrakeFailed || anyHotspotFailed) {
-        const failedType =
-          anyVehicleFailed ? "vehicle configuration" :
-          anyBrakeFailed ? "brake configuration" :
-          "hotspot configuration";
-        setError(`Failed to load ${failedType} from the server.`);
-        setIsLoading(false);
-        return;
-      }
-
-      // Build dynamic config records
+      // Build dynamic config records (Phase 3 failures are non-critical — just set null)
       const newVehicleConfigs: Record<string, VehicleConfiguration | null> = {};
       const newBrakeConfigs: Record<string, BrakeConfiguration | null> = {};
       const newHotspotConfigs: Record<string, HotspotConfiguration | null> = {};
