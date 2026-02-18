@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   HomepageContent,
   AppSettings,
@@ -48,6 +48,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
   >({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedOnce = useRef(false);
 
   // Get axios methods
   const {
@@ -68,7 +69,9 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
    * Fetch all content from CMS
    */
   const fetchAllContent = useCallback(async () => {
-    setIsLoading(true);
+    if (!hasLoadedOnce.current) {
+      setIsLoading(true);
+    }
     setError(null);
 
     try {
@@ -199,6 +202,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
       }
     } finally {
       setIsLoading(false);
+      hasLoadedOnce.current = true;
     }
   }, [
     isCmsEnabled,
@@ -215,23 +219,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
     fetchAllContent();
   }, [fetchAllContent]);
 
-  // Show error UI if something went wrong
-  if (error && !isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white gap-4">
-        <p className="text-xl font-semibold">Something went wrong</p>
-        <p className="text-slate-400 text-sm">Could not load content from the server.</p>
-        <button
-          onClick={fetchAllContent}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors cursor-pointer"
-        >
-          Try Again
-        </button>
-      </div>
-    );
-  }
-
-  const contextValue: ExtendedContentContextValue = {
+  const contextValue = useMemo<ExtendedContentContextValue>(() => ({
     homepage,
     appSettings,
     loadingScreen,
@@ -241,7 +229,25 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
     isLoading,
     error,
     refetch: fetchAllContent,
-  };
+  }), [homepage, appSettings, loadingScreen, vehicleConfigs, brakeConfigs, hotspotConfigs, isLoading, error, fetchAllContent]);
+
+  // Show error UI if something went wrong
+  if (error && !isLoading) {
+    return (
+      <ContentContext.Provider value={contextValue}>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white gap-4">
+          <p className="text-xl font-semibold">Something went wrong</p>
+          <p className="text-slate-400 text-sm">Could not load content from the server.</p>
+          <button
+            onClick={fetchAllContent}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors cursor-pointer"
+          >
+            Try Again
+          </button>
+        </div>
+      </ContentContext.Provider>
+    );
+  }
 
   return <ContentContext.Provider value={contextValue}>{children}</ContentContext.Provider>;
 };

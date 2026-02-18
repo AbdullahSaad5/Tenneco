@@ -6,6 +6,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useMemo,
   ReactNode,
 } from "react";
 import axios from "axios";
@@ -149,14 +150,14 @@ export const LanguageProvider = ({
     [currentLanguage, availableLanguages]
   );
 
-  const contextValue: LanguageContextValue = {
+  const contextValue = useMemo<LanguageContextValue>(() => ({
     currentLanguage,
     availableLanguages,
     isLoading,
     error,
     setLanguage,
     getTranslation,
-  };
+  }), [currentLanguage, availableLanguages, isLoading, error, setLanguage, getTranslation]);
 
   return (
     <LanguageContext.Provider value={contextValue}>
