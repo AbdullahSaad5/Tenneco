@@ -64,7 +64,7 @@ Sentry.init({
   enableLogs: true,
 
   // Replay: 10% of sessions normally, 100% when an error occurs
-  replaysSessionSampleRate: 0.1,
+  replaysSessionSampleRate: 1.0,
   replaysOnErrorSampleRate: 1.0,
 
   // Capture HTTP client errors (4xx/5xx responses)
