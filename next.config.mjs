@@ -10,6 +10,19 @@ const nextConfig = {
     return config;
   },
   swcMinify: true,
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "Document-Policy",
+            value: "js-profiling",
+          },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
