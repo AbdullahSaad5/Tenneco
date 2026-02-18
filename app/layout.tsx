@@ -8,6 +8,7 @@ import { ModelPreloaderProvider, PreloadingScreen, usePreload } from "./_compone
 import { ContentProvider, useContent } from "./providers/ContentProvider";
 import { LanguageProvider } from "./providers/LanguageProvider";
 import { FaviconUpdater } from "./_components/FaviconUpdater";
+import { QueryProvider } from "./providers/QueryProvider";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -55,14 +56,16 @@ export default function RootLayout({
         <meta name="application-name" content="Tenneco 3D Viewer" />
       </head>
       <body className={`${urbanist.className} antialiased min-h-screen h-full w-full bg-white`}>
-        <ContentProvider>
-          <FaviconUpdater />
-          <LanguageProvider>
-            <ModelPreloaderProvider>
-              <AppContent>{children}</AppContent>
-            </ModelPreloaderProvider>
-          </LanguageProvider>
-        </ContentProvider>
+        <QueryProvider>
+          <ContentProvider>
+            <FaviconUpdater />
+            <LanguageProvider>
+              <ModelPreloaderProvider>
+                <AppContent>{children}</AppContent>
+              </ModelPreloaderProvider>
+            </LanguageProvider>
+          </ContentProvider>
+        </QueryProvider>
       </body>
     </html>
   );

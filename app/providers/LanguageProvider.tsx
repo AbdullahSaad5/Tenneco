@@ -9,14 +9,8 @@ import React, {
   useMemo,
   ReactNode,
 } from "react";
-import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 import { useAxios } from "../hooks/useAxios";
-
-function isAbortError(error: unknown): boolean {
-  if (axios.isCancel(error)) return true;
-  if (error instanceof Error && (error.name === "AbortError" || error.name === "CanceledError")) return true;
-  return false;
-}
 
 // ============================================================================
 // Types
@@ -68,66 +62,57 @@ export const LanguageProvider = ({
   defaultLanguage = "en",
 }: LanguageProviderProps) => {
   const [currentLanguage, setCurrentLanguage] = useState<string>(defaultLanguage);
-  const [availableLanguages, setAvailableLanguages] = useState<Language[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const { getLanguages } = useAxios();
 
-  // Fetch available languages on mount
+  const languagesQuery = useQuery({
+    queryKey: ["languages"],
+    queryFn: ({ signal }) => getLanguages(signal),
+  });
+
+  // Filter and sort enabled languages
+  const availableLanguages = useMemo(() => {
+    if (!languagesQuery.data) return [];
+    return languagesQuery.data
+      .filter((lang) => lang.isEnabled)
+      .sort((a, b) => a.order - b.order);
+  }, [languagesQuery.data]);
+
+  // Set initial language when languages load
   useEffect(() => {
-    const fetchLanguages = async () => {
-      try {
-        setIsLoading(true);
-        const languages = await getLanguages();
+    if (availableLanguages.length === 0) return;
 
-        // Filter only enabled languages and sort by order
-        const enabledLanguages = languages
-          .filter((lang) => lang.isEnabled)
-          .sort((a, b) => a.order - b.order);
+    const defaultLang = availableLanguages.find((lang) => lang.isDefault);
+    const storedLanguage =
+      typeof window !== "undefined"
+        ? localStorage.getItem("tenneco-language")
+        : null;
 
-        setAvailableLanguages(enabledLanguages);
-
-        // Set default language from CMS or use provided default
-        const defaultLang = enabledLanguages.find((lang) => lang.isDefault);
-        const storedLanguage = typeof window !== "undefined"
-          ? localStorage.getItem("tenneco-language")
-          : null;
-
-        if (storedLanguage && enabledLanguages.some(lang => lang.code === storedLanguage)) {
-          setCurrentLanguage(storedLanguage);
-        } else if (defaultLang) {
-          setCurrentLanguage(defaultLang.code);
-        } else if (enabledLanguages.length > 0) {
-          setCurrentLanguage(enabledLanguages[0].code);
-        }
-      } catch (err) {
-        if (!isAbortError(err)) {
-          console.error("Failed to fetch languages:", err);
-          setError("Failed to load languages");
-        }
-        setAvailableLanguages([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchLanguages();
-  }, [getLanguages]);
-
-  // Update language and persist to localStorage
-  const setLanguage = useCallback((languageCode: string) => {
-    const languageExists = availableLanguages.some(
-      (lang) => lang.code === languageCode
-    );
-
-    if (languageExists) {
-      setCurrentLanguage(languageCode);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("tenneco-language", languageCode);
-      }
+    if (storedLanguage && availableLanguages.some((lang) => lang.code === storedLanguage)) {
+      setCurrentLanguage(storedLanguage);
+    } else if (defaultLang) {
+      setCurrentLanguage(defaultLang.code);
+    } else if (availableLanguages.length > 0) {
+      setCurrentLanguage(availableLanguages[0].code);
     }
   }, [availableLanguages]);
+
+  // Update language and persist to localStorage
+  const setLanguage = useCallback(
+    (languageCode: string) => {
+      const languageExists = availableLanguages.some(
+        (lang) => lang.code === languageCode
+      );
+
+      if (languageExists) {
+        setCurrentLanguage(languageCode);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("tenneco-language", languageCode);
+        }
+      }
+    },
+    [availableLanguages]
+  );
 
   // Get translated text based on current language
   const getTranslation = useCallback(
@@ -150,14 +135,20 @@ export const LanguageProvider = ({
     [currentLanguage, availableLanguages]
   );
 
-  const contextValue = useMemo<LanguageContextValue>(() => ({
-    currentLanguage,
-    availableLanguages,
-    isLoading,
-    error,
-    setLanguage,
-    getTranslation,
-  }), [currentLanguage, availableLanguages, isLoading, error, setLanguage, getTranslation]);
+  const isLoading = languagesQuery.isLoading;
+  const error = languagesQuery.error ? (languagesQuery.error as Error).message : null;
+
+  const contextValue = useMemo<LanguageContextValue>(
+    () => ({
+      currentLanguage,
+      availableLanguages,
+      isLoading,
+      error,
+      setLanguage,
+      getTranslation,
+    }),
+    [currentLanguage, availableLanguages, isLoading, error, setLanguage, getTranslation]
+  );
 
   return (
     <LanguageContext.Provider value={contextValue}>

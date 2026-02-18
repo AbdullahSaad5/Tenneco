@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { createContext, useContext, useMemo } from "react";
+import { useQuery, useQueries, useQueryClient } from "@tanstack/react-query";
 import {
   HomepageContent,
   AppSettings,
@@ -11,13 +12,6 @@ import {
   ExtendedContentContextValue,
 } from "../_types/content";
 import { useAxios } from "../hooks/useAxios";
-import axios from "axios";
-
-function isAbortError(error: unknown): boolean {
-  if (axios.isCancel(error)) return true;
-  if (error instanceof Error && (error.name === "AbortError" || error.name === "CanceledError")) return true;
-  return false;
-}
 
 // ============================================================================
 // Context Creation
@@ -34,23 +28,6 @@ interface ContentProviderProps {
 }
 
 export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) => {
-  const [homepage, setHomepage] = useState<HomepageContent | null>(null);
-  const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
-  const [loadingScreen, setLoadingScreen] = useState<LoadingScreenContent | null>(null);
-  const [vehicleConfigs, setVehicleConfigs] = useState<
-    Record<string, VehicleConfiguration | null>
-  >({});
-  const [brakeConfigs, setBrakeConfigs] = useState<
-    Record<string, BrakeConfiguration | null>
-  >({});
-  const [hotspotConfigs, setHotspotConfigs] = useState<
-    Record<string, HotspotConfiguration | null>
-  >({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const hasLoadedOnce = useRef(false);
-
-  // Get axios methods
   const {
     getHomepageContent,
     getAppSettings,
@@ -60,176 +37,149 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
     getHotspotConfiguration,
   } = useAxios();
 
-  // Check if CMS is enabled
+  const queryClient = useQueryClient();
+
   const isCmsEnabled =
     process.env.NEXT_PUBLIC_ENABLE_CMS === "true" ||
     process.env.NEXT_PUBLIC_ENABLE_CMS === undefined;
 
-  /**
-   * Fetch all content from CMS
-   */
-  const fetchAllContent = useCallback(async () => {
-    if (!hasLoadedOnce.current) {
-      setIsLoading(true);
-    }
-    setError(null);
+  // ========================================================================
+  // Phase 1: Fetch homepage, app settings, and loading screen (parallel)
+  // ========================================================================
 
-    try {
-      console.log("[ContentProvider] fetchAllContent started. isCmsEnabled:", isCmsEnabled);
+  const homepageQuery = useQuery({
+    queryKey: ["homepage"],
+    queryFn: ({ signal }) => getHomepageContent(signal),
+    enabled: isCmsEnabled,
+  });
 
-      if (!isCmsEnabled) {
-        console.log("[ContentProvider] CMS disabled, skipping fetch.");
-        setIsLoading(false);
-        return;
-      }
+  const appSettingsQuery = useQuery({
+    queryKey: ["appSettings"],
+    queryFn: ({ signal }) => getAppSettings(signal),
+    enabled: isCmsEnabled,
+  });
 
-      // Phase 1: Fetch homepage, app settings, and loading screen
-      console.log("[ContentProvider] Phase 1: fetching homepage, appSettings, loadingScreen...");
-      const [homepageResult, appSettingsResult, loadingScreenResult] = await Promise.allSettled([
-        getHomepageContent(),
-        getAppSettings(),
-        getLoadingScreenContent(),
-      ]);
+  const loadingScreenQuery = useQuery({
+    queryKey: ["loadingScreen"],
+    queryFn: ({ signal }) => getLoadingScreenContent(signal),
+    enabled: isCmsEnabled,
+  });
 
-      console.log("[ContentProvider] Phase 1 results:", {
-        homepage: homepageResult.status,
-        appSettings: appSettingsResult.status,
-        loadingScreen: loadingScreenResult.status,
-        homepageReason: homepageResult.status === "rejected" ? homepageResult.reason : undefined,
-        appSettingsReason: appSettingsResult.status === "rejected" ? appSettingsResult.reason : undefined,
-        loadingScreenReason: loadingScreenResult.status === "rejected" ? loadingScreenResult.reason : undefined,
-      });
+  // ========================================================================
+  // Phase 2: Discover vehicle slugs from homepage data
+  // ========================================================================
 
-      // Check for any real failures in Phase 1 (ignore aborted requests; loading screen is non-critical)
-      const phase1Failures = [
-        { result: homepageResult, name: "homepage content" },
-        { result: appSettingsResult, name: "app settings" },
-      ].filter(
-        ({ result }) => result.status === "rejected" && !isAbortError((result as PromiseRejectedResult).reason)
-      );
+  const vehicleSlugs = useMemo(() => {
+    if (!homepageQuery.data) return [];
+    return Array.from(
+      new Set(
+        (homepageQuery.data.vehicleCategories || [])
+          .filter((cat) => cat.isEnabled)
+          .map((cat) => cat.vehicleType)
+      )
+    );
+  }, [homepageQuery.data]);
 
-      if (phase1Failures.length > 0) {
-        console.error("[ContentProvider] Phase 1 real failures:", phase1Failures.map(f => f.name));
-        setError(`Failed to load ${phase1Failures[0].name} from the server.`);
-        setIsLoading(false);
-        return;
-      }
+  // ========================================================================
+  // Phase 3: Fetch configs for each vehicle type (parallel, enabled after homepage)
+  // ========================================================================
 
-      // If critical requests were aborted, just return silently
-      if ([homepageResult, appSettingsResult].every(r => r.status === "rejected")) {
-        console.log("[ContentProvider] All Phase 1 requests aborted, returning silently.");
-        setIsLoading(false);
-        return;
-      }
+  const vehicleConfigQueries = useQueries({
+    queries: vehicleSlugs.map((slug) => ({
+      queryKey: ["vehicleConfig", slug],
+      queryFn: ({ signal }: { signal: AbortSignal }) => getVehicleConfiguration(slug, signal),
+      enabled: isCmsEnabled && vehicleSlugs.length > 0,
+    })),
+  });
 
-      const homepageData = homepageResult.status === "fulfilled" ? homepageResult.value : null;
-      const appSettingsData = appSettingsResult.status === "fulfilled" ? appSettingsResult.value : null;
-      const loadingScreenData = loadingScreenResult.status === "fulfilled" ? loadingScreenResult.value : null;
+  const brakeConfigQueries = useQueries({
+    queries: vehicleSlugs.map((slug) => ({
+      queryKey: ["brakeConfig", slug],
+      queryFn: ({ signal }: { signal: AbortSignal }) => getBrakeConfiguration(slug, signal),
+      enabled: isCmsEnabled && vehicleSlugs.length > 0,
+    })),
+  });
 
-      console.log("[ContentProvider] Phase 1 data:", {
-        hasHomepage: !!homepageData,
-        hasAppSettings: !!appSettingsData,
-        hasLoadingScreen: !!loadingScreenData,
-      });
+  const hotspotConfigQueries = useQueries({
+    queries: vehicleSlugs.map((slug) => ({
+      queryKey: ["hotspotConfig", slug],
+      queryFn: ({ signal }: { signal: AbortSignal }) => getHotspotConfiguration(slug, signal),
+      enabled: isCmsEnabled && vehicleSlugs.length > 0,
+    })),
+  });
 
-      if (!homepageData || !appSettingsData) {
-        console.warn("[ContentProvider] Homepage or appSettings null (partial abort?), returning silently.");
-        setIsLoading(false);
-        return;
-      }
+  // ========================================================================
+  // Derive state from queries
+  // ========================================================================
 
-      setHomepage(homepageData);
-      setAppSettings(appSettingsData);
-      setLoadingScreen(loadingScreenData);
+  const homepage: HomepageContent | null = homepageQuery.data ?? null;
+  const appSettings: AppSettings | null = appSettingsQuery.data ?? null;
+  const loadingScreen: LoadingScreenContent | null = loadingScreenQuery.data ?? null;
 
-      // Phase 2: Discover vehicle type slugs from homepage categories
-      const vehicleSlugs = Array.from(
-        new Set(
-          (homepageData.vehicleCategories || [])
-            .filter((cat) => cat.isEnabled)
-            .map((cat) => cat.vehicleType)
-        )
-      );
+  const vehicleConfigs = useMemo(() => {
+    const configs: Record<string, VehicleConfiguration | null> = {};
+    vehicleSlugs.forEach((slug, i) => {
+      configs[slug] = vehicleConfigQueries[i]?.data ?? null;
+    });
+    return configs;
+  }, [vehicleSlugs, vehicleConfigQueries]);
 
-      console.log("[ContentProvider] Phase 2 vehicle slugs discovered:", vehicleSlugs);
+  const brakeConfigs = useMemo(() => {
+    const configs: Record<string, BrakeConfiguration | null> = {};
+    vehicleSlugs.forEach((slug, i) => {
+      configs[slug] = brakeConfigQueries[i]?.data ?? null;
+    });
+    return configs;
+  }, [vehicleSlugs, brakeConfigQueries]);
 
-      if (vehicleSlugs.length === 0) {
-        console.log("[ContentProvider] No vehicle slugs found, done.");
-        setIsLoading(false);
-        return;
-      }
+  const hotspotConfigs = useMemo(() => {
+    const configs: Record<string, HotspotConfiguration | null> = {};
+    vehicleSlugs.forEach((slug, i) => {
+      configs[slug] = hotspotConfigQueries[i]?.data ?? null;
+    });
+    return configs;
+  }, [vehicleSlugs, hotspotConfigQueries]);
 
-      // Phase 3: Dynamically fetch configs for each discovered vehicle type
-      console.log("[ContentProvider] Phase 3: fetching vehicle/brake/hotspot configs...");
-      const vehiclePromises = vehicleSlugs.map((slug) => getVehicleConfiguration(slug));
-      const brakePromises = vehicleSlugs.map((slug) => getBrakeConfiguration(slug));
-      const hotspotPromises = vehicleSlugs.map((slug) => getHotspotConfiguration(slug));
+  // isLoading: true only on initial load (React Query's isLoading = isPending && isFetching)
+  // After first successful load, isLoading stays false even during background refetches
+  const phase1Loading = homepageQuery.isLoading || appSettingsQuery.isLoading;
+  const phase3Loading =
+    vehicleSlugs.length > 0 &&
+    (vehicleConfigQueries.some((q) => q.isLoading) ||
+      brakeConfigQueries.some((q) => q.isLoading) ||
+      hotspotConfigQueries.some((q) => q.isLoading));
+  const isLoading = isCmsEnabled ? phase1Loading || phase3Loading : false;
 
-      const [vehicleResults, brakeResults, hotspotResults] = await Promise.all([
-        Promise.allSettled(vehiclePromises),
-        Promise.allSettled(brakePromises),
-        Promise.allSettled(hotspotPromises),
-      ]);
+  // First critical error (homepage or appSettings)
+  const error = homepageQuery.error
+    ? (homepageQuery.error as Error).message
+    : appSettingsQuery.error
+      ? (appSettingsQuery.error as Error).message
+      : null;
 
-      console.log("[ContentProvider] Phase 3 results:", {
-        vehicles: vehicleResults.map(r => ({ status: r.status, reason: r.status === "rejected" ? r.reason : undefined })),
-        brakes: brakeResults.map(r => ({ status: r.status, reason: r.status === "rejected" ? r.reason : undefined })),
-        hotspots: hotspotResults.map(r => ({ status: r.status, reason: r.status === "rejected" ? r.reason : undefined })),
-      });
+  const refetch = async () => {
+    await queryClient.invalidateQueries();
+  };
 
-      // Build dynamic config records (Phase 3 failures are non-critical — just set null)
-      const newVehicleConfigs: Record<string, VehicleConfiguration | null> = {};
-      const newBrakeConfigs: Record<string, BrakeConfiguration | null> = {};
-      const newHotspotConfigs: Record<string, HotspotConfiguration | null> = {};
+  // ========================================================================
+  // Context value
+  // ========================================================================
 
-      vehicleSlugs.forEach((slug, i) => {
-        newVehicleConfigs[slug] = vehicleResults[i].status === "fulfilled" ? vehicleResults[i].value : null;
-        newBrakeConfigs[slug] = brakeResults[i].status === "fulfilled" ? brakeResults[i].value : null;
-        newHotspotConfigs[slug] = hotspotResults[i].status === "fulfilled" ? hotspotResults[i].value : null;
-      });
-
-      setVehicleConfigs(newVehicleConfigs);
-      setBrakeConfigs(newBrakeConfigs);
-      setHotspotConfigs(newHotspotConfigs);
-
-      console.log("[ContentProvider] Done. All content loaded successfully.");
-    } catch (err) {
-      if (!isAbortError(err)) {
-        console.error("[ContentProvider] Unexpected error in fetchAllContent:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch content");
-      } else {
-        console.log("[ContentProvider] Fetch aborted (outer catch), ignoring.");
-      }
-    } finally {
-      setIsLoading(false);
-      hasLoadedOnce.current = true;
-    }
-  }, [
-    isCmsEnabled,
-    getHomepageContent,
-    getAppSettings,
-    getLoadingScreenContent,
-    getVehicleConfiguration,
-    getBrakeConfiguration,
-    getHotspotConfiguration,
-  ]);
-
-  // Fetch content on mount
-  useEffect(() => {
-    fetchAllContent();
-  }, [fetchAllContent]);
-
-  const contextValue = useMemo<ExtendedContentContextValue>(() => ({
-    homepage,
-    appSettings,
-    loadingScreen,
-    vehicleConfigs,
-    brakeConfigs,
-    hotspotConfigs,
-    isLoading,
-    error,
-    refetch: fetchAllContent,
-  }), [homepage, appSettings, loadingScreen, vehicleConfigs, brakeConfigs, hotspotConfigs, isLoading, error, fetchAllContent]);
+  const contextValue = useMemo<ExtendedContentContextValue>(
+    () => ({
+      homepage,
+      appSettings,
+      loadingScreen,
+      vehicleConfigs,
+      brakeConfigs,
+      hotspotConfigs,
+      isLoading,
+      error,
+      refetch,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [homepage, appSettings, loadingScreen, vehicleConfigs, brakeConfigs, hotspotConfigs, isLoading, error]
+  );
 
   // Show error UI if something went wrong
   if (error && !isLoading) {
@@ -239,7 +189,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
           <p className="text-xl font-semibold">Something went wrong</p>
           <p className="text-slate-400 text-sm">Could not load content from the server.</p>
           <button
-            onClick={fetchAllContent}
+            onClick={refetch}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors cursor-pointer"
           >
             Try Again
