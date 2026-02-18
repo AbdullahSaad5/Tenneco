@@ -72,17 +72,30 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
     setError(null);
 
     try {
+      console.log("[ContentProvider] fetchAllContent started. isCmsEnabled:", isCmsEnabled);
+
       if (!isCmsEnabled) {
+        console.log("[ContentProvider] CMS disabled, skipping fetch.");
         setIsLoading(false);
         return;
       }
 
       // Phase 1: Fetch homepage, app settings, and loading screen
+      console.log("[ContentProvider] Phase 1: fetching homepage, appSettings, loadingScreen...");
       const [homepageResult, appSettingsResult, loadingScreenResult] = await Promise.allSettled([
         getHomepageContent(),
         getAppSettings(),
         getLoadingScreenContent(),
       ]);
+
+      console.log("[ContentProvider] Phase 1 results:", {
+        homepage: homepageResult.status,
+        appSettings: appSettingsResult.status,
+        loadingScreen: loadingScreenResult.status,
+        homepageReason: homepageResult.status === "rejected" ? homepageResult.reason : undefined,
+        appSettingsReason: appSettingsResult.status === "rejected" ? appSettingsResult.reason : undefined,
+        loadingScreenReason: loadingScreenResult.status === "rejected" ? loadingScreenResult.reason : undefined,
+      });
 
       // Check for any real failures in Phase 1 (ignore aborted requests)
       const phase1Failures = [
@@ -94,6 +107,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
       );
 
       if (phase1Failures.length > 0) {
+        console.error("[ContentProvider] Phase 1 real failures:", phase1Failures.map(f => f.name));
         setError(`Failed to load ${phase1Failures[0].name} from the server.`);
         setIsLoading(false);
         return;
@@ -101,6 +115,7 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
 
       // If all were aborted, just return silently
       if ([homepageResult, appSettingsResult, loadingScreenResult].every(r => r.status === "rejected")) {
+        console.log("[ContentProvider] All Phase 1 requests aborted, returning silently.");
         setIsLoading(false);
         return;
       }
@@ -109,7 +124,14 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
       const appSettingsData = appSettingsResult.status === "fulfilled" ? appSettingsResult.value : null;
       const loadingScreenData = loadingScreenResult.status === "fulfilled" ? loadingScreenResult.value : null;
 
+      console.log("[ContentProvider] Phase 1 data:", {
+        hasHomepage: !!homepageData,
+        hasAppSettings: !!appSettingsData,
+        hasLoadingScreen: !!loadingScreenData,
+      });
+
       if (!homepageData || !appSettingsData || !loadingScreenData) {
+        console.warn("[ContentProvider] One or more Phase 1 results are null (partial abort?), returning silently.");
         setIsLoading(false);
         return;
       }
@@ -127,12 +149,16 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
         )
       );
 
+      console.log("[ContentProvider] Phase 2 vehicle slugs discovered:", vehicleSlugs);
+
       if (vehicleSlugs.length === 0) {
+        console.log("[ContentProvider] No vehicle slugs found, done.");
         setIsLoading(false);
         return;
       }
 
       // Phase 3: Dynamically fetch configs for each discovered vehicle type
+      console.log("[ContentProvider] Phase 3: fetching vehicle/brake/hotspot configs...");
       const vehiclePromises = vehicleSlugs.map((slug) => getVehicleConfiguration(slug));
       const brakePromises = vehicleSlugs.map((slug) => getBrakeConfiguration(slug));
       const hotspotPromises = vehicleSlugs.map((slug) => getHotspotConfiguration(slug));
@@ -142,6 +168,12 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
         Promise.allSettled(brakePromises),
         Promise.allSettled(hotspotPromises),
       ]);
+
+      console.log("[ContentProvider] Phase 3 results:", {
+        vehicles: vehicleResults.map(r => ({ status: r.status, reason: r.status === "rejected" ? r.reason : undefined })),
+        brakes: brakeResults.map(r => ({ status: r.status, reason: r.status === "rejected" ? r.reason : undefined })),
+        hotspots: hotspotResults.map(r => ({ status: r.status, reason: r.status === "rejected" ? r.reason : undefined })),
+      });
 
       // Build dynamic config records (Phase 3 failures are non-critical — just set null)
       const newVehicleConfigs: Record<string, VehicleConfiguration | null> = {};
@@ -157,9 +189,14 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
       setVehicleConfigs(newVehicleConfigs);
       setBrakeConfigs(newBrakeConfigs);
       setHotspotConfigs(newHotspotConfigs);
+
+      console.log("[ContentProvider] Done. All content loaded successfully.");
     } catch (err) {
       if (!isAbortError(err)) {
+        console.error("[ContentProvider] Unexpected error in fetchAllContent:", err);
         setError(err instanceof Error ? err.message : "Failed to fetch content");
+      } else {
+        console.log("[ContentProvider] Fetch aborted (outer catch), ignoring.");
       }
     } finally {
       setIsLoading(false);
