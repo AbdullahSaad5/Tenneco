@@ -5,7 +5,7 @@ import { Urbanist } from "next/font/google";
 import "./globals.css";
 import "./polyfills";
 import { ModelPreloaderProvider, PreloadingScreen, usePreload } from "./_components/ModelPreloader";
-import { ContentProvider } from "./providers/ContentProvider";
+import { ContentProvider, useContent } from "./providers/ContentProvider";
 import { LanguageProvider } from "./providers/LanguageProvider";
 import { FaviconUpdater } from "./_components/FaviconUpdater";
 
@@ -17,8 +17,9 @@ const urbanist = Urbanist({
 
 function AppContent({ children }: { children: React.ReactNode }) {
   const { isPreloaded } = usePreload();
+  const { isLoading: isContentLoading } = useContent();
 
-  if (!isPreloaded) {
+  if (!isPreloaded || isContentLoading) {
     return <PreloadingScreen />;
   }
 
