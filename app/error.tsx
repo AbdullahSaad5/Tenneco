@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 import { RefreshCw, Home } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -9,8 +10,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
   const router = useRouter();
 
   useEffect(() => {
-    // Log the error to an error reporting service
-    console.error("Application Error:", error);
+    Sentry.captureException(error);
   }, [error]);
 
   const handleGoHome = () => {
