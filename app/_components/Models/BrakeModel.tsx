@@ -109,19 +109,16 @@ const ActionHotspot = ({ position, color, label, onClick, occludeRef, iconType =
           viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="drop-shadow-lg"
           style={{
-            filter: hovered ? `drop-shadow(0 0 20px ${color})` : `drop-shadow(0 4px 10px ${color}80)`,
             transition: "filter 0.3s ease",
           }}
         >
           <circle cx="12" cy="12" r="11" fill={color} opacity={hovered ? "1" : "0.95"} />
-          <circle cx="12" cy="12" r="10" fill="white" />
           {iconType === 'explosion' ? (
             /* Lightning bolt icon */
             <path
               d="M13 3L4 14h7v7l9-11h-7V3z"
-              fill={color}
+              fill="white"
               opacity={hovered ? "1" : "0.9"}
             />
           ) : (
@@ -129,12 +126,12 @@ const ActionHotspot = ({ position, color, label, onClick, occludeRef, iconType =
             <>
               <path
                 d="M8 12l-4-4v3H1v2h3v3l4-4z"
-                fill={color}
+                fill="white"
                 opacity={hovered ? "1" : "0.9"}
               />
               <path
                 d="M16 12l4-4v3h3v2h-3v3l-4-4z"
-                fill={color}
+                fill="white"
                 opacity={hovered ? "1" : "0.9"}
               />
             </>
@@ -261,15 +258,12 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
           viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="drop-shadow-lg"
           style={{
-            filter: hovered ? `drop-shadow(0 0 12px ${color})` : "drop-shadow(0 2px 6px rgba(0,0,0,0.3))",
             transition: "filter 0.2s ease",
           }}
         >
-          <circle cx="12" cy="12" r="10" fill={color} opacity={hovered ? "0.9" : "0.8"} />
-          <circle cx="12" cy="12" r="9" fill="white" />
-          <path d="M12 8v8m-4-4h8" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx="12" cy="12" r="10" fill={color} opacity={hovered ? "1" : "0.9"} />
+          <path d="M12 8v8m-4-4h8" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
         </svg>
       </Html>
 
