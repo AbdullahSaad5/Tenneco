@@ -373,9 +373,9 @@ function BrakeModelViewer({
         <primitive
           object={clonedScene}
           rotation={[
-            brakeConfig.rotation.x,
-            brakeConfig.rotation.y,
-            brakeConfig.rotation.z,
+            brakeConfig?.rotation.x,
+            brakeConfig?.rotation.y,
+            brakeConfig?.rotation.z,
           ]}
         />
       </group>
