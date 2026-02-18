@@ -12,6 +12,10 @@ Sentry.init({
   integrations: [
     // Session Replay - captures DOM snapshots for error debugging
     Sentry.replayIntegration({
+      // Show all text and media in replays (no masking/blocking)
+      maskAllText: false,
+      maskAllInputs: false,
+      blockAllMedia: false,
       // Capture network request/response bodies for debugging API issues
       networkDetailAllowUrls: [
         window.location.origin,
