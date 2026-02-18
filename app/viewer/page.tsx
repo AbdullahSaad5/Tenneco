@@ -113,7 +113,7 @@ function ViewerContent() {
       )}
 
       {/* 3D Canvas - always visible, handles animation internally */}
-      <div className={`absolute inset-0 ${animationComplete ? 'top-[72px]' : 'top-0'}`}>
+      <div className={`absolute inset-0 ${animationComplete ? 'top-[56px] sm:top-[72px]' : 'top-0'}`}>
         <Canvas
           shadows
           gl={{
@@ -147,7 +147,7 @@ function ViewerContent() {
 
       {/* Watermark - only show after animation complete */}
       {animationComplete && (
-        <div className="fixed bottom-6 right-6 z-10 text-slate-400 text-xs font-medium">
+        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-10 text-slate-400 text-xs font-medium">
           Tenneco 3D Viewer
         </div>
       )}

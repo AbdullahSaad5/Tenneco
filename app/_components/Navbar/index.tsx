@@ -23,10 +23,10 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen = false,
       transition={{ type: "spring", damping: 20 }}
       className="fixed top-0 left-0 right-0 z-30 bg-white border-b border-slate-200"
     >
-      <div className="max-w-screen-2xl mx-auto px-6 py-3">
+      <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 py-2 sm:py-3">
         <div className="flex items-center justify-between">
           {/* Left: Sidebar Toggle + Logo */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Back Button (if showBackButton is true) */}
             {showBackButton && (
               <Link href="/">
@@ -52,7 +52,7 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen = false,
                 title={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
               >
                 <svg
-                  className="w-6 h-6 text-slate-700"
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -77,8 +77,8 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen = false,
             )}
 
             {/* Logo */}
-            <div className="flex items-center gap-4">
-              <div className="relative h-12 w-32 sm:w-40">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="relative h-10 w-24 sm:h-12 sm:w-40">
                 <Image
                   src="/tenneco-logo.png"
                   alt="Tenneco Logo"
@@ -95,7 +95,7 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen = false,
           </div>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Language Switcher */}
             <LanguageSwitcher variant="dropdown" theme="light" />
 

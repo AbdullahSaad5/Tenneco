@@ -51,16 +51,16 @@ const ViewControls: React.FC<ViewControlsProps> = ({
       initial={{ x: 100 }}
       animate={{ x: 0 }}
       transition={{ type: "spring", damping: 20 }}
-      className="fixed right-4 top-20 z-20 flex flex-col gap-2"
+      className="fixed right-2 top-16 sm:right-4 sm:top-20 z-20 flex flex-col gap-1.5 sm:gap-2"
     >
       {/* Reset Camera Button */}
       <button
         onClick={onResetCamera}
-        className="group p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
+        className="group p-2 sm:p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
         title="Reset Camera"
       >
         <svg
-          className="w-6 h-6 text-slate-700 group-hover:text-white transition-colors"
+          className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 group-hover:text-white transition-colors"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -78,11 +78,11 @@ const ViewControls: React.FC<ViewControlsProps> = ({
       {showExplosionButton && onPlayExplosion && (
         <button
           onClick={onPlayExplosion}
-          className="group p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
+          className="group p-2 sm:p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
           title="Play Explosion Animation"
         >
           <svg
-            className="w-6 h-6 text-slate-700 group-hover:text-white transition-colors"
+            className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 group-hover:text-white transition-colors"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -100,11 +100,11 @@ const ViewControls: React.FC<ViewControlsProps> = ({
       {/* Zoom In Button */}
       <button
         onClick={onZoomIn}
-        className="group p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
+        className="group p-2 sm:p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
         title="Zoom In"
       >
         <svg
-          className="w-6 h-6 text-slate-700 group-hover:text-white transition-colors"
+          className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 group-hover:text-white transition-colors"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -121,11 +121,11 @@ const ViewControls: React.FC<ViewControlsProps> = ({
       {/* Zoom Out Button */}
       <button
         onClick={onZoomOut}
-        className="group p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
+        className="group p-2 sm:p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
         title="Zoom Out"
       >
         <svg
-          className="w-6 h-6 text-slate-700 group-hover:text-white transition-colors"
+          className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 group-hover:text-white transition-colors"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -142,12 +142,12 @@ const ViewControls: React.FC<ViewControlsProps> = ({
       {/* Fullscreen Button */}
       <button
         onClick={toggleFullscreen}
-        className="group p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
+        className="group p-2 sm:p-3 bg-white hover:bg-primary rounded-lg border border-slate-200 transition-colors"
         title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
       >
         {isFullscreen ? (
           <svg
-            className="w-6 h-6 text-slate-700 group-hover:text-white transition-colors"
+            className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 group-hover:text-white transition-colors"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -161,7 +161,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({
           </svg>
         ) : (
           <svg
-            className="w-6 h-6 text-slate-700 group-hover:text-white transition-colors"
+            className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 group-hover:text-white transition-colors"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

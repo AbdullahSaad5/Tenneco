@@ -72,10 +72,10 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
               animate={{ x: 0 }}
               exit={{ x: -320 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed left-0 top-[72px] h-[calc(100vh-72px)] w-80 bg-gradient-to-br from-slate-900 to-slate-800 backdrop-blur-xl border-r border-white/10 z-50 flex flex-col shadow-2xl"
+              className="fixed left-0 top-[56px] sm:top-[72px] h-[calc(100vh-56px)] sm:h-[calc(100vh-72px)] w-[280px] sm:w-80 bg-gradient-to-br from-slate-900 to-slate-800 backdrop-blur-xl border-r border-white/10 z-50 flex flex-col shadow-2xl"
             >
               {/* Header */}
-              <div className="p-6 border-b border-white/10">
+              <div className="p-4 sm:p-6 border-b border-white/10">
                 {/* Logo and Close Button */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -112,7 +112,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                 </div>
                 {/* Section Title */}
                 <div>
-                  <h2 className="text-xl font-bold text-white mb-1">Vehicle Types</h2>
+                  <h2 className="text-lg sm:text-xl font-bold text-white mb-1">Vehicle Types</h2>
                   <p className="text-slate-400 text-sm">Select a brake system to explore</p>
                 </div>
               </div>
