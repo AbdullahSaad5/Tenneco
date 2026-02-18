@@ -105,9 +105,14 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
         return;
       }
 
-      const homepageData = homepageResult.value;
-      const appSettingsData = appSettingsResult.value;
-      const loadingScreenData = loadingScreenResult.value;
+      const homepageData = homepageResult.status === "fulfilled" ? homepageResult.value : null;
+      const appSettingsData = appSettingsResult.status === "fulfilled" ? appSettingsResult.value : null;
+      const loadingScreenData = loadingScreenResult.status === "fulfilled" ? loadingScreenResult.value : null;
+
+      if (!homepageData || !appSettingsData || !loadingScreenData) {
+        setIsLoading(false);
+        return;
+      }
 
       setHomepage(homepageData);
       setAppSettings(appSettingsData);
