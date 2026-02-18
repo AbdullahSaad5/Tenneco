@@ -8,7 +8,14 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
+import axios from "axios";
 import { useAxios } from "../hooks/useAxios";
+
+function isAbortError(error: unknown): boolean {
+  if (axios.isCancel(error)) return true;
+  if (error instanceof Error && (error.name === "AbortError" || error.name === "CanceledError")) return true;
+  return false;
+}
 
 // ============================================================================
 // Types
@@ -94,8 +101,10 @@ export const LanguageProvider = ({
           setCurrentLanguage(enabledLanguages[0].code);
         }
       } catch (err) {
-        console.error("Failed to fetch languages:", err);
-        setError("Failed to load languages");
+        if (!isAbortError(err)) {
+          console.error("Failed to fetch languages:", err);
+          setError("Failed to load languages");
+        }
         setAvailableLanguages([]);
       } finally {
         setIsLoading(false);

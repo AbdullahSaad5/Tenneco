@@ -11,6 +11,13 @@ import {
   ExtendedContentContextValue,
 } from "../_types/content";
 import { useAxios } from "../hooks/useAxios";
+import axios from "axios";
+
+function isAbortError(error: unknown): boolean {
+  if (axios.isCancel(error)) return true;
+  if (error instanceof Error && (error.name === "AbortError" || error.name === "CanceledError")) return true;
+  return false;
+}
 
 // ============================================================================
 // Context Creation
@@ -77,17 +84,23 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
         getLoadingScreenContent(),
       ]);
 
-      // Check for any failures in Phase 1
-      if (
-        homepageResult.status === "rejected" ||
-        appSettingsResult.status === "rejected" ||
-        loadingScreenResult.status === "rejected"
-      ) {
-        const failedCall =
-          homepageResult.status === "rejected" ? "homepage content" :
-          appSettingsResult.status === "rejected" ? "app settings" :
-          "loading screen";
-        setError(`Failed to load ${failedCall} from the server.`);
+      // Check for any real failures in Phase 1 (ignore aborted requests)
+      const phase1Failures = [
+        { result: homepageResult, name: "homepage content" },
+        { result: appSettingsResult, name: "app settings" },
+        { result: loadingScreenResult, name: "loading screen" },
+      ].filter(
+        ({ result }) => result.status === "rejected" && !isAbortError((result as PromiseRejectedResult).reason)
+      );
+
+      if (phase1Failures.length > 0) {
+        setError(`Failed to load ${phase1Failures[0].name} from the server.`);
+        setIsLoading(false);
+        return;
+      }
+
+      // If all were aborted, just return silently
+      if ([homepageResult, appSettingsResult, loadingScreenResult].every(r => r.status === "rejected")) {
         setIsLoading(false);
         return;
       }
@@ -125,10 +138,16 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
         Promise.allSettled(hotspotPromises),
       ]);
 
-      // Check for any failures in Phase 3
-      const anyVehicleFailed = vehicleResults.some((r) => r.status === "rejected");
-      const anyBrakeFailed = brakeResults.some((r) => r.status === "rejected");
-      const anyHotspotFailed = hotspotResults.some((r) => r.status === "rejected");
+      // Check for any real failures in Phase 3 (ignore aborted requests)
+      const anyVehicleFailed = vehicleResults.some(
+        (r) => r.status === "rejected" && !isAbortError((r as PromiseRejectedResult).reason)
+      );
+      const anyBrakeFailed = brakeResults.some(
+        (r) => r.status === "rejected" && !isAbortError((r as PromiseRejectedResult).reason)
+      );
+      const anyHotspotFailed = hotspotResults.some(
+        (r) => r.status === "rejected" && !isAbortError((r as PromiseRejectedResult).reason)
+      );
 
       if (anyVehicleFailed || anyBrakeFailed || anyHotspotFailed) {
         const failedType =
@@ -155,7 +174,9 @@ export const ContentProvider: React.FC<ContentProviderProps> = ({ children }) =>
       setBrakeConfigs(newBrakeConfigs);
       setHotspotConfigs(newHotspotConfigs);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch content");
+      if (!isAbortError(err)) {
+        setError(err instanceof Error ? err.message : "Failed to fetch content");
+      }
     } finally {
       setIsLoading(false);
     }
