@@ -6,7 +6,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import * as THREE from "three";
 import Scene from "../_components/Scene";
-import LoadingScreen from "../_components/LoadingScreen";
 import ViewControls from "../_components/ViewControls";
 import Navbar from "../_components/Navbar";
 import ModelInfo from "../_components/ModelInfo";
@@ -79,9 +78,9 @@ function ViewerContent() {
     setSelectedHotspot(hotspot);
   };
 
-  // Show loading screen while content is loading
+  // Wait for content to be ready (should already be loaded from preloading)
   if (isLoading || !vehicleConfig || !brakeConfig) {
-    return <LoadingScreen />;
+    return null;
   }
 
   return (
@@ -174,7 +173,7 @@ function ViewerContent() {
 
 export default function ViewerPage() {
   return (
-    <Suspense fallback={<LoadingScreen />}>
+    <Suspense fallback={null}>
       <ViewerContent />
     </Suspense>
   );
