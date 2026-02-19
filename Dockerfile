@@ -1,8 +1,8 @@
 # Multi-stage build for efficient Next.js client application
 # Based on official Next.js Docker example with optimizations
-LABEL maintainer="sas"
 
 FROM node:22-alpine AS base
+LABEL maintainer="sas"
 
 # Install dependencies only when needed
 FROM base AS deps
