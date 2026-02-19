@@ -72,7 +72,7 @@ function ViewerContent() {
     window.dispatchEvent(new CustomEvent("playExplosion"));
   };
 
-  const handleHotspotClick = (hotspot: HotspotItem) => {
+  const handleHotspotClick = (hotspot: HotspotItem | null) => {
     setSelectedHotspot(hotspot);
   };
 

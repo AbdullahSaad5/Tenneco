@@ -16,7 +16,7 @@ interface SceneProps {
   vehicleConfig: VehicleConfiguration;
   brakeConfig: BrakeConfiguration;
   hotspotConfig?: HotspotConfiguration | null;
-  onHotspotClick?: (hotspot: HotspotItem) => void;
+  onHotspotClick?: (hotspot: HotspotItem | null) => void;
   isAnimating?: boolean;
   onAnimationComplete?: () => void;
 }

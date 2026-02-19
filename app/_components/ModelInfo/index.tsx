@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Video } from "lucide-react";
 import Markdown from "react-markdown";
@@ -20,6 +20,13 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot, brakeMedia }) => {
   const [isPDFOpen, setIsPDFOpen] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const { getTranslation } = useLanguage();
+
+  // Reset info panel to open whenever hotspot changes (e.g. re-clicking after manual close)
+  useEffect(() => {
+    if (hotspot) {
+      setIsOpen(true);
+    }
+  }, [hotspot]);
 
   // Get PDF URL: hotspot → brake → null (hidden)
   const pdfUrl = useMemo(() => {

@@ -414,7 +414,7 @@ interface BrakeModelProps {
   vehicleType: VehicleType;
   brakeConfig: BrakeConfiguration;
   hotspotConfig?: HotspotConfiguration | null;
-  onHotspotClick?: (hotspot: HotspotItem) => void;
+  onHotspotClick?: (hotspot: HotspotItem | null) => void;
   opacity?: number;
   showExplosionHotspot?: boolean;
 }
@@ -576,6 +576,10 @@ const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, opacity =
       // Toggle OFF - clicking the same hotspot clears isolation
       setIsolatedBoneIndex(null);
       setActiveIsolationHotspotId(null);
+      if (onHotspotClick) {
+        onHotspotClick(null);
+      }
+      return;
     } else {
       // Find closest bone and isolate its layer
       if (modelRef.current) {
