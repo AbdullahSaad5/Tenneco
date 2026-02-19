@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Video } from "lucide-react";
 import Markdown from "react-markdown";
@@ -20,11 +20,21 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot, brakeMedia }) => {
   const [isPDFOpen, setIsPDFOpen] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const { getTranslation } = useLanguage();
+  const lastHotspotRef = useRef<HotspotItem | null>(null);
 
-  // Reset info panel to open whenever hotspot changes (e.g. re-clicking after manual close)
+  // Keep track of the last non-null hotspot so we can render content during exit animation
+  if (hotspot) {
+    lastHotspotRef.current = hotspot;
+  }
+
+  const displayHotspot = hotspot || lastHotspotRef.current;
+
+  // Reset info panel to open when a hotspot is activated, close when deactivated
   useEffect(() => {
     if (hotspot) {
       setIsOpen(true);
+    } else {
+      setIsOpen(false);
     }
   }, [hotspot]);
 
@@ -68,81 +78,91 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot, brakeMedia }) => {
   const showPdfButton = !!pdfUrl;
   const showVideoButton = !!videoUrl;
 
-  if (!hotspot) return null;
+  if (!displayHotspot) return null;
 
   const details = {
     name: getTranslation(
-      hotspot.info?.title || hotspot.label,
-      hotspot.info?.titleTranslations || hotspot.labelTranslations
+      displayHotspot.info?.title || displayHotspot.label,
+      displayHotspot.info?.titleTranslations || displayHotspot.labelTranslations
     ),
     description: getTranslation(
-      hotspot.info?.description || "",
-      hotspot.info?.descriptionTranslations
+      displayHotspot.info?.description || "",
+      displayHotspot.info?.descriptionTranslations
     ).trim(),
-    color: hotspot.color,
+    color: displayHotspot.color,
   };
 
   return (
     <>
       {/* Action Buttons Group */}
-      <div className="fixed bottom-3 inset-x-0 sm:inset-x-auto sm:bottom-8 sm:right-6 z-20 flex flex-row gap-2 sm:gap-3 justify-center sm:justify-end">
-        {/* Info Toggle Button */}
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          onClick={() => setIsOpen(!isOpen)}
-          className="p-2.5 sm:p-3 rounded-lg border border-white/20 transition-colors shadow-lg bg-white hover:bg-slate-50"
-          title={isOpen ? "Hide Info" : "Show Info"}
-        >
-          <svg
-            className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 transition-colors"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+      <AnimatePresence>
+        {!!hotspot && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.25 }}
+            className="fixed bottom-3 inset-x-0 sm:inset-x-auto sm:bottom-8 sm:right-6 z-20 flex flex-row gap-2 sm:gap-3 justify-center sm:justify-end"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        </motion.button>
+            {/* Info Toggle Button */}
+            <motion.button
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              onClick={() => setIsOpen(!isOpen)}
+              className="p-2.5 sm:p-3 rounded-lg border border-white/20 transition-colors shadow-lg bg-white hover:bg-slate-50"
+              title={isOpen ? "Hide Info" : "Show Info"}
+            >
+              <svg
+                className="w-5 h-5 sm:w-6 sm:h-6 text-slate-700 transition-colors"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </motion.button>
 
-        {/* PDF Button - only show if PDF exists */}
-        {showPdfButton && (
-          <motion.button
-            initial={{ scale: 0, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            onClick={() => setIsPDFOpen(true)}
-            className="p-2.5 sm:p-3 rounded-lg bg-red-600 hover:bg-red-700 transition-colors shadow-lg group"
-            title="View Documentation"
-          >
-            <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:scale-110 transition-transform" />
-          </motion.button>
-        )}
+            {/* PDF Button - only show if PDF exists */}
+            {showPdfButton && (
+              <motion.button
+                initial={{ scale: 0, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                transition={{ delay: 0.05 }}
+                onClick={() => setIsPDFOpen(true)}
+                className="p-2.5 sm:p-3 rounded-lg bg-red-600 hover:bg-red-700 transition-colors shadow-lg group"
+                title="View Documentation"
+              >
+                <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:scale-110 transition-transform" />
+              </motion.button>
+            )}
 
-        {/* Video Button - only show if video exists */}
-        {showVideoButton && (
-          <motion.button
-            initial={{ scale: 0, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            onClick={() => setIsVideoOpen(true)}
-            className="p-2.5 sm:p-3 rounded-lg bg-primary hover:opacity-90 transition-all shadow-lg group"
-            title="Watch Video"
-          >
-            <Video className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:scale-110 transition-transform" />
-          </motion.button>
+            {/* Video Button - only show if video exists */}
+            {showVideoButton && (
+              <motion.button
+                initial={{ scale: 0, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                onClick={() => setIsVideoOpen(true)}
+                className="p-2.5 sm:p-3 rounded-lg bg-primary hover:opacity-90 transition-all shadow-lg group"
+                title="Watch Video"
+              >
+                <Video className="w-5 h-5 sm:w-6 sm:h-6 text-white group-hover:scale-110 transition-transform" />
+              </motion.button>
+            )}
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
 
       {/* Info Panel */}
       <AnimatePresence mode="wait">
         {isOpen && (
           <motion.div
-            key={hotspot.hotspotId}
+            key={displayHotspot.hotspotId}
             initial={{ opacity: 0, x: 100, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 100, scale: 0.9 }}
