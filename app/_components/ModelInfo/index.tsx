@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Video } from "lucide-react";
+import Markdown from "react-markdown";
 import PDFModal from "../PDFModal";
 import VideoModal from "../VideoModal";
 import { HotspotItem, BrakeMedia } from "../../_types/content";
@@ -70,7 +71,7 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot, brakeMedia }) => {
     description: getTranslation(
       hotspot.info?.description || "",
       hotspot.info?.descriptionTranslations
-    ),
+    ).trim(),
     color: hotspot.color,
   };
 
@@ -152,7 +153,9 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot, brakeMedia }) => {
 
             {/* Content */}
             <div className="p-3 sm:p-5">
-              <p className="text-sm sm:text-base text-slate-600 leading-relaxed">{details.description}</p>
+              <div className="text-sm sm:text-base text-slate-600 leading-relaxed prose prose-sm prose-slate max-w-none prose-p:my-1 prose-ul:my-2 prose-li:my-1">
+                <Markdown>{details.description}</Markdown>
+              </div>
             </div>
           </motion.div>
         )}
