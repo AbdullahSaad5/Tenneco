@@ -2,12 +2,12 @@
 
 import { useEffect, useState, createContext, useContext, ReactNode, useCallback, useRef } from "react";
 import Image from "next/image";
-import axios from "axios";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { useGLTF } from "@react-three/drei";
 import { getMediaUrl } from "../../utils/mediaUrl";
+import { useContent } from "../../providers/ContentProvider";
 
 // Enable Three.js cache globally
 THREE.Cache.enabled = true;
@@ -66,64 +66,6 @@ function loadGLBModel(url: string, loader: GLTFLoader): Promise<{ url: string; s
   });
 }
 
-// Fetch active vehicle type slugs from API
-async function fetchVehicleTypeSlugs(): Promise<string[]> {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
-  try {
-    const response = await axios.get(`${apiBaseUrl}/vehicle-types`, {
-      params: { where: { isActive: { equals: true } }, sort: 'order' },
-      timeout: 5000,
-    });
-    const docs = Array.isArray(response.data?.docs) ? response.data.docs : [];
-    return docs.map((vt: { slug: string }) => vt.slug);
-  } catch {
-    return [];
-  }
-}
-
-// Fetch configurations from API
-async function fetchConfigsFromAPI(vehicleTypes: string[]): Promise<{
-  vehicleConfigs: Array<{ vehicleType: string; modelUrl: string | null }>;
-  brakeConfigs: Array<{ vehicleType: string; modelUrl: string | null }>;
-}> {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
-
-  // Fetch vehicle configurations
-  const vehiclePromises = vehicleTypes.map(async (vehicleType) => {
-    try {
-      const response = await axios.get(`${apiBaseUrl}/vehicle-configurations`, {
-        params: { depth: 1, where: { 'vehicleType.slug': { equals: vehicleType } } },
-        timeout: 5000,
-      });
-      const data = Array.isArray(response.data?.docs) ? response.data.docs[0] : response.data;
-      return { vehicleType, modelUrl: data?.modelFile?.media?.url || null };
-    } catch {
-      return { vehicleType, modelUrl: null };
-    }
-  });
-
-  // Fetch brake configurations
-  const brakePromises = vehicleTypes.map(async (vehicleType) => {
-    try {
-      const response = await axios.get(`${apiBaseUrl}/brake-configurations`, {
-        params: { depth: 1, where: { 'vehicleType.slug': { equals: vehicleType } } },
-        timeout: 5000,
-      });
-      const data = Array.isArray(response.data?.docs) ? response.data.docs[0] : response.data;
-      return { vehicleType, modelUrl: data?.modelFile?.media?.url || null };
-    } catch {
-      return { vehicleType, modelUrl: null };
-    }
-  });
-
-  const [vehicleResults, brakeResults] = await Promise.all([
-    Promise.all(vehiclePromises),
-    Promise.all(brakePromises),
-  ]);
-
-  return { vehicleConfigs: vehicleResults, brakeConfigs: brakeResults };
-}
-
 // Detect mobile devices — touch support + small screen
 function isMobileDevice(): boolean {
   if (typeof window === "undefined") return false;
@@ -133,6 +75,8 @@ function isMobileDevice(): boolean {
 }
 
 export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
+  const { vehicleConfigs, brakeConfigs, isLoading: isContentLoading } = useContent();
+
   const [isPreloaded, setIsPreloaded] = useState(false);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("Initializing...");
@@ -142,52 +86,10 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
   });
   const hasStarted = useRef(false);
 
-  const preloadAllModels = useCallback(async () => {
-    if (hasStarted.current) return;
-    hasStarted.current = true;
-
+  // Preload GLB models into Three.js cache (desktop only)
+  const preloadGLBModels = useCallback(async (urls: PreloadContextType['resolvedUrls']) => {
     const mobile = isMobileDevice();
 
-    // Step 1: Discover vehicle types dynamically
-    setStatus("Discovering vehicle types...");
-    setProgress(3);
-
-    const vehicleTypes = await fetchVehicleTypeSlugs();
-
-    // Step 2: Fetch configurations from API
-    setStatus("Fetching configurations...");
-    setProgress(5);
-
-    let apiConfigs;
-    try {
-      apiConfigs = await fetchConfigsFromAPI(vehicleTypes);
-    } catch {
-      apiConfigs = {
-        vehicleConfigs: vehicleTypes.map(vt => ({ vehicleType: vt, modelUrl: null })),
-        brakeConfigs: vehicleTypes.map(vt => ({ vehicleType: vt, modelUrl: null })),
-      };
-    }
-
-    setProgress(10);
-
-    // Step 3: Resolve final URLs (API or fallback)
-    const urls: PreloadContextType['resolvedUrls'] = {
-      vehicles: {},
-      brakes: {},
-    };
-
-    vehicleTypes.forEach((vt) => {
-      const vehicleApi = apiConfigs.vehicleConfigs.find(c => c.vehicleType === vt);
-      const brakeApi = apiConfigs.brakeConfigs.find(c => c.vehicleType === vt);
-
-      urls.vehicles[vt] = getMediaUrl(vehicleApi?.modelUrl ?? undefined) || "";
-      urls.brakes[vt] = getMediaUrl(brakeApi?.modelUrl ?? undefined) || "";
-    });
-
-    setResolvedUrls(urls);
-
-    // On mobile: skip heavy GLB preloading to avoid OOM crashes.
-    // Models will load on-demand when the user opens a specific vehicle.
     if (mobile) {
       console.log("[ModelPreloader] Mobile detected — skipping GLB preloading, models will load on-demand");
       setProgress(100);
@@ -196,7 +98,6 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
       return;
     }
 
-    // Desktop: preload all models into cache for instant transitions
     const allUrls = [
       ...Object.values(urls.vehicles),
       ...Object.values(urls.brakes),
@@ -204,11 +105,20 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
 
     const totalModels = allUrls.length;
 
+    if (totalModels === 0) {
+      setProgress(100);
+      setIsPreloaded(true);
+      setStatus("Complete!");
+      return;
+    }
+
     const loader = createGLTFLoader();
     let loadedCount = 0;
 
     setStatus("Loading 3D models...");
     setProgress(15);
+
+    const vehicleTypes = Object.keys(urls.vehicles);
 
     const loadPromises = allUrls.map(async (url, index) => {
       const isVehicle = index < vehicleTypes.length;
@@ -240,9 +150,37 @@ export function ModelPreloaderProvider({ children }: ModelPreloaderProps) {
     setStatus("Complete!");
   }, []);
 
+  // Derive model URLs from ContentProvider data and trigger preloading
   useEffect(() => {
-    preloadAllModels();
-  }, [preloadAllModels]);
+    if (isContentLoading || hasStarted.current) return;
+    hasStarted.current = true;
+
+    setStatus("Resolving model URLs...");
+    setProgress(5);
+
+    // Derive URLs from ContentProvider's already-loaded configs
+    const urls: PreloadContextType['resolvedUrls'] = {
+      vehicles: {},
+      brakes: {},
+    };
+
+    for (const [vt, config] of Object.entries(vehicleConfigs)) {
+      if (config?.modelFile?.mediaUrl) {
+        urls.vehicles[vt] = getMediaUrl(config.modelFile.mediaUrl) || "";
+      }
+    }
+    for (const [vt, config] of Object.entries(brakeConfigs)) {
+      if (config?.modelFile?.mediaUrl) {
+        urls.brakes[vt] = getMediaUrl(config.modelFile.mediaUrl) || "";
+      }
+    }
+
+    setResolvedUrls(urls);
+    setProgress(10);
+
+    // Preload GLB models into cache
+    preloadGLBModels(urls);
+  }, [isContentLoading, vehicleConfigs, brakeConfigs, preloadGLBModels]);
 
   return (
     <PreloadContext.Provider value={{ isPreloaded, progress, status, resolvedUrls }}>
