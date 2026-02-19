@@ -29,17 +29,17 @@ Sentry.init({
     // Browser tracing - automatic pageload/navigation spans + web vitals
     Sentry.browserTracingIntegration(),
 
-    // User feedback widget - lets users report bugs with screenshots
-    Sentry.feedbackIntegration({
-      colorScheme: "system",
-      autoInject: true,
-      showBranding: false,
-      triggerLabel: "Report a Bug",
-      formTitle: "Report a Bug",
-      submitButtonLabel: "Send Report",
-      messagePlaceholder: "Describe what happened...",
-      successMessageText: "Thank you for your report!",
-    }),
+    // // User feedback widget - lets users report bugs with screenshots
+    // Sentry.feedbackIntegration({
+    //   colorScheme: "system",
+    //   autoInject: true,
+    //   showBranding: false,
+    //   triggerLabel: "Report a Bug",
+    //   formTitle: "Report a Bug",
+    //   submitButtonLabel: "Send Report",
+    //   messagePlaceholder: "Describe what happened...",
+    //   successMessageText: "Thank you for your report!",
+    // }),
 
     // Capture console.error calls as breadcrumbs
     Sentry.captureConsoleIntegration({ levels: ["error", "warn"] }),
