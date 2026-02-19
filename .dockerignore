@@ -64,4 +64,3 @@ scripts/
 # Config files (unless needed)
 .eslintrc.json
 .prettierrc
-tsconfig.json
