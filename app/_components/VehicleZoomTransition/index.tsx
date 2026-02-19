@@ -25,9 +25,15 @@ interface VehicleModelProps {
 }
 
 const VehicleModel = ({ vehicleType, config, opacity, blueTransitionProgress = 0 }: VehicleModelProps) => {
-  // Use preloaded URL to avoid double-loading
   const { resolvedUrls } = usePreload();
-  const modelPath = resolvedUrls.vehicles[vehicleType] || config.modelFile.fallbackPath || "";
+  const modelPath = resolvedUrls.vehicles[vehicleType] || "";
+
+  if (!modelPath) return null;
+
+  return <VehicleModelInner vehicleType={vehicleType} config={config} opacity={opacity} blueTransitionProgress={blueTransitionProgress} modelPath={modelPath} />;
+};
+
+const VehicleModelInner = ({ config, opacity, blueTransitionProgress = 0, modelPath }: VehicleModelProps & { modelPath: string }) => {
   const { scene } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
 
@@ -178,10 +184,15 @@ interface BrakeModelProps {
 }
 
 const BrakeTransitionModel = ({ vehicleType, config, opacity }: BrakeModelProps) => {
-  // Use preloaded URL to avoid double-loading
   const { resolvedUrls } = usePreload();
-  const modelPath = resolvedUrls.brakes[vehicleType] || config.modelFile.fallbackPath || "";
+  const modelPath = resolvedUrls.brakes[vehicleType] || "";
 
+  if (!modelPath) return null;
+
+  return <BrakeTransitionModelInner vehicleType={vehicleType} config={config} opacity={opacity} modelPath={modelPath} />;
+};
+
+const BrakeTransitionModelInner = ({ config, opacity, modelPath }: BrakeModelProps & { modelPath: string }) => {
   const { scene } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
 

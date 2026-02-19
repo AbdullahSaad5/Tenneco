@@ -360,7 +360,7 @@ interface BrakeModelProps {
 const BrakeModel = (props: BrakeModelProps) => {
   // Use preloaded URL to avoid double-loading
   const { resolvedUrls } = usePreload();
-  const modelPath = resolvedUrls.brakes[props.vehicleType] || props.brakeConfig.modelFile.fallbackPath || "";
+  const modelPath = resolvedUrls.brakes[props.vehicleType] || "";
 
   // Guard: don't attempt to load if we have no valid model path
   if (!modelPath) return null;

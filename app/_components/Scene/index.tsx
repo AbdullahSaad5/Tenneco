@@ -31,7 +31,7 @@ interface VehicleModelProps {
 
 const VehicleModel = (props: VehicleModelProps) => {
   const { resolvedUrls } = usePreload();
-  const modelPath = resolvedUrls.vehicles[props.vehicleType] || props.vehicleConfig.modelFile.fallbackPath || "";
+  const modelPath = resolvedUrls.vehicles[props.vehicleType] || "";
 
   // Guard: don't attempt to load if we have no valid model path
   if (!modelPath) return null;

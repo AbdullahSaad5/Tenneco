@@ -84,46 +84,36 @@ function CameraInfo({
 function VehicleModel({ vehicleType }: { vehicleType: VehicleType }) {
   const { vehicleConfigs } = useContent();
   const config = vehicleConfigs[vehicleType];
-  const modelPath = config ? (getMediaUrl(config.modelFile.mediaUrl) || config.modelFile.fallbackPath) : '';
+  const modelPath = config ? (getMediaUrl(config.modelFile.mediaUrl) || "") : "";
+
+  if (!modelPath) return null;
+
+  return <VehicleModelInner vehicleType={vehicleType} modelPath={modelPath} />;
+}
+
+function VehicleModelInner({ vehicleType, modelPath }: { vehicleType: VehicleType; modelPath: string }) {
+  const { vehicleConfigs } = useContent();
+  const config = vehicleConfigs[vehicleType];
   const groupRef = useRef<THREE.Group>(null);
 
-  // Always call useGLTF to satisfy React hooks rules
-  const gltf = useGLTF(modelPath || '');
+  const { scene } = useGLTF(modelPath);
 
-  // Use scale from config - handle Vector3 format (same as VehicleZoomTransition)
   const baseScale = config ? (typeof config.scale === 'number' ? config.scale : config.scale.x) : 1;
   const modelScale = config ? config.zoomConfig.initialScale * baseScale : 1;
 
-  // Clone and calculate offset synchronously (same as VehicleZoomTransition)
   const { clonedScene, centerOffset } = useMemo(() => {
-    if (!gltf || !gltf.scene) {
-      return { clonedScene: null, centerOffset: new THREE.Vector3(0, 0, 0) };
-    }
+    const cloned = clone(scene) as THREE.Group;
 
-    // Use SkeletonUtils.clone for proper animation and hierarchy support
-    const cloned = clone(gltf.scene) as THREE.Group;
-
-    // Calculate center BEFORE scaling (use original size for offset calculation)
     const box = new THREE.Box3().setFromObject(cloned);
     const center = new THREE.Vector3();
     box.getCenter(center);
     const minY = box.min.y;
 
-    // Calculate offset and scale it appropriately (same as VehicleZoomTransition)
     const offset = center.clone().negate().multiplyScalar(modelScale);
-    offset.y = (-minY - 0.5) * modelScale; // Position on ground, scaled
+    offset.y = (-minY - 0.5) * modelScale;
 
     return { clonedScene: cloned, centerOffset: offset };
-  }, [gltf, modelScale]);
-
-  if (!modelPath) {
-    console.error('No model path available for vehicle type:', vehicleType);
-    return null;
-  }
-
-  if (!clonedScene) {
-    return null;
-  }
+  }, [scene, modelScale]);
 
   return (
     <group

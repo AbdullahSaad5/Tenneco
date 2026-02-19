@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { AnimationMixer, AnimationAction } from 'three';
 import { VehicleType } from '@/app/_types/content';
 import { useContent } from '@/app/providers/ContentProvider';
+import { getMediaUrl } from '@/app/utils/mediaUrl';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 type CoordinateType = 'click' | 'camera';
@@ -218,8 +219,43 @@ function BrakeModelViewer({
 }) {
   const { brakeConfigs } = useContent();
   const brakeConfig = brakeConfigs[vehicleType];
-  const modelPath = brakeConfig?.modelFile?.fallbackPath;
-  // @ts-expect-error - modelPath is not undefined
+  const modelPath = getMediaUrl(brakeConfig?.modelFile?.mediaUrl) || "";
+
+  if (!modelPath) return null;
+
+  return (
+    <BrakeModelViewerInner
+      vehicleType={vehicleType}
+      isExploded={isExploded}
+      isAnimationPlaying={isAnimationPlaying}
+      onAnimationStateChange={onAnimationStateChange}
+      modelGroupRef={modelGroupRef}
+      modelPath={modelPath}
+    />
+  );
+}
+
+function BrakeModelViewerInner({
+  vehicleType,
+  isExploded,
+  isAnimationPlaying,
+  onAnimationStateChange,
+  modelGroupRef,
+  modelPath,
+}: {
+  vehicleType: VehicleType;
+  isExploded: boolean;
+  isAnimationPlaying: boolean;
+  onAnimationStateChange: (state: {
+    isExploded: boolean;
+    isAnimationPlaying: boolean;
+    hasAnimations: boolean;
+  }) => void;
+  modelGroupRef: MutableRefObject<THREE.Group | null>;
+  modelPath: string;
+}) {
+  const { brakeConfigs } = useContent();
+  const brakeConfig = brakeConfigs[vehicleType];
   const { scene, animations } = useGLTF(modelPath);
 
   const mixerRef = useRef<AnimationMixer | null>(null);
