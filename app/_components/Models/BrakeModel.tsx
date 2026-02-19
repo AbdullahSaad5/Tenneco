@@ -296,27 +296,26 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
 };
 
 /**
- * Finds the skeleton bone index closest to a hotspot position.
- * Uses bone world positions (which reflect the current animation state)
- * to determine which layer/part the hotspot belongs to.
+ * Finds the skeleton bone index whose mesh is closest to a hotspot position.
+ * For each SkinnedMesh, computes the deformed bounding box (accounting for
+ * bone animation) and finds the closest point on that box to the hotspot.
+ * Returns the dominant bone of the closest mesh.
  */
-const MAX_BONE_SNAP_DISTANCE = 10;
-
 function findClosestBoneIndex(
   hotspotPosition: Vector3,
   sceneRoot: THREE.Group,
   modelGroup: THREE.Group
 ): number {
-  // Convert hotspot position from modelGroup's local space to world space
-  const hotspotWorldPos = new THREE.Vector3(
+  // Hotspot position is in modelGroup's local space (where hotspots are rendered).
+  const hotspotLocalPos = new THREE.Vector3(
     hotspotPosition.x,
     hotspotPosition.y,
     hotspotPosition.z
   );
-  modelGroup.localToWorld(hotspotWorldPos);
 
   // Ensure all world matrices are up-to-date (bone transforms, etc.)
   sceneRoot.updateMatrixWorld(true);
+  modelGroup.updateMatrixWorld(true);
 
   // Find the first skeleton in the scene
   let foundSkeleton: THREE.Skeleton | null = null;
@@ -325,25 +324,88 @@ function findClosestBoneIndex(
       foundSkeleton = (child as THREE.SkinnedMesh).skeleton;
     }
   });
-
   if (!foundSkeleton) return -1;
   const skeleton: THREE.Skeleton = foundSkeleton;
 
   let closestBoneIndex = -1;
   let closestDist = Infinity;
-  const boneWorldPos = new THREE.Vector3();
 
-  skeleton.bones.forEach((bone: THREE.Bone, index: number) => {
-    bone.getWorldPosition(boneWorldPos);
-    const dist = boneWorldPos.distanceTo(hotspotWorldPos);
+  const tempVec = new THREE.Vector3();
+  const closestPoint = new THREE.Vector3();
+  const deformedBox = new THREE.Box3();
+  const boneTransMat = new THREE.Matrix4();
+  const combinedMat = new THREE.Matrix4();
+
+  sceneRoot.traverse((child) => {
+    if (!(child as THREE.SkinnedMesh).isSkinnedMesh) return;
+    const mesh = child as THREE.SkinnedMesh;
+    const geometry = mesh.geometry;
+    const skinIndexAttr = geometry.getAttribute('skinIndex') as THREE.BufferAttribute | undefined;
+    const skinWeightAttr = geometry.getAttribute('skinWeight') as THREE.BufferAttribute | undefined;
+    if (!skinIndexAttr || !skinWeightAttr) return;
+
+    // Find the dominant bone for this mesh (highest total skin weight)
+    const boneWeights = new Map<number, number>();
+    for (let i = 0; i < skinIndexAttr.count; i++) {
+      const indices = [skinIndexAttr.getX(i), skinIndexAttr.getY(i), skinIndexAttr.getZ(i), skinIndexAttr.getW(i)];
+      const weights = [skinWeightAttr.getX(i), skinWeightAttr.getY(i), skinWeightAttr.getZ(i), skinWeightAttr.getW(i)];
+      for (let j = 0; j < 4; j++) {
+        if (weights[j] > 0.01) {
+          const bi = Math.round(indices[j]);
+          boneWeights.set(bi, (boneWeights.get(bi) || 0) + weights[j]);
+        }
+      }
+    }
+
+    let dominantBone = -1;
+    let maxWeight = 0;
+    boneWeights.forEach((w, b) => {
+      if (w > maxWeight) { maxWeight = w; dominantBone = b; }
+    });
+    if (dominantBone < 0) return;
+
+    // Build the deformation matrix for the dominant bone.
+    // Pipeline: localPos → bindMatrix → boneTransform → bindMatrixInverse → world
+    // boneTransform = bone.matrixWorld * boneInverse
+    boneTransMat.multiplyMatrices(
+      skeleton.bones[dominantBone].matrixWorld,
+      skeleton.boneInverses[dominantBone]
+    );
+    combinedMat.copy(mesh.bindMatrix);
+    combinedMat.premultiply(boneTransMat);
+    combinedMat.premultiply(mesh.bindMatrixInverse);
+    combinedMat.premultiply(mesh.matrixWorld);
+
+    // Transform all 8 corners of the bind-pose bounding box to get the
+    // deformed bounding box in modelGroup's local space.
+    geometry.computeBoundingBox();
+    const box = geometry.boundingBox!;
+    deformedBox.makeEmpty();
+
+    for (let cx = 0; cx <= 1; cx++) {
+      for (let cy = 0; cy <= 1; cy++) {
+        for (let cz = 0; cz <= 1; cz++) {
+          tempVec.set(
+            cx === 0 ? box.min.x : box.max.x,
+            cy === 0 ? box.min.y : box.max.y,
+            cz === 0 ? box.min.z : box.max.z
+          );
+          tempVec.applyMatrix4(combinedMat);
+          modelGroup.worldToLocal(tempVec);
+          deformedBox.expandByPoint(tempVec);
+        }
+      }
+    }
+
+    // Find the closest point on the deformed box to the hotspot
+    deformedBox.clampPoint(hotspotLocalPos, closestPoint);
+    const dist = closestPoint.distanceTo(hotspotLocalPos);
+
     if (dist < closestDist) {
       closestDist = dist;
-      closestBoneIndex = index;
+      closestBoneIndex = dominantBone;
     }
   });
-
-  // Reject if closest bone is too far (likely a misclassification)
-  if (closestDist > MAX_BONE_SNAP_DISTANCE) return -1;
 
   return closestBoneIndex;
 }
