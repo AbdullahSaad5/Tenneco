@@ -528,8 +528,8 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
             />
           </group>
         </Float>
-      ) : (phase === "transitioning" || phase === "brake") ? (
-        // During transition - render brake for fade-in
+      ) : brakeOpacity > 0 ? (
+        // During transition - only render brake when it actually has opacity > 0
         <group ref={groupRef}>
           <BrakeModel
             vehicleType={vehicleType}
