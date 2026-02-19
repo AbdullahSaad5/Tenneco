@@ -44,12 +44,12 @@ install:
 # Build images
 build:
 	@echo "Building Docker images..."
-	docker-compose build
+	docker compose build
 
 # Start services (detached)
 up:
 	@echo "Starting services in detached mode..."
-	docker-compose up -d
+	docker compose up -d
 	@echo ""
 	@echo "Services started! Access at:"
 	@echo "  Frontend: http://localhost:3000"
@@ -61,30 +61,30 @@ up:
 # Start services with logs
 dev:
 	@echo "Starting services with logs..."
-	docker-compose up
+	docker compose up
 
 # Stop services
 down:
 	@echo "Stopping services..."
-	docker-compose down
+	docker compose down
 
 # Restart services
 restart:
 	@echo "Restarting services..."
-	docker-compose restart
+	docker compose restart
 
 # View logs
 logs:
-	docker-compose logs -f
+	docker compose logs -f
 
 logs-client:
-	docker-compose logs -f client
+	docker compose logs -f client
 
 logs-admin:
-	docker-compose logs -f admin
+	docker compose logs -f admin
 
 logs-db:
-	docker-compose logs -f mongodb
+	docker compose logs -f mongodb
 
 # Clean up (removes volumes - deletes data!)
 clean:
@@ -92,7 +92,7 @@ clean:
 	@read -p "Are you sure? (y/N) " -n 1 -r; \
 	echo; \
 	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-		docker-compose down -v; \
+		docker compose down -v; \
 		echo "Cleanup complete!"; \
 	else \
 		echo "Cleanup cancelled."; \
@@ -100,23 +100,23 @@ clean:
 
 # Show running containers
 ps:
-	docker-compose ps
+	docker compose ps
 
 # Access container shells
 shell-client:
-	docker-compose exec client sh
+	docker compose exec client sh
 
 shell-admin:
-	docker-compose exec admin sh
+	docker compose exec admin sh
 
 shell-db:
-	docker-compose exec mongodb mongosh -u admin -p changeme123
+	docker compose exec mongodb mongosh -u admin -p changeme123
 
 # Rebuild without cache
 rebuild:
 	@echo "Rebuilding from scratch (no cache)..."
-	docker-compose build --no-cache
-	docker-compose up -d
+	docker compose build --no-cache
+	docker compose up -d
 
 # Production build
 prod: install build up
