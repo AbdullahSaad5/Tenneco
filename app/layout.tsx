@@ -7,7 +7,6 @@ import "./polyfills";
 import { ModelPreloaderProvider, PreloadingScreen, usePreload } from "./_components/ModelPreloader";
 import { ContentProvider, useContent } from "./providers/ContentProvider";
 import { LanguageProvider } from "./providers/LanguageProvider";
-import { FaviconUpdater } from "./_components/FaviconUpdater";
 import { QueryProvider } from "./providers/QueryProvider";
 
 const urbanist = Urbanist({
@@ -35,8 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* v3.sas.26 */}
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        {/* v3.sas.26 — favicon served dynamically via app/icon.ts */}
         <title>Tenneco 3D Model Viewer</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="description" content="Tenneco 3D Model Viewer - Interactive 3D visualization platform" />
@@ -59,7 +57,6 @@ export default function RootLayout({
       <body className={`${urbanist.className} antialiased min-h-screen h-full w-full bg-white`}>
         <QueryProvider>
           <ContentProvider>
-            <FaviconUpdater />
             <LanguageProvider>
               <ModelPreloaderProvider>
                 <AppContent>{children}</AppContent>
