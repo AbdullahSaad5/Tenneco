@@ -171,7 +171,7 @@ docker-compose up -d
 - ✅ Environment variable management
 - ✅ Port mapping (client: 3000, admin: 3001, mongo: 27017)
 
-### Health Check Endpoint (`client/app/api/health/route.ts`)
+### Health Check Endpoint (`client/app/health/route.ts`)
 
 **Features**:
 - ✅ Returns 200 OK when healthy
@@ -270,7 +270,7 @@ docker-compose exec client sh     # Shell access
 1. ✅ **Environment Setup**: Copy and configure `.env` file
 2. ✅ **Build Images**: Run `make build` or `docker-compose build`
 3. ✅ **Start Services**: Run `make up` or `docker-compose up -d`
-4. ✅ **Verify Health**: Check http://localhost:3000/api/health
+4. ✅ **Verify Health**: Check http://localhost:3000/health
 5. ✅ **Access Applications**: Open http://localhost:3000
 6. ✅ **Configure CMS**: Access admin panel at http://localhost:3001/admin
 

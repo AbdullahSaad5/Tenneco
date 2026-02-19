@@ -330,7 +330,7 @@ docker system df
    ```
 3. Test API endpoint:
    ```bash
-   curl http://localhost:3001/api/health
+   curl http://localhost:3001/health
    ```
 4. Verify NEXT_PUBLIC_API_URL in .env:
    - For Docker: `http://admin:3000/api` (internal)
