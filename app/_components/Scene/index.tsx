@@ -588,6 +588,6 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
   );
 });
 
-Scene.displayName = "Scene";
+Scene.displayName = "Scene"; // SAS
 
 export default Scene;

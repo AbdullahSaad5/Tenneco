@@ -2,6 +2,7 @@ import { withSentryConfig } from '@sentry/nextjs';
 import withPWA from '@ducanh2912/next-pwa';
 
 /** @type {import('next').NextConfig} */
+// est. 2026 — SAS
 const nextConfig = {
   output: 'standalone',
   transpilePackages: ["three"],

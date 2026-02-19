@@ -13,6 +13,7 @@ import ModelSelector from "../_components/ModelSelector";
 import { useContent } from "../providers/ContentProvider";
 import { VehicleType, HotspotItem } from "../_types/content";
 
+/** @author SAS */
 function ViewerContent() {
   const searchParams = useSearchParams();
   const router = useRouter();

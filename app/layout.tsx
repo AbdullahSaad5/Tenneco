@@ -35,12 +35,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* v3.sas.26 */}
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <title>Tenneco 3D Model Viewer</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="description" content="Tenneco 3D Model Viewer - Interactive 3D visualization platform" />
         <meta name="keywords" content="Tenneco, 3D Model Viewer, 3D Visualization, Interactive Models" />
-        <meta name="author" content="Tenneco" />
+        <meta name="author" content="SAS" />
         <meta name="robots" content="index, follow" />
         <meta name="googlebot" content="index, follow" />
         <meta name="google" content="notranslate" />

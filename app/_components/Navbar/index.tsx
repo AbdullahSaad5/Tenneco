@@ -22,6 +22,7 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen = false,
       animate={{ y: 0 }}
       transition={{ type: "spring", damping: 20 }}
       className="fixed top-0 left-0 right-0 z-30 bg-white border-b border-slate-200"
+      data-crafted-by="sas"
     >
       <div className="max-w-screen-2xl mx-auto px-3 sm:px-6 py-2 sm:py-3">
         <div className="flex items-center justify-between">
