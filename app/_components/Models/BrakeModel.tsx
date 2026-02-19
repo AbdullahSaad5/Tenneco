@@ -1,5 +1,5 @@
 import { useGLTF, Html } from "@react-three/drei";
-import React, { useRef, useState, useEffect, useMemo } from "react";
+import React, { useRef, useState, useEffect, useLayoutEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { VehicleType, BrakeConfiguration, HotspotConfiguration, HotspotItem, Vector3 } from "../../_types/content";
@@ -615,7 +615,9 @@ const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, opacity =
 
   // Unified effect: handles both isolation highlighting AND opacity transitions.
   // Merged to prevent race conditions where separate effects overwrite each other's material state.
-  useEffect(() => {
+  // Uses useLayoutEffect to apply opacity BEFORE the browser paints, preventing a one-frame flash
+  // when the brake model first mounts during the fade-in transition.
+  useLayoutEffect(() => {
     const boneIdx = isolatedBoneIndex ?? -1;
     const isIsolationActive = boneIdx >= 0;
 
