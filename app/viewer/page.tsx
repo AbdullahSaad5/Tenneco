@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { Suspense, useRef, useEffect, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import * as THREE from "three";
@@ -28,25 +28,22 @@ function ViewerContent() {
   const [animationComplete, setAnimationComplete] = useState(!shouldAnimate);
   const [selectedHotspot, setSelectedHotspot] = useState<HotspotItem | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const prevVehicleType = useRef(vehicleType);
+  const [prevVehicleType, setPrevVehicleType] = useState(vehicleType);
 
   // Get the current configs for the selected vehicle type
   const vehicleConfig = vehicleConfigs[vehicleType];
   const brakeConfig = brakeConfigs[vehicleType];
   const hotspotConfig = hotspotConfigs[vehicleType];
 
-  // Reset states when vehicle type changes
-  useEffect(() => {
-    const shouldAnim = searchParams.get("animate") === "true";
-
-    // Only reset animation state if vehicle type actually changed or it's the initial load
-    if (prevVehicleType.current !== vehicleType) {
-      setShowAnimation(shouldAnim);
-      setAnimationComplete(!shouldAnim);
-      setSelectedHotspot(null);
-      prevVehicleType.current = vehicleType;
-    }
-  }, [vehicleType, searchParams]);
+  // Reset states synchronously during render when vehicle type changes
+  // (React recommended pattern for adjusting state based on props)
+  // This ensures Scene remounts with the correct isAnimating value
+  if (prevVehicleType !== vehicleType) {
+    setShowAnimation(shouldAnimate);
+    setAnimationComplete(!shouldAnimate);
+    setSelectedHotspot(null);
+    setPrevVehicleType(vehicleType);
+  }
 
   const handleAnimationComplete = () => {
     setShowAnimation(false);
