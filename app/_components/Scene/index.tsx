@@ -10,8 +10,6 @@ import { usePreload } from "../ModelPreloader";
 import { viewer, transition } from "../../config";
 import { VehicleType, VehicleConfiguration, BrakeConfiguration, HotspotConfiguration, HotspotItem } from "../../_types/content";
 import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 
 interface SceneProps {
   vehicleType: VehicleType;
@@ -204,9 +202,7 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
   const zoomConfig = vehicleConfig.zoomConfig;
 
   // Get model paths from preload context (already preloaded by ModelPreloader)
-  const { isPreloaded, resolvedUrls } = usePreload();
-  const brakeModelUrl = resolvedUrls.brakes[vehicleType] || "";
-  const brakeModelReadyRef = useRef(!isAnimating); // Not needed if no animation
+  const { isPreloaded } = usePreload();
 
   // Models are already preloaded by ModelPreloader, just mark as ready
   useEffect(() => {
@@ -214,45 +210,6 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
       setModelsPreloaded(true);
     }
   }, [isPreloaded]);
-
-  // Eagerly preload the brake model in the background when animating.
-  // On desktop this is a no-op (already cached by ModelPreloader).
-  // On mobile, ModelPreloader skips GLB loading, so the brake model would only
-  // start downloading when BrakeModel mounts (during the brake phase), causing
-  // Suspense to blank the canvas. By preloading here at mount time, we use the
-  // ~4+ seconds of vehicle animation as download runway.
-  useEffect(() => {
-    if (!isAnimating || !brakeModelUrl) {
-      brakeModelReadyRef.current = true;
-      return;
-    }
-
-    // Check if already in Three.js cache
-    const cached = THREE.Cache.get(brakeModelUrl);
-    if (cached) {
-      brakeModelReadyRef.current = true;
-      return;
-    }
-
-    const loader = new GLTFLoader();
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
-    loader.setDRACOLoader(dracoLoader);
-
-    loader.load(
-      brakeModelUrl,
-      () => {
-        // Also register with useGLTF so it won't re-fetch when BrakeModel mounts
-        useGLTF.preload(brakeModelUrl);
-        brakeModelReadyRef.current = true;
-      },
-      undefined,
-      () => {
-        // On error, mark ready anyway so animation doesn't hang forever
-        brakeModelReadyRef.current = true;
-      }
-    );
-  }, [isAnimating, brakeModelUrl]);
 
   // Timing from config
   const { showVehicleDuration, zoomDuration, transitionDuration, showBrakeDuration } = transition.timing;
@@ -365,8 +322,8 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
       setVehicleOpacity(0.7 * (1 - progress));
       setBrakeOpacity(0);
 
-      if (progress >= 1 && !cameraLockedToBrakeRef.current && brakeModelReadyRef.current) {
-        // Transition complete and brake model loaded - move to brake phase
+      if (progress >= 1 && !cameraLockedToBrakeRef.current) {
+        // Transition complete - move to brake phase
         transitionCompletedRef.current = true;
         cameraLockedToBrakeRef.current = true;
         setVehicleOpacity(0);
@@ -552,7 +509,9 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
         />
       )}
 
-      {/* Brake Model - only render during transition/brake phases or when animation complete */}
+      {/* Brake Model - always mounted so useGLTF loads at mount time (prevents
+           mobile Suspense mid-animation). Hidden via visible={false} during early
+           animation phases, then fades in during brake phase. */}
       {!isAnimating || phase === "complete" ? (
         <Float
           speed={floatConfig.speed}
@@ -571,9 +530,11 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
             />
           </group>
         </Float>
-      ) : brakeOpacity > 0 ? (
-        // During transition - only render brake when it actually has opacity > 0
-        <group ref={groupRef}>
+      ) : (
+        // Always mounted during animation — visible toggles via Three.js group.
+        // This ensures useGLTF fires at Scene mount (caught by the same Suspense
+        // boundary as the vehicle model) instead of mid-animation on mobile.
+        <group ref={groupRef} visible={brakeOpacity > 0}>
           <BrakeModel
             vehicleType={vehicleType}
             brakeConfig={brakeConfig}
@@ -583,7 +544,7 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
             showExplosionHotspot={brakeFadeComplete}
           />
         </group>
-      ) : null}
+      )}
 
       {/* Ground Shadow */}
       <ContactShadows
