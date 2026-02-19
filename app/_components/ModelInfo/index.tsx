@@ -152,7 +152,7 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot, brakeMedia }) => {
             </div>
 
             {/* Content */}
-            <div className="p-3 sm:p-5">
+            <div className="p-3 sm:p-5 max-h-[50vh] overflow-y-auto">
               <div className="text-sm sm:text-base text-slate-600 leading-relaxed prose prose-sm prose-slate max-w-none prose-p:my-1 prose-ul:my-2 prose-li:my-1">
                 <Markdown>{details.description}</Markdown>
               </div>
