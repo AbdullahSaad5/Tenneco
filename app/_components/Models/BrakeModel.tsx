@@ -31,8 +31,8 @@ const ActionHotspot = ({ position, color, label, onClick, occludeRef, iconType =
   const glowRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
   const { camera } = useThree();
-  const [distanceFactor, setDistanceFactor] = useState(8);
-  const distanceFactorRef = useRef(8);
+  const [distanceFactor, setDistanceFactor] = useState<number | null>(null);
+  const distanceFactorRef = useRef(0);
   const worldPosRef = useRef(new THREE.Vector3());
 
   const pos: [number, number, number] = [position.x, position.y, position.z];
@@ -96,50 +96,52 @@ const ActionHotspot = ({ position, color, label, onClick, occludeRef, iconType =
       </mesh>
 
       {/* Lightning/Explosion icon */}
-      <Html
-        center
-        distanceFactor={distanceFactor}
-        zIndexRange={[10, 0]}
-        style={{ pointerEvents: "none" }}
-        occlude={occludeRef ? [occludeRef] : undefined}
-      >
-        <svg
-          width="64"
-          height="64"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{
-            transition: "filter 0.3s ease",
-          }}
+      {distanceFactor !== null && (
+        <Html
+          center
+          distanceFactor={distanceFactor}
+          zIndexRange={[10, 0]}
+          style={{ pointerEvents: "none" }}
+          occlude={occludeRef ? [occludeRef] : undefined}
         >
-          <circle cx="12" cy="12" r="11" fill={color} opacity={hovered ? "1" : "0.95"} />
-          {iconType === 'explosion' ? (
-            /* Lightning bolt icon */
-            <path
-              d="M13 3L4 14h7v7l9-11h-7V3z"
-              fill="white"
-              opacity={hovered ? "1" : "0.9"}
-            />
-          ) : (
-            /* Compress arrows icon */
-            <>
+          <svg
+            width="64"
+            height="64"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              transition: "filter 0.3s ease",
+            }}
+          >
+            <circle cx="12" cy="12" r="11" fill={color} opacity={hovered ? "1" : "0.95"} />
+            {iconType === 'explosion' ? (
+              /* Lightning bolt icon */
               <path
-                d="M8 12l-4-4v3H1v2h3v3l4-4z"
+                d="M13 3L4 14h7v7l9-11h-7V3z"
                 fill="white"
                 opacity={hovered ? "1" : "0.9"}
               />
-              <path
-                d="M16 12l4-4v3h3v2h-3v3l-4-4z"
-                fill="white"
-                opacity={hovered ? "1" : "0.9"}
-              />
-            </>
-          )}
-        </svg>
-      </Html>
+            ) : (
+              /* Compress arrows icon */
+              <>
+                <path
+                  d="M8 12l-4-4v3H1v2h3v3l4-4z"
+                  fill="white"
+                  opacity={hovered ? "1" : "0.9"}
+                />
+                <path
+                  d="M16 12l4-4v3h3v2h-3v3l-4-4z"
+                  fill="white"
+                  opacity={hovered ? "1" : "0.9"}
+                />
+              </>
+            )}
+          </svg>
+        </Html>
+      )}
 
-      {hovered && (
+      {hovered && distanceFactor !== null && (
         <Html
           position={[0, 2.5, 0]}
           center
@@ -183,8 +185,8 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
   const glowRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
   const { camera } = useThree();
-  const [distanceFactor, setDistanceFactor] = useState(8);
-  const distanceFactorRef = useRef(8);
+  const [distanceFactor, setDistanceFactor] = useState<number | null>(null);
+  const distanceFactorRef = useRef(0);
   const worldPosRef = useRef(new THREE.Vector3());
   const { getTranslation } = useLanguage();
 
@@ -245,29 +247,31 @@ const Hotspot = ({ config, onClick, occludeRef }: HotspotProps) => {
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      <Html
-        center
-        distanceFactor={distanceFactor}
-        zIndexRange={[10, 0]}
-        style={{ pointerEvents: "none" }}
-        occlude={occludeRef ? [occludeRef] : undefined}
-      >
-        <svg
-          width="56"
-          height="56"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{
-            transition: "filter 0.2s ease",
-          }}
+      {distanceFactor !== null && (
+        <Html
+          center
+          distanceFactor={distanceFactor}
+          zIndexRange={[10, 0]}
+          style={{ pointerEvents: "none" }}
+          occlude={occludeRef ? [occludeRef] : undefined}
         >
-          <circle cx="12" cy="12" r="10" fill={color} opacity={hovered ? "1" : "0.9"} />
-          <path d="M12 8v8m-4-4h8" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-        </svg>
-      </Html>
+          <svg
+            width="56"
+            height="56"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              transition: "filter 0.2s ease",
+            }}
+          >
+            <circle cx="12" cy="12" r="10" fill={color} opacity={hovered ? "1" : "0.9"} />
+            <path d="M12 8v8m-4-4h8" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+          </svg>
+        </Html>
+      )}
 
-      {hovered && (
+      {hovered && distanceFactor !== null && (
         <Html
           position={[0, 2, 0]}
           center
@@ -788,7 +792,7 @@ const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, onBrakeCo
   }, [isAnimationPlaying, onHotspotClick]);
 
   // Update animation mixer
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (mixerRef.current && isAnimationPlaying) {
       mixerRef.current.update(delta);
     }
