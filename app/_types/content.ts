@@ -247,6 +247,12 @@ export interface ZoomConfig {
   zoomIntensity: number
 }
 
+export interface ShowcaseWaypoint {
+  position: Vector3
+  duration: number
+  pause?: number
+}
+
 export interface VehicleConfiguration {
   id: string
   vehicleType: VehicleType
@@ -257,6 +263,9 @@ export interface VehicleConfiguration {
   cameraStart: Vector3
   cameraZoomTarget: Vector3
   zoomConfig: ZoomConfig
+  showcaseEnabled: boolean
+  showcaseWaypoints: ShowcaseWaypoint[]
+  showcaseReturnDuration: number
   isActive: boolean
 }
 

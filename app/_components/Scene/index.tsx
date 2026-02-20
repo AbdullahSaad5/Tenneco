@@ -22,37 +22,6 @@ interface SceneProps {
   onAnimationComplete?: () => void;
 }
 
-// --- Showcase camera orbit waypoints ---
-// Each waypoint is a camera position + time (in seconds) to reach it.
-// The camera will smoothly move through these before the main animation.
-interface ShowcaseWaypoint {
-  position: { x: number; y: number; z: number };
-  duration: number; // seconds to travel from previous position to this one
-  pause?: number;   // optional seconds to hold at this position before moving on
-}
-
-// Waypoints per vehicle type — camera orbits around the model to "show it off"
-const SHOWCASE_WAYPOINTS: Record<string, ShowcaseWaypoint[]> = {
-  light: [
-    { position: { x: 12, y: 4, z: 8 }, duration: 2, pause: 0.5 },
-    { position: { x: -8, y: 3, z: 12 }, duration: 2.5, pause: 0.5 },
-    { position: { x: -10, y: 5, z: -6 }, duration: 2 },
-  ],
-  commerical: [
-    { position: { x: 14, y: 5, z: 10 }, duration: 2, pause: 0.5 },
-    { position: { x: -10, y: 4, z: 14 }, duration: 2.5, pause: 0.5 },
-    { position: { x: -12, y: 6, z: -8 }, duration: 2 },
-  ],
-  rail: [
-    { position: { x: 16, y: 6, z: 12 }, duration: 2, pause: 0.5 },
-    { position: { x: -12, y: 5, z: 16 }, duration: 2.5, pause: 0.5 },
-    { position: { x: -14, y: 7, z: -10 }, duration: 2 },
-  ],
-};
-
-// Time (seconds) for the camera to return to initial position after the last waypoint
-const SHOWCASE_RETURN_DURATION = 2;
-
 // Vehicle model component for transition animation
 interface VehicleModelProps {
   vehicleType: VehicleType;
@@ -281,8 +250,10 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
   // with a strong ease-out so the camera decelerates heavily near each waypoint,
   // giving the impression of lingering without ever stopping.
   const showcaseData = useMemo(() => {
-    const waypoints = SHOWCASE_WAYPOINTS[vehicleType] || [];
-    if (waypoints.length === 0) return null;
+    if (!vehicleConfig.showcaseEnabled) return null;
+
+    const waypoints = vehicleConfig.showcaseWaypoints;
+    if (!waypoints || waypoints.length === 0) return null;
 
     const startPos = new THREE.Vector3(
       vehicleConfig.cameraStart.x,
@@ -293,7 +264,7 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
     // Path: start → waypoint₁ → waypoint₂ → … → start
     const points: THREE.Vector3[] = [
       startPos.clone(),
-      ...waypoints.map(wp => new THREE.Vector3(wp.position.x, wp.position.y, wp.position.z)),
+      ...waypoints.map((wp) => new THREE.Vector3(wp.position.x, wp.position.y, wp.position.z)),
       startPos.clone(),
     ];
 
@@ -301,7 +272,7 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
     const curve = new THREE.CatmullRomCurve3(points, false, "catmullrom", 0.5);
     const numSegments = points.length - 1;
 
-    // Per-segment: duration includes pause, ease-out exponent scales with pause ratio
+    // Per-segment: duration includes linger, ease-out exponent scales with linger ratio
     const segments = waypoints.map((wp, i) => {
       const totalTime = wp.duration + (wp.pause || 0);
       const pauseRatio = (wp.pause || 0) / totalTime;
@@ -317,7 +288,7 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
 
     // Return segment (last waypoint → start)
     segments.push({
-      duration: SHOWCASE_RETURN_DURATION,
+      duration: vehicleConfig.showcaseReturnDuration,
       easeOutExponent: 3, // always ease-out on return
       tStart: waypoints.length / numSegments,
       tEnd: 1,
@@ -331,7 +302,7 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
     const totalDuration = cumulativeTimes[cumulativeTimes.length - 1];
 
     return { curve, segments, cumulativeTimes, totalDuration };
-  }, [vehicleType, vehicleConfig.cameraStart]);
+  }, [vehicleConfig.showcaseEnabled, vehicleConfig.showcaseWaypoints, vehicleConfig.showcaseReturnDuration, vehicleConfig.cameraStart]);
 
   // Camera view from config - Final position after animation
   const cameraView = useMemo(() => ({
