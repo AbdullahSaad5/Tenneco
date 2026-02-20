@@ -1,6 +1,6 @@
 "use client";
 
-import { Environment, OrbitControls, PerspectiveCamera, ContactShadows, Float, useGLTF } from "@react-three/drei";
+import { Environment, OrbitControls, PerspectiveCamera, ContactShadows, useGLTF } from "@react-three/drei";
 import { useRef, useEffect, useState, forwardRef, useImperativeHandle, useMemo } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
@@ -461,7 +461,6 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
   }, [camera]);
 
   const lighting = config.lighting;
-  const floatConfig = config.float;
   const postProcessing = config.postProcessing;
   const controls = config.controls;
 
@@ -513,23 +512,16 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
            mobile Suspense mid-animation). Hidden via visible={false} during early
            animation phases, then fades in during brake phase. */}
       {!isAnimating || phase === "complete" ? (
-        <Float
-          speed={floatConfig.speed}
-          rotationIntensity={floatConfig.rotationIntensity}
-          floatIntensity={floatConfig.floatIntensity}
-          floatingRange={floatConfig.floatingRange}
-        >
-          <group ref={groupRef}>
-            <BrakeModel
-              vehicleType={vehicleType}
-              brakeConfig={brakeConfig}
-              hotspotConfig={hotspotConfig}
-              onHotspotClick={onHotspotClick}
-              opacity={1}
-              showExplosionHotspot={true}
-            />
-          </group>
-        </Float>
+        <group ref={groupRef}>
+          <BrakeModel
+            vehicleType={vehicleType}
+            brakeConfig={brakeConfig}
+            hotspotConfig={hotspotConfig}
+            onHotspotClick={onHotspotClick}
+            opacity={1}
+            showExplosionHotspot={true}
+          />
+        </group>
       ) : (
         // Always mounted during animation — visible toggles via Three.js group.
         // This ensures useGLTF fires at Scene mount (caught by the same Suspense
