@@ -89,9 +89,7 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen = false,
                   priority
                 />
               </div>
-              <div className="border-l border-slate-300 pl-4 hidden md:block">
-                <p className="text-sm text-slate-600 font-medium">3D Model Viewer</p>
-              </div>
+
             </div>
           </div>
 

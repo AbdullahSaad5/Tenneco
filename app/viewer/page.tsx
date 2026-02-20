@@ -143,13 +143,6 @@ function ViewerContent() {
       {/* Model Info - show when hotspot is selected */}
       {animationComplete && <ModelInfo hotspot={selectedHotspot} brakeMedia={brakeConfig?.media} />}
 
-      {/* Watermark - only show after animation complete */}
-      {animationComplete && (
-        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-10 text-slate-400 text-xs font-medium">
-          Tenneco 3D Viewer
-        </div>
-      )}
-
       {/* Vehicle type label during animation */}
       {showAnimation && (
         <motion.div
