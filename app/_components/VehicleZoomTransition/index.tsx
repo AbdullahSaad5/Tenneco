@@ -265,7 +265,8 @@ const TransitionScene = ({ vehicleType, vehicleConfig, brakeConfig, onZoomComple
   const zoomConfig = vehicleConfig.zoomConfig;
 
   // Timing from config
-  const { showVehicleDuration, zoomDuration, transitionDuration, showBrakeDuration } = transition.timing;
+  const { showVehicleDuration, transitionDuration, showBrakeDuration } = transition.timing;
+  const zoomDuration = vehicleConfig.zoomDuration * 1000; // seconds → ms, from CMS
   const blueTransitionDuration = 800; // Duration for transitioning to blue variant
 
   // Camera positions from config

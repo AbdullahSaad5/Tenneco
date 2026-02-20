@@ -264,6 +264,7 @@ export interface VehicleConfiguration {
   cameraZoomTarget: Vector3
   zoomConfig: ZoomConfig
   animationStartDelay: number
+  zoomDuration: number
   showcaseEnabled: boolean
   showcaseWaypoints: ShowcaseWaypoint[]
   showcaseReturnDuration: number

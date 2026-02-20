@@ -213,7 +213,8 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
   }, [isPreloaded]);
 
   // Timing from config
-  const { showVehicleDuration, zoomDuration, transitionDuration, showBrakeDuration } = transition.timing;
+  const { showVehicleDuration, transitionDuration, showBrakeDuration } = transition.timing;
+  const zoomDuration = vehicleConfig.zoomDuration * 1000; // convert seconds → ms
   const blueTransitionDuration = 800;
 
   // Camera positions for animation

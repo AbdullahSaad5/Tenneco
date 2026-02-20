@@ -1,8 +1,6 @@
 {
   "timing": {
-    "fadeInDuration": 500,
     "showVehicleDuration": 1500,
-    "zoomDuration": 2000,
     "transitionDuration": 500,
     "showBrakeDuration": 1000
   },

@@ -18,9 +18,7 @@ export interface Vector3Config {
 
 export interface TransitionConfig {
   timing: {
-    fadeInDuration: number;
     showVehicleDuration: number;
-    zoomDuration: number;
     transitionDuration: number;
     showBrakeDuration: number;
   };
