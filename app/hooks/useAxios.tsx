@@ -361,6 +361,12 @@ export const useAxios = () => {
         fallbackPdfPath: data.media?.fallbackPdfPath,
         fallbackVideoUrl: data.media?.fallbackVideoUrl,
       },
+      overallInfo: (data.overallInfo?.title || data.overallInfo?.description) ? {
+        title: data.overallInfo.title,
+        titleTranslations: data.overallInfo.titleTranslations || [],
+        description: data.overallInfo.description,
+        descriptionTranslations: data.overallInfo.descriptionTranslations || [],
+      } : undefined,
       isActive: data.isActive !== false,
     };
 

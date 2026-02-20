@@ -9,6 +9,7 @@ import Scene from "../_components/Scene";
 import ViewControls from "../_components/ViewControls";
 import Navbar from "../_components/Navbar";
 import ModelInfo from "../_components/ModelInfo";
+import BrakeOverallInfo from "../_components/BrakeOverallInfo";
 import ModelSelector from "../_components/ModelSelector";
 import { useContent } from "../providers/ContentProvider";
 import { VehicleType, HotspotItem } from "../_types/content";
@@ -28,6 +29,7 @@ function ViewerContent() {
   const [showAnimation, setShowAnimation] = useState(shouldAnimate);
   const [animationComplete, setAnimationComplete] = useState(!shouldAnimate);
   const [selectedHotspot, setSelectedHotspot] = useState<HotspotItem | null>(null);
+  const [isBrakeCollapsed, setIsBrakeCollapsed] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [prevVehicleType, setPrevVehicleType] = useState(vehicleType);
 
@@ -133,6 +135,7 @@ function ViewerContent() {
               hotspotConfig={hotspotConfig}
               ref={sceneRef}
               onHotspotClick={handleHotspotClick}
+              onBrakeCollapsedChange={setIsBrakeCollapsed}
               isAnimating={showAnimation}
               onAnimationComplete={handleAnimationComplete}
             />
@@ -140,8 +143,13 @@ function ViewerContent() {
         </Canvas>
       </div>
 
-      {/* Model Info - show when hotspot is selected */}
-      {animationComplete && <ModelInfo hotspot={selectedHotspot} brakeMedia={brakeConfig?.media} />}
+      {/* Model Info - show when hotspot is selected and brake is exploded */}
+      {animationComplete && !isBrakeCollapsed && <ModelInfo hotspot={selectedHotspot} brakeMedia={brakeConfig?.media} />}
+
+      {/* Overall Brake Info - show when brake is collapsed and overallInfo is configured */}
+      {animationComplete && brakeConfig?.overallInfo && (
+        <BrakeOverallInfo info={brakeConfig.overallInfo} isCollapsed={isBrakeCollapsed} />
+      )}
 
       {/* Vehicle type label during animation */}
       {showAnimation && (

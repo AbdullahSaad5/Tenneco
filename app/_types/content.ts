@@ -283,6 +283,13 @@ export interface CollapseHotspot {
   labelTranslations?: Translation[]
 }
 
+export interface OverallBrakeInfo {
+  title?: string
+  titleTranslations?: Translation[]
+  description?: string
+  descriptionTranslations?: Translation[]
+}
+
 export interface BrakeConfiguration {
   id: string
   vehicleType: VehicleType
@@ -294,6 +301,7 @@ export interface BrakeConfiguration {
   explosionHotspot: ExplosionHotspot
   collapseHotspot: CollapseHotspot
   media?: BrakeMedia
+  overallInfo?: OverallBrakeInfo
   isActive: boolean
 }
 

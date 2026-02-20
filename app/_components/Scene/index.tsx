@@ -17,6 +17,7 @@ interface SceneProps {
   brakeConfig: BrakeConfiguration;
   hotspotConfig?: HotspotConfiguration | null;
   onHotspotClick?: (hotspot: HotspotItem | null) => void;
+  onBrakeCollapsedChange?: (isCollapsed: boolean) => void;
   isAnimating?: boolean;
   onAnimationComplete?: () => void;
 }
@@ -166,7 +167,7 @@ const VehicleModelInner = ({ vehicleConfig, opacity, blueTransitionProgress = 0,
   );
 };
 
-const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConfig, onHotspotClick, isAnimating = false, onAnimationComplete }: SceneProps, ref) => {
+const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConfig, onHotspotClick, onBrakeCollapsedChange, isAnimating = false, onAnimationComplete }: SceneProps, ref) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const controlsRef = useRef<any>(null);
   const groupRef = useRef<THREE.Group | null>(null);
@@ -518,6 +519,7 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
             brakeConfig={brakeConfig}
             hotspotConfig={hotspotConfig}
             onHotspotClick={onHotspotClick}
+            onBrakeCollapsedChange={onBrakeCollapsedChange}
             opacity={1}
             showExplosionHotspot={true}
           />

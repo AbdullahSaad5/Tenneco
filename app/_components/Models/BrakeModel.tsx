@@ -415,6 +415,7 @@ interface BrakeModelProps {
   brakeConfig: BrakeConfiguration;
   hotspotConfig?: HotspotConfiguration | null;
   onHotspotClick?: (hotspot: HotspotItem | null) => void;
+  onBrakeCollapsedChange?: (isCollapsed: boolean) => void;
   opacity?: number;
   showExplosionHotspot?: boolean;
 }
@@ -430,7 +431,7 @@ const BrakeModel = (props: BrakeModelProps) => {
   return <BrakeModelInner {...props} modelPath={modelPath} />;
 };
 
-const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, opacity = 1, showExplosionHotspot: showExplosionHotspotProp = true, modelPath }: BrakeModelProps & { modelPath: string }) => {
+const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, onBrakeCollapsedChange, opacity = 1, showExplosionHotspot: showExplosionHotspotProp = true, modelPath }: BrakeModelProps & { modelPath: string }) => {
   const { getTranslation } = useLanguage();
   const vehicleHotspots = hotspotConfig?.hotspots || [];
 
@@ -546,6 +547,8 @@ const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, opacity =
   // Handle explosion hotspot click
   const handleExplosionHotspotClick = () => {
     if (actionRef.current && !isAnimationPlaying) {
+      // Clear any active hotspot before exploding
+      if (onHotspotClick) onHotspotClick(null);
       setIsAnimationPlaying(true);
       setShowHotspots(false);
       setExplosionHotspotClicked(true); // Mark as clicked to hide it
@@ -558,6 +561,8 @@ const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, opacity =
   // Handle collapse hotspot click
   const handleCollapseHotspotClick = () => {
     if (actionRef.current && !isAnimationPlaying) {
+      // Clear any active hotspot before collapsing
+      if (onHotspotClick) onHotspotClick(null);
       setIsAnimationPlaying(true);
       setShowHotspots(false);
 
@@ -612,6 +617,11 @@ const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, opacity =
       setActiveIsolationHotspotId(null);
     }
   }, [isAnimationPlaying]);
+
+  // Notify parent when collapsed/exploded state changes
+  useEffect(() => {
+    if (onBrakeCollapsedChange) onBrakeCollapsedChange(!isExploded);
+  }, [isExploded, onBrakeCollapsedChange]);
 
   // Unified effect: handles both isolation highlighting AND opacity transitions.
   // Merged to prevent race conditions where separate effects overwrite each other's material state.
@@ -762,6 +772,8 @@ const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, opacity =
   useEffect(() => {
     const handlePlayExplosion = () => {
       if (actionRef.current && !isAnimationPlaying) {
+        // Clear any active hotspot before exploding
+        if (onHotspotClick) onHotspotClick(null);
         setIsAnimationPlaying(true);
         setShowHotspots(false);
         setExplosionHotspotClicked(true); // Mark as clicked to hide it
@@ -773,7 +785,7 @@ const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, opacity =
 
     window.addEventListener('playExplosion', handlePlayExplosion);
     return () => window.removeEventListener('playExplosion', handlePlayExplosion);
-  }, [isAnimationPlaying]);
+  }, [isAnimationPlaying, onHotspotClick]);
 
   // Update animation mixer
   useFrame((state, delta) => {
