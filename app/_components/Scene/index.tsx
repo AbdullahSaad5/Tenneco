@@ -22,6 +22,37 @@ interface SceneProps {
   onAnimationComplete?: () => void;
 }
 
+// --- Showcase camera orbit waypoints ---
+// Each waypoint is a camera position + time (in seconds) to reach it.
+// The camera will smoothly move through these before the main animation.
+interface ShowcaseWaypoint {
+  position: { x: number; y: number; z: number };
+  duration: number; // seconds to travel from previous position to this one
+  pause?: number;   // optional seconds to hold at this position before moving on
+}
+
+// Waypoints per vehicle type — camera orbits around the model to "show it off"
+const SHOWCASE_WAYPOINTS: Record<string, ShowcaseWaypoint[]> = {
+  light: [
+    { position: { x: 12, y: 4, z: 8 }, duration: 2, pause: 0.5 },
+    { position: { x: -8, y: 3, z: 12 }, duration: 2.5, pause: 0.5 },
+    { position: { x: -10, y: 5, z: -6 }, duration: 2 },
+  ],
+  commerical: [
+    { position: { x: 14, y: 5, z: 10 }, duration: 2, pause: 0.5 },
+    { position: { x: -10, y: 4, z: 14 }, duration: 2.5, pause: 0.5 },
+    { position: { x: -12, y: 6, z: -8 }, duration: 2 },
+  ],
+  rail: [
+    { position: { x: 16, y: 6, z: 12 }, duration: 2, pause: 0.5 },
+    { position: { x: -12, y: 5, z: 16 }, duration: 2.5, pause: 0.5 },
+    { position: { x: -14, y: 7, z: -10 }, duration: 2 },
+  ],
+};
+
+// Time (seconds) for the camera to return to initial position after the last waypoint
+const SHOWCASE_RETURN_DURATION = 2;
+
 // Vehicle model component for transition animation
 interface VehicleModelProps {
   vehicleType: VehicleType;
@@ -176,8 +207,8 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
   const [modelsPreloaded, setModelsPreloaded] = useState(false);
 
   // Animation state - component remounts on vehicle change so state is always fresh
-  const [phase, setPhase] = useState<"showing" | "blueTransition" | "zooming" | "transitioning" | "brake" | "complete">(
-    isAnimating ? "showing" : "complete"
+  const [phase, setPhase] = useState<"showcase" | "showing" | "blueTransition" | "zooming" | "transitioning" | "brake" | "complete">(
+    isAnimating ? "showcase" : "complete"
   );
   const [vehicleOpacity, setVehicleOpacity] = useState(isAnimating ? 1 : 0);
   const [blueTransitionProgress, setBlueTransitionProgress] = useState(0);
@@ -245,6 +276,63 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
     zoomConfig.initialLookAtTarget.z
   ));
 
+  // --- Showcase orbit: pre-compute CatmullRom curve and per-segment timing ---
+  // The "pause" value doesn't actually pause — it adds extra time to the segment
+  // with a strong ease-out so the camera decelerates heavily near each waypoint,
+  // giving the impression of lingering without ever stopping.
+  const showcaseData = useMemo(() => {
+    const waypoints = SHOWCASE_WAYPOINTS[vehicleType] || [];
+    if (waypoints.length === 0) return null;
+
+    const startPos = new THREE.Vector3(
+      vehicleConfig.cameraStart.x,
+      vehicleConfig.cameraStart.y,
+      vehicleConfig.cameraStart.z
+    );
+
+    // Path: start → waypoint₁ → waypoint₂ → … → start
+    const points: THREE.Vector3[] = [
+      startPos.clone(),
+      ...waypoints.map(wp => new THREE.Vector3(wp.position.x, wp.position.y, wp.position.z)),
+      startPos.clone(),
+    ];
+
+    // Smooth spline through all points
+    const curve = new THREE.CatmullRomCurve3(points, false, "catmullrom", 0.5);
+    const numSegments = points.length - 1;
+
+    // Per-segment: duration includes pause, ease-out exponent scales with pause ratio
+    const segments = waypoints.map((wp, i) => {
+      const totalTime = wp.duration + (wp.pause || 0);
+      const pauseRatio = (wp.pause || 0) / totalTime;
+      return {
+        duration: totalTime,
+        // Higher exponent = stronger deceleration near waypoint
+        // 1 = linear, ~2-3 = noticeable linger
+        easeOutExponent: 1 + pauseRatio * 4,
+        tStart: i / numSegments,
+        tEnd: (i + 1) / numSegments,
+      };
+    });
+
+    // Return segment (last waypoint → start)
+    segments.push({
+      duration: SHOWCASE_RETURN_DURATION,
+      easeOutExponent: 3, // always ease-out on return
+      tStart: waypoints.length / numSegments,
+      tEnd: 1,
+    });
+
+    // Cumulative time breakpoints
+    const cumulativeTimes: number[] = [0];
+    for (const seg of segments) {
+      cumulativeTimes.push(cumulativeTimes[cumulativeTimes.length - 1] + seg.duration);
+    }
+    const totalDuration = cumulativeTimes[cumulativeTimes.length - 1];
+
+    return { curve, segments, cumulativeTimes, totalDuration };
+  }, [vehicleType, vehicleConfig.cameraStart]);
+
   // Camera view from config - Final position after animation
   const cameraView = useMemo(() => ({
     position: new THREE.Vector3(
@@ -268,6 +356,48 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
     if (!isAnimating || phase === "complete" || completedRef.current || !isInitialized || !modelsPreloaded) return;
 
     const elapsed = Date.now() - startTime.current;
+
+    // Phase 0: Showcase orbit — camera moves through waypoints around the vehicle
+    if (phase === "showcase") {
+      if (!showcaseData) {
+        // No waypoints for this vehicle type, skip straight to showing
+        setPhase("showing");
+        startTime.current = Date.now();
+        return;
+      }
+
+      const showcaseElapsed = (Date.now() - startTime.current) / 1000; // seconds
+
+      if (showcaseElapsed >= showcaseData.totalDuration) {
+        // Showcase complete — curve already ends at initial position,
+        // skip the static "showing" hold and flow straight into blue transition
+        camera.position.copy(initialPosition.current);
+        camera.lookAt(initialLookAt.current);
+        setPhase("blueTransition");
+        startTime.current = Date.now();
+      } else {
+        // Find which segment we're in
+        let segIndex = 0;
+        for (let i = 0; i < showcaseData.segments.length; i++) {
+          if (showcaseElapsed < showcaseData.cumulativeTimes[i + 1]) {
+            segIndex = i;
+            break;
+          }
+        }
+
+        const seg = showcaseData.segments[segIndex];
+        const segStart = showcaseData.cumulativeTimes[segIndex];
+        const localProgress = Math.min((showcaseElapsed - segStart) / seg.duration, 1);
+
+        // Ease-out: higher exponent = stronger deceleration near waypoint
+        const eased = 1 - Math.pow(1 - localProgress, seg.easeOutExponent);
+
+        const t = seg.tStart + eased * (seg.tEnd - seg.tStart);
+        camera.position.copy(showcaseData.curve.getPoint(t));
+        camera.lookAt(initialLookAt.current);
+      }
+      return; // don't fall through to other phases
+    }
 
     // Phase 1: Show vehicle
     if (phase === "showing") {
@@ -500,7 +630,7 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
       <fog attach="fog" args={[config.scene.fogColor, config.scene.fogNear, config.scene.fogFar]} />
 
       {/* Vehicle Model - only show before brake appears */}
-      {isAnimating && (phase === "showing" || phase === "blueTransition" || phase === "zooming" || (phase === "transitioning" && vehicleOpacity > 0)) && (
+      {isAnimating && (phase === "showcase" || phase === "showing" || phase === "blueTransition" || phase === "zooming" || (phase === "transitioning" && vehicleOpacity > 0)) && (
         <VehicleModel
           vehicleType={vehicleType}
           vehicleConfig={vehicleConfig}
