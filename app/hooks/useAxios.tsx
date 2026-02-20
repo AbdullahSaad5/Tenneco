@@ -300,6 +300,7 @@ export const useAxios = () => {
       cameraStart: data.cameraStart || { x: 8, y: 4, z: 12 },
       cameraZoomTarget: data.cameraZoomTarget || { x: 0, y: 0, z: 2 },
       zoomConfig: data.zoomConfig || { initialScale: 1, initialLookAtTarget: { x: 0, y: 0, z: 0 }, zoomLookAtTarget: { x: 0, y: 0, z: 0 }, zoomIntensity: 1 },
+      animationStartDelay: data.animationStartDelay || 0,
       showcaseEnabled: data.showcaseEnabled !== false,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       showcaseWaypoints: (data.showcaseWaypoints || []).map((wp: any) => ({

@@ -176,8 +176,8 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
   const [modelsPreloaded, setModelsPreloaded] = useState(false);
 
   // Animation state - component remounts on vehicle change so state is always fresh
-  const [phase, setPhase] = useState<"showcase" | "showing" | "blueTransition" | "zooming" | "transitioning" | "brake" | "complete">(
-    isAnimating ? "showcase" : "complete"
+  const [phase, setPhase] = useState<"waiting" | "showcase" | "showing" | "blueTransition" | "zooming" | "transitioning" | "brake" | "complete">(
+    isAnimating ? "waiting" : "complete"
   );
   const [vehicleOpacity, setVehicleOpacity] = useState(isAnimating ? 1 : 0);
   const [blueTransitionProgress, setBlueTransitionProgress] = useState(0);
@@ -327,6 +327,18 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
     if (!isAnimating || phase === "complete" || completedRef.current || !isInitialized || !modelsPreloaded) return;
 
     const elapsed = Date.now() - startTime.current;
+
+    // Phase -1: Wait — hold camera at initial position for animationStartDelay seconds
+    if (phase === "waiting") {
+      camera.position.copy(initialPosition.current);
+      camera.lookAt(initialLookAt.current);
+
+      if (elapsed >= vehicleConfig.animationStartDelay * 1000) {
+        setPhase("showcase");
+        startTime.current = Date.now();
+      }
+      return;
+    }
 
     // Phase 0: Showcase orbit — camera moves through waypoints around the vehicle
     if (phase === "showcase") {
@@ -601,7 +613,7 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
       <fog attach="fog" args={[config.scene.fogColor, config.scene.fogNear, config.scene.fogFar]} />
 
       {/* Vehicle Model - only show before brake appears */}
-      {isAnimating && (phase === "showcase" || phase === "showing" || phase === "blueTransition" || phase === "zooming" || (phase === "transitioning" && vehicleOpacity > 0)) && (
+      {isAnimating && (phase === "waiting" || phase === "showcase" || phase === "showing" || phase === "blueTransition" || phase === "zooming" || (phase === "transitioning" && vehicleOpacity > 0)) && (
         <VehicleModel
           vehicleType={vehicleType}
           vehicleConfig={vehicleConfig}
