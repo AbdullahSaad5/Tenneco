@@ -143,11 +143,11 @@ function ViewerContent() {
         </Canvas>
       </div>
 
-      {/* Model Info - show when hotspot is selected and brake is exploded */}
-      {animationComplete && !isBrakeCollapsed && <ModelInfo hotspot={selectedHotspot} brakeMedia={brakeConfig?.media} />}
+      {/* Model Info - show when brake is exploded, or when a collapsed hotspot is selected */}
+      {animationComplete && (!isBrakeCollapsed || selectedHotspot !== null) && <ModelInfo hotspot={selectedHotspot} brakeMedia={brakeConfig?.media} />}
 
-      {/* Overall Brake Info - show when brake is collapsed and overallInfo is configured */}
-      {animationComplete && brakeConfig?.overallInfo && (
+      {/* Overall Brake Info - show when brake is collapsed, no hotspot selected, and overallInfo is configured */}
+      {animationComplete && brakeConfig?.overallInfo && selectedHotspot === null && (
         <BrakeOverallInfo info={brakeConfig.overallInfo} isCollapsed={isBrakeCollapsed} />
       )}
 

@@ -351,6 +351,7 @@ export interface HotspotConfiguration {
   vehicleType: VehicleType
   defaults?: HotspotDefaults
   hotspots: HotspotItem[]
+  collapsedHotspots: HotspotItem[]
 }
 
 // ----------------------------------------------------------------------------

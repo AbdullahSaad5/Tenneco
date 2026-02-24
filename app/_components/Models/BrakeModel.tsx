@@ -438,6 +438,7 @@ const BrakeModel = (props: BrakeModelProps) => {
 const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, onBrakeCollapsedChange, opacity = 1, showExplosionHotspot: showExplosionHotspotProp = true, modelPath }: BrakeModelProps & { modelPath: string }) => {
   const { getTranslation } = useLanguage();
   const vehicleHotspots = hotspotConfig?.hotspots || [];
+  const vehicleCollapsedHotspots = hotspotConfig?.collapsedHotspots || [];
 
   const { scene, animations } = useGLTF(modelPath);
   const groupRef = useRef<THREE.Group>(null);
@@ -468,6 +469,7 @@ const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, onBrakeCo
   // Bone-based isolation state
   const [isolatedBoneIndex, setIsolatedBoneIndex] = useState<number | null>(null);
   const [activeIsolationHotspotId, setActiveIsolationHotspotId] = useState<string | null>(null);
+  const [activeCollapsedHotspotId, setActiveCollapsedHotspotId] = useState<string | null>(null);
 
   // Use scale from config - handle both Vector3 and number formats
   const baseScale = typeof brakeConfig.scale === 'number'
@@ -547,6 +549,7 @@ const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, onBrakeCo
 
   // Filter enabled hotspots
   const activeHotspots = vehicleHotspots.filter(hs => hs.isEnabled);
+  const activeCollapsedHotspots = vehicleCollapsedHotspots.filter(hs => hs.isEnabled);
 
   // Handle explosion hotspot click
   const handleExplosionHotspotClick = () => {
@@ -614,11 +617,23 @@ const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, onBrakeCo
     }
   };
 
-  // Clear isolation when animation starts (explode/collapse)
+  // Handle collapsed hotspot click — show info only, no mesh isolation, toggle on re-click
+  const handleCollapsedHotspotClick = (hotspot: HotspotItem) => {
+    if (activeCollapsedHotspotId === hotspot.hotspotId) {
+      setActiveCollapsedHotspotId(null);
+      if (onHotspotClick) onHotspotClick(null);
+    } else {
+      setActiveCollapsedHotspotId(hotspot.hotspotId);
+      if (onHotspotClick) onHotspotClick(hotspot);
+    }
+  };
+
+  // Clear isolation and collapsed selection when animation starts (explode/collapse)
   useEffect(() => {
     if (isAnimationPlaying) {
       setIsolatedBoneIndex(null);
       setActiveIsolationHotspotId(null);
+      setActiveCollapsedHotspotId(null);
     }
   }, [isAnimationPlaying]);
 
@@ -841,13 +856,23 @@ const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, onBrakeCo
           />
         )}
 
-        {/* Dynamic Hotspots from config - only show when exploded */}
+        {/* Expanded Hotspots from config - only show when exploded */}
         {showHotspots && isExploded && activeHotspots.map((hotspotItem) => (
           <Hotspot
             key={hotspotItem.hotspotId}
             config={hotspotItem}
             occludeRef={meshGroupRef}
             onClick={() => handleHotspotClickWithIsolation(hotspotItem)}
+          />
+        ))}
+
+        {/* Collapsed Hotspots from config - only show when collapsed and not animating */}
+        {!isExploded && !isAnimationPlaying && activeCollapsedHotspots.map((hotspotItem) => (
+          <Hotspot
+            key={hotspotItem.hotspotId}
+            config={hotspotItem}
+            occludeRef={meshGroupRef}
+            onClick={() => handleCollapsedHotspotClick(hotspotItem)}
           />
         ))}
       </group>

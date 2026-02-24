@@ -406,46 +406,51 @@ export const useAxios = () => {
 
     const resolvedSlug = typeof data.vehicleType === 'object' ? data.vehicleType.slug : data.vehicleType;
 
+    type RawHotspot = {
+      id?: string;
+      hotspotId: string;
+      label: string;
+      labelTranslations?: Array<{ language: string; value: string }>;
+      position?: { x: number; y: number; z: number };
+      color?: string;
+      isEnabled?: boolean;
+      info?: {
+        title?: string;
+        titleTranslations?: Array<{ language: string; value: string }>;
+        description?: string;
+        descriptionTranslations?: Array<{ language: string; value: string }>;
+        pdf?: string;
+        pdfMedia?: { id: string; url: string };
+        video?: string;
+        videoMedia?: { id: string; url: string };
+      };
+    };
+
+    const mapHotspot = (hs: RawHotspot): HotspotItem => ({
+      hotspotId: hs.hotspotId || hs.id || "",
+      label: hs.label || "",
+      labelTranslations: hs.labelTranslations,
+      position: hs.position || { x: 0, y: 0, z: 0 },
+      color: hs.color || "#3b82f6",
+      isEnabled: hs.isEnabled !== false,
+      info: hs.info ? {
+        title: hs.info.title,
+        titleTranslations: hs.info.titleTranslations,
+        description: hs.info.description,
+        descriptionTranslations: hs.info.descriptionTranslations,
+        pdf: hs.info.pdfMedia?.url || hs.info.pdf,
+        pdfMediaId: hs.info.pdfMedia?.id,
+        video: hs.info.videoMedia?.url || hs.info.video,
+        videoMediaId: hs.info.videoMedia?.id,
+      } : undefined,
+    });
+
     const hotspotConfig: HotspotConfiguration = {
       id: data.id,
       vehicleType: resolvedSlug,
       defaults: data.defaults,
-      hotspots: (data.hotspots || []).map((hs: {
-        id?: string;
-        hotspotId: string;
-        label: string;
-        labelTranslations?: Array<{ language: string; value: string }>;
-        position?: { x: number; y: number; z: number };
-        color?: string;
-        isEnabled?: boolean;
-        info?: {
-          title?: string;
-          titleTranslations?: Array<{ language: string; value: string }>;
-          description?: string;
-          descriptionTranslations?: Array<{ language: string; value: string }>;
-          pdf?: string;
-          pdfMedia?: { id: string; url: string };
-          video?: string;
-          videoMedia?: { id: string; url: string };
-        };
-      }) => ({
-        hotspotId: hs.hotspotId || hs.id || "",
-        label: hs.label || "",
-        labelTranslations: hs.labelTranslations,
-        position: hs.position || { x: 0, y: 0, z: 0 },
-        color: hs.color || "#3b82f6",
-        isEnabled: hs.isEnabled !== false,
-        info: hs.info ? {
-          title: hs.info.title,
-          titleTranslations: hs.info.titleTranslations,
-          description: hs.info.description,
-          descriptionTranslations: hs.info.descriptionTranslations,
-          pdf: hs.info.pdfMedia?.url || hs.info.pdf,
-          pdfMediaId: hs.info.pdfMedia?.id,
-          video: hs.info.videoMedia?.url || hs.info.video,
-          videoMediaId: hs.info.videoMedia?.id,
-        } : undefined,
-      })),
+      hotspots: (data.hotspots || []).map(mapHotspot),
+      collapsedHotspots: (data.collapsedHotspots || []).map(mapHotspot),
     };
 
     return hotspotConfig;
