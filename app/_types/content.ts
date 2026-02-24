@@ -338,6 +338,7 @@ export interface HotspotItem {
   position: Vector3
   color: string
   isEnabled: boolean
+  infoSide?: 'left' | 'right'
   info?: HotspotInfo
 }
 

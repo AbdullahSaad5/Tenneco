@@ -414,6 +414,7 @@ export const useAxios = () => {
       position?: { x: number; y: number; z: number };
       color?: string;
       isEnabled?: boolean;
+      infoSide?: 'left' | 'right';
       info?: {
         title?: string;
         titleTranslations?: Array<{ language: string; value: string }>;
@@ -433,6 +434,7 @@ export const useAxios = () => {
       position: hs.position || { x: 0, y: 0, z: 0 },
       color: hs.color || "#3b82f6",
       isEnabled: hs.isEnabled !== false,
+      infoSide: hs.infoSide || 'right',
       info: hs.info ? {
         title: hs.info.title,
         titleTranslations: hs.info.titleTranslations,

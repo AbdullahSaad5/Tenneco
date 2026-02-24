@@ -80,6 +80,8 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot, brakeMedia }) => {
 
   if (!displayHotspot) return null;
 
+  const isLeft = displayHotspot.infoSide === 'left';
+
   const details = {
     name: getTranslation(
       displayHotspot.info?.title || displayHotspot.label,
@@ -102,7 +104,7 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot, brakeMedia }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.25 }}
-            className="fixed bottom-3 inset-x-0 sm:inset-x-auto sm:bottom-8 sm:right-6 z-20 flex flex-row gap-2 sm:gap-3 justify-center sm:justify-end"
+            className={`fixed bottom-3 inset-x-0 sm:inset-x-auto sm:bottom-8 z-20 flex flex-row gap-2 sm:gap-3 justify-center ${isLeft ? 'sm:left-6 sm:justify-start' : 'sm:right-6 sm:justify-end'}`}
           >
             {/* Info Toggle Button */}
             <motion.button
@@ -163,11 +165,11 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot, brakeMedia }) => {
         {isOpen && (
           <motion.div
             key={displayHotspot.hotspotId}
-            initial={{ opacity: 0, x: 100, scale: 0.9 }}
+            initial={{ opacity: 0, x: isLeft ? -100 : 100, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 100, scale: 0.9 }}
+            exit={{ opacity: 0, x: isLeft ? -100 : 100, scale: 0.9 }}
             transition={{ duration: 0.3, type: "spring" }}
-            className="fixed bottom-16 left-3 right-3 sm:bottom-24 sm:left-auto sm:right-6 z-20 w-auto sm:w-96 bg-white/95 backdrop-blur-sm rounded-lg border border-white/20 overflow-hidden shadow-2xl"
+            className={`fixed bottom-16 left-3 right-3 sm:bottom-24 z-20 w-auto sm:w-96 bg-white/95 backdrop-blur-sm rounded-lg border border-white/20 overflow-hidden shadow-2xl ${isLeft ? 'sm:left-6 sm:right-auto' : 'sm:left-auto sm:right-6'}`}
           >
             {/* Header */}
             <div className="p-3 sm:p-5 flex items-center gap-2 sm:gap-3 border-b border-slate-200">
