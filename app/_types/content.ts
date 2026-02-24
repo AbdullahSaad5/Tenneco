@@ -313,6 +313,8 @@ export interface BrakeConfiguration {
   collapseHotspot: CollapseHotspot
   media?: BrakeMedia
   overallInfo?: OverallBrakeInfo
+  gridColor?: string
+  sceneBackgroundColor?: string
   isActive: boolean
 }
 

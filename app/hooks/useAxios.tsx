@@ -377,6 +377,8 @@ export const useAxios = () => {
         description: data.overallInfo.description,
         descriptionTranslations: data.overallInfo.descriptionTranslations || [],
       } : undefined,
+      gridColor: data.gridColor || undefined,
+      sceneBackgroundColor: data.sceneBackgroundColor || undefined,
       isActive: data.isActive !== false,
     };
 

@@ -167,6 +167,78 @@ const VehicleModelInner = ({ vehicleConfig, opacity, blueTransitionProgress = 0,
   );
 };
 
+// Animated grid that smoothly transitions vertex colors in sync with brake fade-in
+const AnimatedGrid = ({ targetColor, progress }: { targetColor?: string; progress: number }) => {
+  const gridRef = useRef<THREE.LineSegments>(null);
+  const originalColorsRef = useRef<Float32Array | null>(null);
+
+  // Capture original vertex colors once after mount
+  useEffect(() => {
+    if (gridRef.current) {
+      const colorAttr = gridRef.current.geometry.getAttribute('color') as THREE.BufferAttribute | undefined;
+      if (colorAttr) {
+        originalColorsRef.current = new Float32Array(colorAttr.array as ArrayLike<number>);
+      }
+    }
+  }, []);
+
+  useFrame(() => {
+    if (!gridRef.current || !originalColorsRef.current || !targetColor) return;
+
+    const colorAttr = gridRef.current.geometry.getAttribute('color') as THREE.BufferAttribute | undefined;
+    if (!colorAttr) return;
+
+    const t = progress;
+    const tc = new THREE.Color(targetColor);
+    const orig = originalColorsRef.current;
+    for (let i = 0; i < colorAttr.count; i++) {
+      const i3 = i * 3;
+      colorAttr.setXYZ(
+        i,
+        orig[i3] + (tc.r - orig[i3]) * t,
+        orig[i3 + 1] + (tc.g - orig[i3 + 1]) * t,
+        orig[i3 + 2] + (tc.b - orig[i3 + 2]) * t,
+      );
+    }
+    colorAttr.needsUpdate = true;
+  });
+
+  return (
+    <gridHelper
+      ref={gridRef}
+      args={[viewer.scene.gridSize, viewer.scene.gridDivisions, viewer.scene.gridColor1, viewer.scene.gridColor2]}
+      position={[0, -2, 0]}
+    />
+  );
+};
+
+
+// Large flat plane that fills the ground area between grid lines with an animated color
+const AnimatedGroundPlane = ({ targetColor, progress }: { targetColor?: string; progress: number }) => {
+  const matRef = useRef<THREE.MeshBasicMaterial>(null);
+  const originalColorRef = useRef(new THREE.Color(viewer.scene.backgroundColor));
+
+  useFrame(() => {
+    if (!matRef.current || !targetColor) return;
+
+    const t = progress;
+    const orig = originalColorRef.current;
+    const tc = new THREE.Color(targetColor);
+    matRef.current.color.setRGB(
+      orig.r + (tc.r - orig.r) * t,
+      orig.g + (tc.g - orig.g) * t,
+      orig.b + (tc.b - orig.b) * t,
+    );
+  });
+
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.01, 0]}>
+      <planeGeometry args={[viewer.scene.gridSize, viewer.scene.gridSize]} />
+      <meshBasicMaterial ref={matRef} color={viewer.scene.backgroundColor} depthWrite={false} />
+    </mesh>
+  );
+};
+
 const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConfig, onHotspotClick, onBrakeCollapsedChange, isAnimating = false, onAnimationComplete }: SceneProps, ref) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const controlsRef = useRef<any>(null);
@@ -663,11 +735,11 @@ const Scene = forwardRef(({ vehicleType, vehicleConfig, brakeConfig, hotspotConf
         far={100}
       />
 
-      {/* Infinite Ground Grid */}
-      <gridHelper
-        args={[config.scene.gridSize, config.scene.gridDivisions, config.scene.gridColor1, config.scene.gridColor2]}
-        position={[0, -2, 0]}
-      />
+      {/* Ground plane fill — animates to brakeConfig.sceneBackgroundColor in sync with brake fade-in */}
+      <AnimatedGroundPlane targetColor={brakeConfig?.sceneBackgroundColor} progress={brakeOpacity} />
+
+      {/* Infinite Ground Grid — animates to brakeConfig.gridColor in sync with brake fade-in */}
+      <AnimatedGrid targetColor={brakeConfig?.gridColor} progress={brakeOpacity} />
 
       {/* Camera Controls - disabled during animation */}
       <OrbitControls
