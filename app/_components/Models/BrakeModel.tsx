@@ -866,8 +866,8 @@ const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, onBrakeCo
           />
         ))}
 
-        {/* Collapsed Hotspots from config - only show when collapsed and not animating */}
-        {!isExploded && !isAnimationPlaying && activeCollapsedHotspots.map((hotspotItem) => (
+        {/* Collapsed Hotspots from config - only show when collapsed, not animating, and scene transition complete */}
+        {showExplosionHotspotProp && !isExploded && !isAnimationPlaying && activeCollapsedHotspots.map((hotspotItem) => (
           <Hotspot
             key={hotspotItem.hotspotId}
             config={hotspotItem}
