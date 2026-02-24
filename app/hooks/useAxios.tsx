@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import { useCallback } from "react";
+import { lexicalToHtml } from "../utils/lexicalToHtml";
 import { MediaResponse } from "../_types/axios";
 import {
   HomepageContent,
@@ -374,8 +375,13 @@ export const useAxios = () => {
       overallInfo: (data.overallInfo?.title || data.overallInfo?.description) ? {
         title: data.overallInfo.title,
         titleTranslations: data.overallInfo.titleTranslations || [],
-        description: data.overallInfo.description,
-        descriptionTranslations: data.overallInfo.descriptionTranslations || [],
+        description: lexicalToHtml(data.overallInfo.description),
+        descriptionTranslations: (data.overallInfo.descriptionTranslations || []).map(
+          (t: { language: string; value: unknown }) => ({
+            language: t.language,
+            value: lexicalToHtml(t.value),
+          })
+        ),
       } : undefined,
       gridColor: data.gridColor || undefined,
       sceneBackgroundColor: data.sceneBackgroundColor || undefined,
@@ -440,8 +446,13 @@ export const useAxios = () => {
       info: hs.info ? {
         title: hs.info.title,
         titleTranslations: hs.info.titleTranslations,
-        description: hs.info.description,
-        descriptionTranslations: hs.info.descriptionTranslations,
+        description: lexicalToHtml(hs.info.description),
+        descriptionTranslations: (hs.info.descriptionTranslations || []).map(
+          (t: { language: string; value: unknown }) => ({
+            language: t.language,
+            value: lexicalToHtml(t.value),
+          })
+        ),
         pdf: hs.info.pdfMedia?.url || hs.info.pdf,
         pdfMediaId: hs.info.pdfMedia?.id,
         video: hs.info.videoMedia?.url || hs.info.video,

@@ -2,7 +2,6 @@
 
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Markdown from "react-markdown";
 import { OverallBrakeInfo } from "../../_types/content";
 import { useLanguage } from "../../providers/LanguageProvider";
 
@@ -39,7 +38,7 @@ const BrakeOverallInfo: React.FC<BrakeOverallInfoProps> = ({ info, isCollapsed }
           {description && (
             <div className="p-3 sm:p-5 max-h-[50vh] overflow-y-auto">
               <div className="text-sm sm:text-base text-slate-600 leading-relaxed prose prose-sm prose-slate max-w-none prose-p:my-1 prose-ul:my-2 prose-li:my-1">
-                <Markdown>{description}</Markdown>
+                <div dangerouslySetInnerHTML={{ __html: description }} />
               </div>
             </div>
           )}

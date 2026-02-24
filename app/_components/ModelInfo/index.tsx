@@ -3,7 +3,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FileText, Video } from "lucide-react";
-import Markdown from "react-markdown";
 import PDFModal from "../PDFModal";
 import VideoModal from "../VideoModal";
 import { HotspotItem, BrakeMedia } from "../../_types/content";
@@ -183,7 +182,7 @@ const ModelInfo: React.FC<ModelInfoProps> = ({ hotspot, brakeMedia }) => {
             {/* Content */}
             <div className="p-3 sm:p-5 max-h-[50vh] overflow-y-auto">
               <div className="text-sm sm:text-base text-slate-600 leading-relaxed prose prose-sm prose-slate max-w-none prose-p:my-1 prose-ul:my-2 prose-li:my-1">
-                <Markdown>{details.description}</Markdown>
+                <div dangerouslySetInnerHTML={{ __html: details.description }} />
               </div>
             </div>
           </motion.div>
