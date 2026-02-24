@@ -698,13 +698,13 @@ const BrakeModelInner = ({ brakeConfig, hotspotConfig, onHotspotClick, onBrakeCo
             stdMat.emissiveIntensity = original.emissiveIntensity;
           }
         } else if (isSelected) {
-          // Selected mesh: full visibility + emissive glow, modulated by overall opacity
+          // Selected mesh: full visibility, preserve original color (no emissive overlay)
           material.transparent = opacity < 1;
           material.opacity = opacity;
           material.depthWrite = true;
           if (stdMat.isMeshStandardMaterial) {
-            stdMat.emissive.copy(highlightColorRef.current);
-            stdMat.emissiveIntensity = 0.4;
+            stdMat.emissive.copy(original.emissive);
+            stdMat.emissiveIntensity = original.emissiveIntensity;
           }
         } else {
           // Non-selected mesh: dimmed + transparent, modulated by overall opacity
