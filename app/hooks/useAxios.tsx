@@ -10,6 +10,7 @@ import {
   VehicleConfiguration,
   BrakeConfiguration,
   HotspotConfiguration,
+  HotspotItem,
 } from "../_types/content";
 
 const instance: AxiosInstance = axios.create({

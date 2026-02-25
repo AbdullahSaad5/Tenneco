@@ -81,7 +81,7 @@ function serializeNode(node: LexicalNode): string {
       if (!node.value?.url) return ''
       const src = getMediaUrl(node.value.url)
       const alt = escapeAttr(node.value.alt || node.value.filename || '')
-      return `<img src="${escapeAttr(src)}" alt="${alt}" style="max-width:100%;height:auto;" />`
+      return `<img src="${escapeAttr(src ?? '')}" alt="${alt}" style="max-width:100%;height:auto;" />`
     }
 
     case 'linebreak':

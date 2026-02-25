@@ -169,7 +169,7 @@ const VehicleModelInner = ({ vehicleConfig, opacity, blueTransitionProgress = 0,
 
 // Animated grid that smoothly transitions vertex colors in sync with brake fade-in
 const AnimatedGrid = ({ targetColor, progress }: { targetColor?: string; progress: number }) => {
-  const gridRef = useRef<THREE.LineSegments>(null);
+  const gridRef = useRef<THREE.GridHelper>(null);
   const originalColorsRef = useRef<Float32Array | null>(null);
 
   // Capture original vertex colors once after mount
