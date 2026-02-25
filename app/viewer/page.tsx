@@ -13,6 +13,7 @@ import BrakeOverallInfo from "../_components/BrakeOverallInfo";
 import ModelSelector from "../_components/ModelSelector";
 import { useContent } from "../providers/ContentProvider";
 import { VehicleType, HotspotItem } from "../_types/content";
+import { useInactivityRedirect } from "../hooks/useInactivityRedirect";
 
 /** @author SAS */
 function ViewerContent() {
@@ -28,6 +29,7 @@ function ViewerContent() {
   const sceneRef = useRef<any>(null);
   const [showAnimation, setShowAnimation] = useState(shouldAnimate);
   const [animationComplete, setAnimationComplete] = useState(!shouldAnimate);
+  useInactivityRedirect("/", animationComplete);
   const [selectedHotspot, setSelectedHotspot] = useState<HotspotItem | null>(null);
   const [isBrakeCollapsed, setIsBrakeCollapsed] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
