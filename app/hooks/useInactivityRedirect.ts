@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-const INACTIVITY_TIMEOUT = 2 * 15 * 1000; // 2 minutes
+const INACTIVITY_TIMEOUT = 2 * 60 * 1000; // 2 minutes
 
 const ACTIVITY_EVENTS = [
   "mousemove",
